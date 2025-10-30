@@ -34,7 +34,7 @@ export default function AdminHistorialPage() {
   }, [router]);
 
   const cargar = async () => {
-    const resp = await apiGet<Accion[]>(`/auth/recepcionistas/acciones`, token);
+    const resp = await apiGet<Accion[]>(`/auth/acciones`, token);
     if (resp.success && resp.data) setAcciones(resp.data);
     const u = await apiGet<UsuarioListItem[]>(`/auth/usuarios`, token);
     if (u.success && u.data) setUsuarios(u.data);
