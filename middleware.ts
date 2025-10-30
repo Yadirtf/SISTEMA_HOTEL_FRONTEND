@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 // Rutas protegidas
 const protectedPaths = [
   "/panel",
+  "/panel/admin",
   "/reservas",
   "/huespedes",
   "/habitaciones",
@@ -22,11 +23,28 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Restricción adicional por rol para la ruta de admin
+  if (pathname.startsWith("/panel/admin")) {
+    const role = req.cookies.get("auth_role")?.value || "";
+    if (role !== "Administrador") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/panel";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/panel", "/reservas", "/huespedes", "/habitaciones"],
+  matcher: [
+    "/panel",
+    "/panel/admin",
+    "/panel/admin/:path*",
+    "/reservas",
+    "/huespedes",
+    "/habitaciones",
+  ],
 };
 
 

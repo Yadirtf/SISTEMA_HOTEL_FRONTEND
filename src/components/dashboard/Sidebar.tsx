@@ -2,7 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Box, Button, Stack, Text } from "@chakra-ui/react";
+import * as React from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { getSessionUser } from "@/lib/session";
 
 const GOLD = "#d4af37";
 const BLACK = "#0b0b0b";
@@ -21,6 +23,14 @@ export function Sidebar() {
   const router = useRouter();
   const { colors } = useThemeMode();
 
+  const user = getSessionUser();
+  const isAdmin = user?.rol === "Administrador";
+  const isAdminSection = pathname.startsWith("/panel/admin");
+  const [adminOpen, setAdminOpen] = React.useState(false);
+  React.useEffect(() => {
+    if (isAdminSection) setAdminOpen(true);
+  }, [isAdminSection]);
+
   return (
     <Box
       as="nav"
@@ -36,7 +46,7 @@ export function Sidebar() {
         Sistema Hotel
       </Text>
       <Stack gap={2}>
-        {NAV_ITEMS.map((item) => {
+        {[...NAV_ITEMS].map((item) => {
           const active = pathname === item.href;
           return (
             <Button
@@ -52,6 +62,45 @@ export function Sidebar() {
             </Button>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <Button
+              onClick={() => setAdminOpen((v) => !v)}
+              justifyContent="flex-start"
+              variant="ghost"
+              bg={isAdminSection ? "rgba(212,175,55,0.16)" : "transparent"}
+              _hover={{ bg: "rgba(212,175,55,0.22)" }}
+              color={colors.text}
+            >
+              Administrar
+            </Button>
+            {adminOpen && (
+              <Stack pl={4} gap={1}>
+                <Button
+                  onClick={() => router.push("/panel/admin/historial")}
+                  justifyContent="flex-start"
+                  variant="ghost"
+                  bg={pathname === "/panel/admin/historial" ? "rgba(212,175,55,0.16)" : "transparent"}
+                  _hover={{ bg: "rgba(212,175,55,0.22)" }}
+                  color={colors.text}
+                >
+                  Historial
+                </Button>
+                <Button
+                  onClick={() => router.push("/panel/admin/usuarios")}
+                  justifyContent="flex-start"
+                  variant="ghost"
+                  bg={pathname === "/panel/admin/usuarios" ? "rgba(212,175,55,0.16)" : "transparent"}
+                  _hover={{ bg: "rgba(212,175,55,0.22)" }}
+                  color={colors.text}
+                >
+                  Usuarios
+                </Button>
+              </Stack>
+            )}
+          </>
+        )}
       </Stack>
     </Box>
   );

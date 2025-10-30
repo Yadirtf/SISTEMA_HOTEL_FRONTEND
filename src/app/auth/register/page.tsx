@@ -16,6 +16,9 @@ export default function RegisterPage() {
   const router = useRouter();
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -23,20 +26,20 @@ export default function RegisterPage() {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!correo || !contrasena) {
-      setErrorMsg("Ingrese correo y contraseña");
+    if (!correo || !contrasena || !nombre || !apellido || !telefono) {
+      setErrorMsg("Complete todos los campos");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const resp = await apiPost<UserResponseDto, { correo: string; contrasena: string }>(
+      const resp = await apiPost<UserResponseDto, { correo: string; contrasena: string; nombre: string; apellido: string; telefono: string }>(
         "/auth/register",
-        { correo, contrasena }
+        { correo, contrasena, nombre, apellido, telefono }
       );
 
-      if (!resp || resp.ok === false || !resp.data) {
-        setErrorMsg(resp?.mensaje || "No se pudo registrar");
+      if (!resp || resp.success === false || !resp.data) {
+        setErrorMsg(resp?.message || "No se pudo registrar");
         return;
       }
 
@@ -63,6 +66,39 @@ export default function RegisterPage() {
                   {errorMsg}
                 </Box>
               )}
+              <Field.Root>
+                <Field.Label color="black">Nombre</Field.Label>
+                <Input
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Juan"
+                  bg="gray.50"
+                  color="gray.900"
+                  _placeholder={{ color: "gray.500" }}
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label color="black">Apellido</Field.Label>
+                <Input
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                  placeholder="Pérez"
+                  bg="gray.50"
+                  color="gray.900"
+                  _placeholder={{ color: "gray.500" }}
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label color="black">Teléfono</Field.Label>
+                <Input
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  placeholder="3001234567"
+                  bg="gray.50"
+                  color="gray.900"
+                  _placeholder={{ color: "gray.500" }}
+                />
+              </Field.Root>
               <Field.Root>
                 <Field.Label color="black">Correo</Field.Label>
                 <Input

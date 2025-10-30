@@ -30,8 +30,8 @@ export default function LoginPage() {
         { correo, contrasena }
       );
 
-      if (!resp || resp.ok === false || !resp.data) {
-        setErrorMsg(resp?.mensaje || "Credenciales inválidas");
+      if (!resp || resp.success === false || !resp.data) {
+        setErrorMsg(resp?.message || "Credenciales inválidas");
         return;
       }
 

@@ -1,8 +1,8 @@
 export type Caja<T> = {
-  ok: boolean;
-  mensaje?: string;
-  data?: T;
-  errores?: unknown;
+  success: boolean;
+  message?: string;
+  data: T;
+  timestamp?: string;
 };
 
 // Usar SIEMPRE el proxy /api para evitar CORS en desarrollo
@@ -25,7 +25,7 @@ export async function apiPost<TResponse, TBody = unknown>(path: string, body: TB
       return errJson as Caja<TResponse>;
     } catch {
       const errText = await res.text().catch(() => "");
-      return { ok: false, mensaje: errText || `HTTP ${res.status}` } as Caja<TResponse>;
+      return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
     }
   }
 
@@ -33,7 +33,62 @@ export async function apiPost<TResponse, TBody = unknown>(path: string, body: TB
     const json = await res.json();
     return json as Caja<TResponse>;
   } catch {
-    return { ok: false, mensaje: "Respuesta inválida del servidor" } as Caja<TResponse>;
+    return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
+  }
+}
+
+export async function apiGet<TResponse>(path: string, token?: string): Promise<Caja<TResponse>> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "GET",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    try {
+      const errJson = await res.json();
+      return errJson as Caja<TResponse>;
+    } catch {
+      const errText = await res.text().catch(() => "");
+      return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
+    }
+  }
+
+  try {
+    const json = await res.json();
+    return json as Caja<TResponse>;
+  } catch {
+    return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
+  }
+}
+
+export async function apiPatch<TResponse, TBody = unknown>(path: string, body: TBody, token?: string): Promise<Caja<TResponse>> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    try {
+      const errJson = await res.json();
+      return errJson as Caja<TResponse>;
+    } catch {
+      const errText = await res.text().catch(() => "");
+      return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
+    }
+  }
+
+  try {
+    const json = await res.json();
+    return json as Caja<TResponse>;
+  } catch {
+    return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
   }
 }
 
