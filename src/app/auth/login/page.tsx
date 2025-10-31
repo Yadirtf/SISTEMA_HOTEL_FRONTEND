@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [contrasena, setContrasena] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showPass, setShowPass] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,20 +74,31 @@ export default function LoginPage() {
               </Field.Root>
               <Field.Root>
                 <Field.Label color="black">Contraseña</Field.Label>
-                <Input
-                  type="password"
-                  value={contrasena}
-                  onChange={(e) => setContrasena(e.target.value)}
-                  placeholder="********"
-                  bg="gray.50"
-                  color="gray.900"
-                  _placeholder={{ color: "gray.500" }}
-                />
+                <Box position="relative" w="100%">
+                  <Input
+                    w="100%"
+                    type={showPass ? "text" : "password"}
+                    value={contrasena}
+                    onChange={(e) => setContrasena(e.target.value)}
+                    placeholder="********"
+                    bg="gray.50"
+                    color="gray.900"
+                    _placeholder={{ color: "gray.500" }}
+                    pr={20}
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => setShowPass((v) => !v)} position="absolute" right={2} top={2}>
+                    {showPass ? "Ocultar" : "Ver"}
+                  </Button>
+                </Box>
               </Field.Root>
               <Button type="submit" colorScheme="blue" loading={isSubmitting} w="full">Entrar</Button>
-              <Text fontSize="sm" textAlign="center">
+              <Text fontSize="sm" textAlign="center" color="black">
                 ¿No tienes cuenta? {" "}
-                <Link as={NextLink} href="/auth/register" color="blue.600">Regístrate</Link>
+                <Link as={NextLink} href="/auth/register" color="black">Regístrate</Link>
+              </Text>
+              <Text fontSize="sm" textAlign="center" color="black">
+                ¿Olvidaste tu contraseña? {" "}
+                <Link as={NextLink} href="/auth/forgot-password" color="black">Recupérala aquí</Link>
               </Text>
             </Stack>
           </Box>

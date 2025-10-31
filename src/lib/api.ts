@@ -31,7 +31,9 @@ export async function apiPost<TResponse, TBody = unknown>(path: string, body: TB
 
   try {
     const json = await res.json();
-    return json as Caja<TResponse>;
+    const maybe = json as any;
+    if (maybe && typeof maybe.success === 'boolean') return maybe as Caja<TResponse>;
+    return { success: true, data: json as TResponse } as Caja<TResponse>;
   } catch {
     return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
   }
@@ -58,7 +60,9 @@ export async function apiGet<TResponse>(path: string, token?: string): Promise<C
 
   try {
     const json = await res.json();
-    return json as Caja<TResponse>;
+    const maybe = json as any;
+    if (maybe && typeof maybe.success === 'boolean') return maybe as Caja<TResponse>;
+    return { success: true, data: json as TResponse } as Caja<TResponse>;
   } catch {
     return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
   }
@@ -86,11 +90,76 @@ export async function apiPatch<TResponse, TBody = unknown>(path: string, body: T
 
   try {
     const json = await res.json();
-    return json as Caja<TResponse>;
+    const maybe = json as any;
+    if (maybe && typeof maybe.success === 'boolean') return maybe as Caja<TResponse>;
+    return { success: true, data: json as TResponse } as Caja<TResponse>;
   } catch {
     return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
   }
 }
+
+export async function apiPut<TResponse, TBody = unknown>(path: string, body: TBody, token?: string): Promise<Caja<TResponse>> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    try {
+      const errJson = await res.json();
+      return errJson as Caja<TResponse>;
+    } catch {
+      const errText = await res.text().catch(() => "");
+      return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
+    }
+  }
+
+  if (res.status === 204) {
+    return { success: true, data: undefined as unknown as TResponse } as Caja<TResponse>;
+  }
+  try {
+    const json = await res.json();
+    const maybe = json as any;
+    if (maybe && typeof maybe.success === 'boolean') return maybe as Caja<TResponse>;
+    return { success: true, data: json as TResponse } as Caja<TResponse>;
+  } catch {
+    return { success: true, data: undefined as unknown as TResponse } as Caja<TResponse>;
+  }
+}
+
+export async function apiDelete<TResponse>(path: string, token?: string): Promise<Caja<TResponse>> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "DELETE",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    try {
+      const errJson = await res.json();
+      return errJson as Caja<TResponse>;
+    } catch {
+      const errText = await res.text().catch(() => "");
+      return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
+    }
+  }
+
+  try {
+    const json = await res.json();
+    const maybe = json as any;
+    if (maybe && typeof maybe.success === 'boolean') return maybe as Caja<TResponse>;
+    return { success: true, data: json as TResponse } as Caja<TResponse>;
+  } catch {
+    return { success: false, message: "Respuesta inválida del servidor", data: undefined as unknown as TResponse } as Caja<TResponse>;
+  }
+}
+
+ 
 
 export type JwtResponseDto = {
   access_token: string;

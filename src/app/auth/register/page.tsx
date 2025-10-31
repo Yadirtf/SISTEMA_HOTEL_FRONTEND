@@ -21,6 +21,7 @@ export default function RegisterPage() {
   const [telefono, setTelefono] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showPass, setShowPass] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,20 +114,27 @@ export default function RegisterPage() {
               </Field.Root>
               <Field.Root>
                 <Field.Label color="black">Contraseña</Field.Label>
-                <Input
-                  type="password"
-                  value={contrasena}
-                  onChange={(e) => setContrasena(e.target.value)}
-                  placeholder="********"
-                  bg="gray.50"
-                  color="gray.900"
-                  _placeholder={{ color: "gray.500" }}
-                />
+                <Box position="relative" w="100%">
+                  <Input
+                    w="100%"
+                    type={showPass ? "text" : "password"}
+                    value={contrasena}
+                    onChange={(e) => setContrasena(e.target.value)}
+                    placeholder="********"
+                    bg="gray.50"
+                    color="gray.900"
+                    _placeholder={{ color: "gray.500" }}
+                    pr={20}
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => setShowPass((v) => !v)} position="absolute" right={2} top={2}>
+                    {showPass ? "Ocultar" : "Ver"}
+                  </Button>
+                </Box>
               </Field.Root>
               <Button type="submit" colorScheme="blue" loading={isSubmitting} w="full">Registrarme</Button>
-              <Text fontSize="sm" textAlign="center">
+              <Text fontSize="sm" textAlign="center" color="black">
                 ¿Ya tienes cuenta? {" "}
-                <Link as={NextLink} href="/auth/login" color="blue.600">Inicia sesión</Link>
+                <Link as={NextLink} href="/auth/login" color="black">Inicia sesión</Link>
               </Text>
             </Stack>
           </Box>

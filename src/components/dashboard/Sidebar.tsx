@@ -26,9 +26,13 @@ export function Sidebar() {
   const user = getSessionUser();
   const isAdmin = user?.rol === "Administrador";
   const isAdminSection = pathname.startsWith("/panel/admin");
-  const [adminOpen, setAdminOpen] = React.useState(false);
+  // Evitar mismatch SSR/CSR: hidratar y luego decidir render condicional
+  const [hydrated, setHydrated] = React.useState(false);
+  const [adminOpen, setAdminOpen] = React.useState<boolean>(false);
   React.useEffect(() => {
-    if (isAdminSection) setAdminOpen(true);
+    setHydrated(true);
+    setAdminOpen(isAdminSection);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdminSection]);
 
   return (
@@ -63,7 +67,7 @@ export function Sidebar() {
           );
         })}
 
-        {isAdmin && (
+        {hydrated && isAdmin && (
           <>
             <Button
               onClick={() => setAdminOpen((v) => !v)}
