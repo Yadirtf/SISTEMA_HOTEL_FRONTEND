@@ -1,11 +1,13 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Button, Flex, Heading, Stack } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
+import { useEffect, useState, useMemo } from "react";
 import { apiGet, apiPatch } from "@/lib/api";
 import { getSessionUser, getToken } from "@/lib/session";
 import { useRouter } from "next/navigation";
+import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { UserFilters } from "@/components/admin/UserFilters";
 
 type UsuarioListItem = {
   idUsuario: number;
@@ -18,9 +20,14 @@ type UsuarioListItem = {
 
 export default function AdminUsuariosPage() {
   const router = useRouter();
-  const [msg, setMsg] = useState<string | null>(null);
+  const { colors, mode } = useThemeMode();
+  const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
   const [usuarios, setUsuarios] = useState<UsuarioListItem[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState<boolean>(false);
+
+  // Filtros
+  const [rolFilter, setRolFilter] = useState<string>("all");
+  const [estadoFilter, setEstadoFilter] = useState<string>("all");
 
   const token = getToken() || undefined;
   const sessionUser = getSessionUser();
@@ -32,12 +39,20 @@ export default function AdminUsuariosPage() {
     }
   }, [router]);
 
+  const showNotification = (type: "success" | "error" | "info", title: string, description?: string) => {
+    setNotification({ type, title, description });
+    setTimeout(() => setNotification(null), type === "error" ? 5000 : 3000);
+  };
+
   const cargarUsuarios = async () => {
     setLoadingUsuarios(true);
-    setMsg(null);
     const resp = await apiGet<UsuarioListItem[]>(`/auth/usuarios`, token);
-    if (resp.success && resp.data) setUsuarios(resp.data);
-    setMsg(resp.message || (resp.success ? `Usuarios cargados` : `Error`));
+    if (resp.success && resp.data) {
+      setUsuarios(resp.data);
+      showNotification("success", "Usuarios cargados");
+    } else {
+      showNotification("error", "Error", resp.message || "Error al cargar usuarios");
+    }
     setLoadingUsuarios(false);
   };
 
@@ -45,74 +60,493 @@ export default function AdminUsuariosPage() {
     cargarUsuarios();
   }, []);
 
+  const cambiarEstado = async (idUsuario: number, estadoActual: string) => {
+    const nuevoEstado = estadoActual === 'Activo' ? 'Inactivo' : 'Activo';
+    try {
+      const resp = await apiPatch<string, { estado: 'Activo' | 'Inactivo' }>(
+        `/auth/usuarios/${idUsuario}/estado`,
+        { estado: nuevoEstado as any },
+        token
+      );
+      if (resp.success) {
+        showNotification("success", "Estado actualizado", `Usuario ${nuevoEstado.toLowerCase()} exitosamente`);
+        await cargarUsuarios();
+      } else {
+        showNotification("error", "Error", resp.message || "Error al actualizar estado");
+      }
+    } catch (e: any) {
+      showNotification("error", "Error", e?.message || "Error desconocido");
+    }
+  };
+
+  const cambiarRol = async (idUsuario: number, rolActual: string) => {
+    const nuevoRol = rolActual === 'Administrador' ? 'Recepcionista' : 'Administrador';
+    try {
+      const resp = await apiPatch<string, { rol: 'Administrador' | 'Recepcionista' }>(
+        `/auth/usuarios/${idUsuario}/rol`,
+        { rol: nuevoRol as any },
+        token
+      );
+      if (resp.success) {
+        showNotification("success", "Rol actualizado", `Rol cambiado a ${nuevoRol} exitosamente`);
+        await cargarUsuarios();
+      } else {
+        showNotification("error", "Error", resp.message || "Error al actualizar rol");
+      }
+    } catch (e: any) {
+      showNotification("error", "Error", e?.message || "Error desconocido");
+    }
+  };
+
+  const usuariosFiltrados = useMemo(() => {
+    return usuarios.filter((u) => {
+      const matchesSession = sessionUser ? u.idUsuario !== sessionUser.idUsuario : true;
+      const matchesRol = rolFilter === "all" || u.rol === rolFilter;
+      const matchesEstado = estadoFilter === "all" || u.estado === estadoFilter;
+      return matchesSession && matchesRol && matchesEstado;
+    });
+  }, [usuarios, sessionUser, rolFilter, estadoFilter]);
+
+  // Determinar si hay filtros activos
+  const hasFilters = useMemo(() => {
+    return rolFilter !== "all" || estadoFilter !== "all";
+  }, [rolFilter, estadoFilter]);
+
   return (
     <DashboardShell title="Administración - Usuarios">
       <Stack gap={6}>
-        <Box bg="gray.800" borderColor="gray.700" borderWidth="1px" borderRadius="md" p={4}>
-          <Flex justify="space-between" align="center" mb={3}>
-            <Heading size="sm" color="white">Usuarios</Heading>
-            <Button size="sm" onClick={cargarUsuarios} disabled={loadingUsuarios} colorScheme="blue">Refrescar</Button>
+        {/* Barra superior con filtros y botón de refrescar */}
+        <Flex
+          justify="space-between"
+          align={{ base: "stretch", md: "end" }}
+          direction={{ base: "column", md: "row" }}
+          gap={4}
+          p={{ base: 3, md: 5 }}
+          bg={colors.surface}
+          borderRadius="lg"
+          borderWidth="2px"
+          borderColor={colors.border}
+          boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
+        >
+          <UserFilters
+            rolFilter={rolFilter}
+            estadoFilter={estadoFilter}
+            onRolChange={setRolFilter}
+            onEstadoChange={setEstadoFilter}
+          />
+
+          <Flex 
+            gap={3} 
+            align="end" 
+            direction={{ base: "column", md: "row" }}
+            w={{ base: "100%", md: "auto" }}
+          >
+            <Button
+              size={{ base: "md", md: "sm" }}
+              onClick={cargarUsuarios}
+              disabled={loadingUsuarios}
+              variant="outline"
+              borderColor={colors.border}
+              color={colors.subtext}
+              bg="transparent"
+              _hover={{ bg: colors.surface, borderColor: colors.gold, color: colors.gold }}
+              transition="all 0.2s"
+              w={{ base: "100%", md: "auto" }}
+            >
+              {loadingUsuarios ? "Cargando..." : "Refrescar"}
+            </Button>
           </Flex>
-          <Box overflowX="auto">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>ID</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Nombre</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Apellido</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Teléfono</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Correo</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Rol</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Estado</th>
-                  <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #2D3748', color: '#CBD5E0' }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios
-                  .filter((u) => (sessionUser ? u.idUsuario !== sessionUser.idUsuario : true))
-                  .map((u) => (
-                  <tr key={u.idUsuario}>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.idUsuario}</td>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.persona?.nombre || '-'}</td>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.persona?.apellido || '-'}</td>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.persona?.telefono || '-'}</td>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.correo}</td>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.rol}</td>
-                    <td style={{ padding: '8px', color: '#E2E8F0' }}>{u.estado}</td>
-                    <td style={{ padding: '8px' }}>
-                      <Flex gap={2} wrap="wrap">
-                        <Button size="xs" colorScheme="yellow" onClick={async () => {
-                          const nuevo = u.estado === 'Activo' ? 'Inactivo' : 'Activo';
-                          const resp = await apiPatch<string, { estado: 'Activo' | 'Inactivo' }>(`/auth/usuarios/${u.idUsuario}/estado`, { estado: nuevo as any }, token);
-                          setMsg(resp.message || (resp.success ? 'Estado actualizado' : 'Error'));
-                          await cargarUsuarios();
-                        }}>Cambiar estado</Button>
-                        <Button size="xs" colorScheme="purple" onClick={async () => {
-                          const nuevoRol = u.rol === 'Administrador' ? 'Recepcionista' : 'Administrador';
-                          const resp = await apiPatch<string, { rol: 'Administrador' | 'Recepcionista' }>(`/auth/usuarios/${u.idUsuario}/rol`, { rol: nuevoRol as any }, token);
-                          setMsg(resp.message || (resp.success ? 'Rol actualizado' : 'Error'));
-                          await cargarUsuarios();
-                        }}>Actualizar rol</Button>
-                      </Flex>
+        </Flex>
+
+        {/* Tabla de usuarios */}
+        <Box
+          bg={colors.surface}
+          borderColor={colors.border}
+          borderWidth="2px"
+          borderRadius="lg"
+          p={{ base: 3, md: 5 }}
+          boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
+        >
+          <Heading 
+            size={{ base: "sm", md: "md" }}
+            color={colors.gold} 
+            mb={4}
+            borderBottom="2px solid"
+            borderBottomColor={colors.border}
+            pb={3}
+            fontSize={{ base: "lg", md: "xl" }}
+          >
+            Listado de Usuarios
+            {hasFilters && (
+              <Text as="span" color={colors.subtext} fontSize={{ base: "xs", md: "sm" }} fontWeight="normal" ml={2}>
+                ({usuariosFiltrados.length} de {usuarios.filter((u) => (sessionUser ? u.idUsuario !== sessionUser.idUsuario : true)).length})
+              </Text>
+            )}
+          </Heading>
+
+          {/* Vista de tabla para desktop */}
+          <Box 
+            overflowX="auto" 
+            display={{ base: "none", lg: "block" }}
+          >
+            <Box
+              as="table"
+              w="100%"
+              style={{ borderCollapse: "collapse" }}
+            >
+              <Box as="thead">
+                <Box as="tr" borderBottom="2px" borderColor={colors.border}>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    ID
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Nombre
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Apellido
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Teléfono
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Correo
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Rol
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Estado
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="left"
+                    p={3}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Acciones
+                  </Box>
+                </Box>
+              </Box>
+              <Box as="tbody">
+                {usuariosFiltrados.length === 0 && !loadingUsuarios ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      style={{
+                        textAlign: "center",
+                        padding: "32px",
+                        color: colors.subtext,
+                      }}
+                    >
+                      No hay usuarios para mostrar
                     </td>
                   </tr>
-                ))}
-                {usuarios.length === 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ padding: '12px', color: '#A0AEC0' }}>No hay usuarios para mostrar.</td>
-                  </tr>
+                ) : (
+                  usuariosFiltrados.map((u) => {
+                    const RowWithHover = () => {
+                      const [isHovered, setIsHovered] = useState(false);
+                      const hoverBg = mode === "light" ? colors.gold : "#1a1a1a";
+                      const textColor = isHovered && mode === "light" ? "white" : colors.text;
+                      const subtextColor = isHovered && mode === "light" ? "white" : colors.subtext;
+
+                      return (
+                        <Box
+                          as="tr"
+                          borderBottom="1px"
+                          borderColor={colors.border}
+                          bg={isHovered ? hoverBg : "transparent"}
+                          onMouseEnter={() => setIsHovered(true)}
+                          onMouseLeave={() => setIsHovered(false)}
+                          transition="all 0.2s"
+                        >
+                          <Box as="td" p={3} color={textColor} fontWeight="medium">
+                            {u.idUsuario}
+                          </Box>
+                          <Box as="td" p={3} color={subtextColor}>
+                            {u.persona?.nombre || "-"}
+                          </Box>
+                          <Box as="td" p={3} color={subtextColor}>
+                            {u.persona?.apellido || "-"}
+                          </Box>
+                          <Box as="td" p={3} color={subtextColor}>
+                            {u.persona?.telefono || "-"}
+                          </Box>
+                          <Box as="td" p={3} color={subtextColor}>
+                            {u.correo}
+                          </Box>
+                          <Box as="td" p={3} color={subtextColor}>
+                            {u.rol}
+                          </Box>
+                          <Box as="td" p={3} color={subtextColor}>
+                            {u.estado}
+                          </Box>
+                          <Box as="td" p={3}>
+                            <Flex gap={2} wrap="wrap">
+                              <Button
+                                size="xs"
+                                bg={colors.gold}
+                                color={colors.bg}
+                                onClick={() => cambiarEstado(u.idUsuario, u.estado)}
+                                _hover={{ 
+                                  bg: "#b8941f",
+                                  transform: "scale(1.05)"
+                                }}
+                                transition="all 0.2s"
+                                fontWeight="semibold"
+                                borderWidth={isHovered && mode === "light" ? "1px" : "0px"}
+                                borderColor={isHovered && mode === "light" ? "white" : "transparent"}
+                                borderStyle="solid"
+                              >
+                                Cambiar Estado
+                              </Button>
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                borderColor={colors.border}
+                                color={isHovered && mode === "light" ? "white" : colors.subtext}
+                                onClick={() => cambiarRol(u.idUsuario, u.rol)}
+                                _hover={{
+                                  borderColor: mode === "light" ? "white" : colors.gold,
+                                  color: mode === "light" ? "white" : colors.gold,
+                                  bg: "transparent"
+                                }}
+                                transition="all 0.2s"
+                                style={{
+                                  borderColor: isHovered && mode === "light" ? "white" : colors.border,
+                                  color: isHovered && mode === "light" ? "white" : colors.subtext,
+                                }}
+                              >
+                                Actualizar Rol
+                              </Button>
+                            </Flex>
+                          </Box>
+                        </Box>
+                      );
+                    };
+                    return <RowWithHover key={u.idUsuario} />;
+                  })
                 )}
-              </tbody>
-            </table>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Vista de cards para móvil/tablet */}
+          <Box display={{ base: "block", lg: "none" }}>
+            {usuariosFiltrados.length === 0 && !loadingUsuarios ? (
+              <Box
+                textAlign="center"
+                p={8}
+                color={colors.subtext}
+                fontSize="sm"
+              >
+                No hay usuarios para mostrar
+              </Box>
+            ) : (
+              <Stack gap={4}>
+                {usuariosFiltrados.map((u) => {
+                  return (
+                    <Box
+                      key={u.idUsuario}
+                      p={4}
+                      bg={colors.bg}
+                      borderWidth="1px"
+                      borderColor={colors.border}
+                      borderRadius="md"
+                      boxShadow="sm"
+                    >
+                      <Flex justify="space-between" align="start" mb={3} wrap="wrap" gap={2}>
+                        <Box>
+                          <Text fontSize="lg" fontWeight="bold" color={colors.gold} mb={1}>
+                            {u.persona?.nombre || "-"} {u.persona?.apellido || ""}
+                          </Text>
+                          <Text fontSize="sm" color={colors.subtext}>
+                            ID: {u.idUsuario}
+                          </Text>
+                        </Box>
+                        <Box textAlign="right">
+                          <Text fontSize="sm" fontWeight="bold" color={colors.gold}>
+                            {u.rol}
+                          </Text>
+                          <Text fontSize="xs" color={colors.subtext}>
+                            {u.estado}
+                          </Text>
+                        </Box>
+                      </Flex>
+
+                      <Stack gap={2} mb={4}>
+                        <Box>
+                          <Text fontSize="xs" color={colors.subtext} mb={0.5}>
+                            Correo
+                          </Text>
+                          <Text fontSize="sm" color={colors.text} fontWeight="medium">
+                            {u.correo}
+                          </Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" color={colors.subtext} mb={0.5}>
+                            Teléfono
+                          </Text>
+                          <Text fontSize="sm" color={colors.text} fontWeight="medium">
+                            {u.persona?.telefono || "-"}
+                          </Text>
+                        </Box>
+                      </Stack>
+
+                      <Flex gap={2} wrap="wrap">
+                        <Button
+                          size="sm"
+                          bg={colors.gold}
+                          color={colors.bg}
+                          onClick={() => cambiarEstado(u.idUsuario, u.estado)}
+                          _hover={{ 
+                            bg: "#b8941f",
+                            transform: "scale(1.05)"
+                          }}
+                          transition="all 0.2s"
+                          fontWeight="semibold"
+                          flex="1"
+                          minW="120px"
+                        >
+                          Cambiar Estado
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          borderColor={colors.border}
+                          color={colors.subtext}
+                          onClick={() => cambiarRol(u.idUsuario, u.rol)}
+                          _hover={{
+                            borderColor: colors.gold,
+                            color: colors.gold,
+                            bg: "transparent"
+                          }}
+                          transition="all 0.2s"
+                          flex="1"
+                          minW="120px"
+                        >
+                          Actualizar Rol
+                        </Button>
+                      </Flex>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
           </Box>
         </Box>
 
-        {msg && (
-          <Box bg="gray.900" borderColor="gray.700" borderWidth="1px" p={3} borderRadius="md" color="gray.200">{msg}</Box>
+        {/* Notificaciones */}
+        {notification && (
+          <Box
+            position="fixed"
+            top={{ base: "10px", md: "20px" }}
+            right={{ base: "10px", md: "20px" }}
+            left={{ base: "10px", md: "auto" }}
+            zIndex={1000}
+            maxW={{ base: "calc(100% - 20px)", md: "400px" }}
+            w={{ base: "auto", md: "400px" }}
+            p={4}
+            borderRadius="md"
+            bg={notification.type === "success" ? "#16a34a" : notification.type === "error" ? "#dc2626" : colors.gold}
+            color="white"
+            boxShadow={`0 4px 12px ${notification.type === "success" ? "#16a34a40" : notification.type === "error" ? "#dc262640" : `${colors.gold}40`}`}
+            borderLeft="4px solid"
+            borderLeftColor={notification.type === "success" ? "#22c55e" : notification.type === "error" ? "#ef4444" : "#b8941f"}
+          >
+            <Flex justify="space-between" align="start" gap={3}>
+              <Box flex="1">
+                <Text fontWeight="bold" fontSize="md" mb={notification.description ? 1 : 0}>
+                  {notification.title}
+                </Text>
+                {notification.description && (
+                  <Text fontSize="sm" opacity={0.9}>
+                    {notification.description}
+                  </Text>
+                )}
+              </Box>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => setNotification(null)}
+                color="white"
+                _hover={{ bg: "rgba(255,255,255,0.2)" }}
+                p={1}
+                minW="auto"
+                h="auto"
+              >
+                ×
+              </Button>
+            </Flex>
+          </Box>
         )}
       </Stack>
     </DashboardShell>
   );
 }
-
-
