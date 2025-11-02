@@ -33,6 +33,7 @@ export default function HabitacionesPage() {
   // Filtros
   const [floorFilter, setFloorFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("active");
 
   // Paginación
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -73,7 +74,10 @@ export default function HabitacionesPage() {
   const load = async () => {
     setLoading(true);
     try {
-    const resp = await apiGet<Room[]>(`/rooms`, token);
+      // Si el filtro incluye inactivas (all o inactive), solicitar todas las habitaciones
+      const includeInactive = statusFilter === "all" || statusFilter === "inactive";
+      const url = includeInactive ? `/rooms?includeInactive=true` : `/rooms`;
+      const resp = await apiGet<Room[]>(url, token);
       if (resp.success && resp.data) {
         setRooms(resp.data);
         showNotification("success", "Habitaciones cargadas");
@@ -83,27 +87,38 @@ export default function HabitacionesPage() {
     } catch (error: any) {
       showNotification("error", "Error", error?.message || "Error al cargar habitaciones");
     } finally {
-    setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Recargar habitaciones cuando cambie el filtro de estado
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
   // Filtrar habitaciones según los filtros seleccionados
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
       const matchesFloor = floorFilter === "all" || room.floor?.toString() === floorFilter;
       const matchesType = typeFilter === "all" || room.type === typeFilter;
-      return matchesFloor && matchesType;
+      const matchesStatus = 
+        statusFilter === "all" || 
+        (statusFilter === "active" && room.isActive === true) ||
+        (statusFilter === "inactive" && room.isActive === false);
+      return matchesFloor && matchesType && matchesStatus;
     });
-  }, [rooms, floorFilter, typeFilter]);
+  }, [rooms, floorFilter, typeFilter, statusFilter]);
 
-  // Determinar si hay filtros activos
+  // Determinar si hay filtros activos (excluyendo el filtro de estado por defecto)
   const hasFilters = useMemo(() => {
-    return floorFilter !== "all" || typeFilter !== "all";
-  }, [floorFilter, typeFilter]);
+    return floorFilter !== "all" || typeFilter !== "all" || statusFilter !== "active";
+  }, [floorFilter, typeFilter, statusFilter]);
 
   // Items por página según si hay filtros
   const itemsPerPage = hasFilters ? 5 : 13;
@@ -114,7 +129,7 @@ export default function HabitacionesPage() {
   // Resetear a página 1 cuando cambien los filtros
   useEffect(() => {
     setCurrentPage(1);
-  }, [floorFilter, typeFilter]);
+  }, [floorFilter, typeFilter, statusFilter]);
 
   // Obtener las habitaciones de la página actual
   const paginatedRooms = useMemo(() => {
@@ -200,27 +215,47 @@ export default function HabitacionesPage() {
     }
   };
 
-  const deactivate = async (id: string, roomNumber?: string) => {
+  const toggleActive = async (room: Room) => {
+    const isCurrentlyActive = room.isActive === true;
+    const action = isCurrentlyActive ? "desactivar" : "activar";
+    const actionPast = isCurrentlyActive ? "desactivada" : "activada";
+    
     if (
       !confirm(
-        "¿Está seguro de que desea desactivar esta habitación? (La habitación se ocultará pero no se eliminará)"
+        `¿Está seguro de que desea ${action} esta habitación?`
       )
     )
       return;
 
     try {
-      const resp = roomNumber
-        ? await apiDelete<Room>(`/rooms/number/${roomNumber}`, token)
-        : await apiDelete<Room>(`/rooms/${id}`, token);
+      // Si está activa, usar DELETE para desactivar (comportamiento original)
+      if (isCurrentlyActive) {
+        const resp = room.number
+          ? await apiDelete<Room>(`/rooms/number/${room.number}`, token)
+          : await apiDelete<Room>(`/rooms/${room._id}`, token);
 
-      if (resp.success) {
-        showNotification("success", "Habitación desactivada");
-        await load();
+        if (resp.success) {
+          showNotification("success", `Habitación ${actionPast}`);
+          await load();
+        } else {
+          showNotification("error", "Error", resp.message || `Error al ${action}`);
+        }
       } else {
-        showNotification("error", "Error", resp.message || "Error al desactivar");
+        // Si está desactivada, usar PUT para activar
+        const body = { isActive: true };
+        const resp = room.number
+          ? await apiPut<Room, typeof body>(`/rooms/number/${room.number}`, body, token)
+          : await apiPut<Room, typeof body>(`/rooms/${room._id}`, body, token);
+
+        if (resp.success) {
+          showNotification("success", `Habitación ${actionPast}`);
+          await load();
+        } else {
+          showNotification("error", "Error", resp.message || `Error al ${action}`);
+        }
       }
     } catch (e: any) {
-      showNotification("error", "Error", e?.message || "Error desconocido");
+      showNotification("error", "Error", e?.message || `Error desconocido al ${action}`);
     }
   };
 
@@ -268,8 +303,10 @@ export default function HabitacionesPage() {
           <RoomFilters
             floorFilter={floorFilter}
             typeFilter={typeFilter}
+            statusFilter={statusFilter}
             onFloorChange={setFloorFilter}
             onTypeChange={setTypeFilter}
+            onStatusChange={setStatusFilter}
           />
 
           <Flex gap={3} align="end">
@@ -501,8 +538,8 @@ export default function HabitacionesPage() {
                                 variant="outline"
                                 borderColor={colors.border}
                                 color={isHovered && mode === "light" ? "white" : colors.subtext}
-                                onClick={() => deactivate(r._id, r.number)}
-                                _hover={{ 
+                                onClick={() => toggleActive(r)}
+                                _hover={{
                                   borderColor: mode === "light" ? "white" : colors.gold,
                                   color: mode === "light" ? "white" : colors.gold,
                                   bg: "transparent"
@@ -513,7 +550,7 @@ export default function HabitacionesPage() {
                                   color: isHovered && mode === "light" ? "white" : colors.subtext,
                                 }}
                               >
-                                Desactivar
+                                {r.isActive === true ? "Desactivar" : "Activar"}
                               </Button>
                               <Button
                                 size="xs"

@@ -6,8 +6,10 @@ import { useThemeMode } from "@/components/theme/ThemeProvider";
 interface RoomFiltersProps {
   floorFilter: string;
   typeFilter: string;
+  statusFilter: string;
   onFloorChange: (value: string) => void;
   onTypeChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
 }
 
 const typeToEs: Record<string, string> = { 
@@ -20,8 +22,10 @@ const typeToEs: Record<string, string> = {
 export function RoomFilters({
   floorFilter,
   typeFilter,
+  statusFilter,
   onFloorChange,
   onTypeChange,
+  onStatusChange,
 }: RoomFiltersProps) {
   const { colors } = useThemeMode();
   
@@ -113,6 +117,50 @@ export function RoomFilters({
           </option>
           <option value="suite" style={{ backgroundColor: colors.surface, color: colors.text }}>
             {typeToEs.suite}
+          </option>
+        </select>
+      </Box>
+
+      <Box>
+        <Text color={colors.gold} mb={1} fontSize="sm" fontWeight="semibold">
+          Estado de Habitación
+        </Text>
+        <select
+          value={statusFilter}
+          onChange={(e) => onStatusChange(e.target.value)}
+          style={{
+            width: '180px',
+            backgroundColor: colors.surface,
+            color: colors.text,
+            borderRadius: '6px',
+            padding: '8px',
+            border: `1px solid ${colors.border}`,
+            fontSize: '14px',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = colors.gold;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = colors.border;
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = colors.gold;
+            e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = colors.border;
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          <option value="all" style={{ backgroundColor: colors.surface, color: colors.text }}>
+            Todas
+          </option>
+          <option value="active" style={{ backgroundColor: colors.surface, color: colors.text }}>
+            Activas
+          </option>
+          <option value="inactive" style={{ backgroundColor: colors.surface, color: colors.text }}>
+            Desactivadas
           </option>
         </select>
       </Box>
