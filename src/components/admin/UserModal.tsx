@@ -27,6 +27,7 @@ interface UserModalProps {
   formData: UserFormData;
   onFormChange: (field: keyof UserFormData, value: any) => void;
   isLoading?: boolean;
+  isEditMode?: boolean;
 }
 
 export function UserModal({
@@ -36,6 +37,7 @@ export function UserModal({
   formData,
   onFormChange,
   isLoading = false,
+  isEditMode = false,
 }: UserModalProps) {
   const { colors } = useThemeMode();
   
@@ -81,7 +83,7 @@ export function UserModal({
           gap={2}
         >
           <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={colors.gold}>
-            Crear Usuario
+            {isEditMode ? "Editar Usuario" : "Crear Usuario"}
           </Text>
           <Button
             variant="ghost"
@@ -176,7 +178,7 @@ export function UserModal({
 
             <Box>
               <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                Contraseña *
+                Contraseña {isEditMode ? "(Dejar vacío para no cambiar)" : "*"}
               </Text>
               <Input
                 type="password"
@@ -185,7 +187,7 @@ export function UserModal({
                 bg={colors.bg}
                 color={colors.text}
                 borderColor={colors.border}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={isEditMode ? "Dejar vacío para mantener la actual" : "Mínimo 6 caracteres"}
                 _hover={{ borderColor: colors.gold }}
                 _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
                 _placeholder={{ color: colors.subtext }}
@@ -307,7 +309,7 @@ export function UserModal({
                 boxShadow={`0 2px 8px ${colors.gold}50`}
                 w={{ base: "100%", md: "auto" }}
               >
-                {isLoading ? "Creando..." : "Crear Usuario"}
+                {isLoading ? (isEditMode ? "Actualizando..." : "Creando...") : (isEditMode ? "Actualizar Usuario" : "Crear Usuario")}
               </Button>
             </Flex>
           </Stack>

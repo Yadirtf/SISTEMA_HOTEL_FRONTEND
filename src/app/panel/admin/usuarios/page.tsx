@@ -3,7 +3,7 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
-import { apiGet, apiPatch, apiPost } from "@/lib/api";
+import { apiGet, apiPatch, apiPost, apiPut } from "@/lib/api";
 import { getSessionUser, getToken } from "@/lib/session";
 import { useRouter } from "next/navigation";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
@@ -33,6 +33,8 @@ export default function AdminUsuariosPage() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
     correo: "",
     contrasena: "",
@@ -113,6 +115,8 @@ export default function AdminUsuariosPage() {
   };
 
   const openCreateModal = () => {
+    setIsEditMode(false);
+    setEditingUserId(null);
     setFormData({
       correo: "",
       contrasena: "",
@@ -125,8 +129,25 @@ export default function AdminUsuariosPage() {
     setIsModalOpen(true);
   };
 
+  const openEditModal = (usuario: UsuarioListItem) => {
+    setIsEditMode(true);
+    setEditingUserId(usuario.idUsuario);
+    setFormData({
+      correo: usuario.correo,
+      contrasena: "", // Contraseña vacía para edición
+      nombre: usuario.persona?.nombre || "",
+      apellido: usuario.persona?.apellido || "",
+      telefono: usuario.persona?.telefono || "",
+      rol: usuario.rol as "Administrador" | "Recepcionista",
+      estado: usuario.estado as "Activo" | "Inactivo",
+    });
+    setIsModalOpen(true);
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditingUserId(null);
     setFormData({
       correo: "",
       contrasena: "",
@@ -145,16 +166,34 @@ export default function AdminUsuariosPage() {
   const submit = async () => {
     setIsSubmitting(true);
     try {
-      const resp = await apiPost<any, UserFormData>(`/auth/usuarios`, formData, token);
-      if (resp.success) {
-        showNotification("success", "Usuario creado", resp.message || "Usuario creado exitosamente");
-        closeModal();
-        await cargarUsuarios();
+      if (isEditMode && editingUserId) {
+        // Modo edición: hacer PUT
+        // Si la contraseña está vacía, no incluirla en el request
+        const updateData: Partial<UserFormData> = { ...formData };
+        if (!updateData.contrasena || updateData.contrasena.trim() === "") {
+          delete updateData.contrasena;
+        }
+        const resp = await apiPut<any, Partial<UserFormData>>(`/auth/usuarios/${editingUserId}`, updateData, token);
+        if (resp.success) {
+          showNotification("success", "Usuario actualizado", resp.message || "Usuario actualizado exitosamente");
+          closeModal();
+          await cargarUsuarios();
+        } else {
+          showNotification("error", "Error", resp.message || "Error al actualizar usuario");
+        }
       } else {
-        showNotification("error", "Error", resp.message || "Error al crear usuario");
+        // Modo creación: hacer POST
+        const resp = await apiPost<any, UserFormData>(`/auth/usuarios`, formData, token);
+        if (resp.success) {
+          showNotification("success", "Usuario creado", resp.message || "Usuario creado exitosamente");
+          closeModal();
+          await cargarUsuarios();
+        } else {
+          showNotification("error", "Error", resp.message || "Error al crear usuario");
+        }
       }
     } catch (e: any) {
-      showNotification("error", "Error", e?.message || "Error desconocido al crear usuario");
+      showNotification("error", "Error", e?.message || (isEditMode ? "Error desconocido al actualizar usuario" : "Error desconocido al crear usuario"));
     } finally {
       setIsSubmitting(false);
     }
@@ -432,6 +471,23 @@ export default function AdminUsuariosPage() {
                                 size="xs"
                                 bg={colors.gold}
                                 color={colors.bg}
+                                onClick={() => openEditModal(u)}
+                                _hover={{ 
+                                  bg: "#b8941f",
+                                  transform: "scale(1.05)"
+                                }}
+                                transition="all 0.2s"
+                                fontWeight="semibold"
+                                borderWidth={isHovered && mode === "light" ? "1px" : "0px"}
+                                borderColor={isHovered && mode === "light" ? "white" : "transparent"}
+                                borderStyle="solid"
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                size="xs"
+                                bg={colors.gold}
+                                color={colors.bg}
                                 onClick={() => cambiarEstado(u.idUsuario, u.estado)}
                                 _hover={{ 
                                   bg: "#b8941f",
@@ -543,6 +599,22 @@ export default function AdminUsuariosPage() {
                           size="sm"
                           bg={colors.gold}
                           color={colors.bg}
+                          onClick={() => openEditModal(u)}
+                          _hover={{ 
+                            bg: "#b8941f",
+                            transform: "scale(1.05)"
+                          }}
+                          transition="all 0.2s"
+                          fontWeight="semibold"
+                          flex="1"
+                          minW="120px"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          size="sm"
+                          bg={colors.gold}
+                          color={colors.bg}
                           onClick={() => cambiarEstado(u.idUsuario, u.estado)}
                           _hover={{ 
                             bg: "#b8941f",
@@ -626,7 +698,7 @@ export default function AdminUsuariosPage() {
           </Box>
         )}
 
-        {/* Modal de creación de usuario */}
+        {/* Modal de creación/edición de usuario */}
         <UserModal
           isOpen={isModalOpen}
           onClose={closeModal}
@@ -634,6 +706,7 @@ export default function AdminUsuariosPage() {
           formData={formData}
           onFormChange={handleFormChange}
           isLoading={isSubmitting}
+          isEditMode={isEditMode}
         />
       </Stack>
     </DashboardShell>
