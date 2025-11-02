@@ -24,13 +24,26 @@ export function DashboardShell({ title, children }: { title: string; children: R
 
   return (
     <Flex minH="100vh" bg={colors.bg}>
-      <Box display={{ base: open ? "block" : "none", md: "block" }} pos={{ base: "fixed", md: "relative" }} inset={{ base: 0, md: "auto" }} zIndex={20} w={{ base: "75%", md: "auto" }}>
+      <Box 
+        display={{ base: open ? "block" : "none", md: "block" }} 
+        pos="fixed" 
+        top={0}
+        left={0}
+        bottom={0}
+        zIndex={20} 
+        w={{ base: "75%", md: "256px" }}
+        overflowY="auto"
+      >
         <Sidebar />
       </Box>
       {open && (
         <Box onClick={() => setOpen(false)} display={{ base: "block", md: "none" }} pos="fixed" inset={0} bg="rgba(0,0,0,0.35)" zIndex={10} />
       )}
-      <Box flex="1" color={colors.text}>
+      <Box 
+        flex="1" 
+        color={colors.text}
+        ml={{ base: 0, md: "256px" }}
+      >
         <TopBar title={title} onOpenMenu={() => setOpen(true)} />
         <Box p={6}>{children}</Box>
       </Box>

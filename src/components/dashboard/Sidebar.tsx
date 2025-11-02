@@ -38,13 +38,14 @@ export function Sidebar() {
   return (
     <Box
       as="nav"
-      w={{ base: "full", md: 64 }}
+      w="full"
+      h="100vh"
       bg={colors.surface}
       color={colors.text}
-      borderRightWidth={{ base: 0, md: "1px" }}
+      borderRightWidth="1px"
       borderColor={colors.border}
-      minH={{ base: "auto", md: "100vh" }}
       p={4}
+      overflowY="auto"
     >
       <Text fontWeight="bold" letterSpacing="wide" mb={6} color={colors.text}>
         Sistema Hotel
