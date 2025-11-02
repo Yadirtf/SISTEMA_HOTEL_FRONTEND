@@ -76,24 +76,27 @@ export function RoomModal({
         bg={colors.surface}
         color={colors.text}
         borderRadius="lg"
-        w="90%"
+        w={{ base: "95%", md: "90%" }}
         maxW="600px"
         maxH="90vh"
         overflowY="auto"
         boxShadow={`0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 2px ${colors.border}`}
         onClick={(e) => e.stopPropagation()}
+        m={{ base: 2, md: 0 }}
       >
         {/* Header */}
         <Box
-          p={6}
+          p={{ base: 4, md: 6 }}
           borderBottom="2px"
           borderColor={colors.border}
           display="flex"
           justifyContent="space-between"
           alignItems="center"
           bg={colors.bg}
+          flexWrap="wrap"
+          gap={2}
         >
-          <Text fontSize="xl" fontWeight="bold" color={colors.gold}>
+          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={colors.gold}>
             {isEditing ? "Editar Habitación" : "Registrar Habitación"}
           </Text>
           <Button
@@ -112,10 +115,10 @@ export function RoomModal({
         </Box>
 
         {/* Body */}
-        <Box p={6}>
+        <Box p={{ base: 4, md: 6 }}>
           <Stack gap={5}>
             <Flex gap={4} flexWrap="wrap">
-              <Box flex="1" minW="200px">
+              <Box flex="1" minW={{ base: "100%", md: "200px" }}>
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Número de Habitación *
                 </Text>
@@ -132,7 +135,7 @@ export function RoomModal({
                 />
               </Box>
 
-              <Box flex="1" minW="200px">
+              <Box flex="1" minW={{ base: "100%", md: "200px" }}>
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Tipo de Habitación *
                 </Text>
@@ -178,7 +181,7 @@ export function RoomModal({
             </Flex>
 
             <Flex gap={4} flexWrap="wrap">
-              <Box flex="1" minW="200px">
+              <Box flex="1" minW={{ base: "100%", md: "200px" }}>
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Precio por Noche *
                 </Text>
@@ -198,7 +201,7 @@ export function RoomModal({
                 />
               </Box>
 
-              <Box flex="1" minW="200px">
+              <Box flex="1" minW={{ base: "100%", md: "200px" }}>
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Piso *
                 </Text>
@@ -218,7 +221,7 @@ export function RoomModal({
                 />
               </Box>
 
-              <Box flex="1" minW="200px">
+              <Box flex="1" minW={{ base: "100%", md: "200px" }}>
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Capacidad Máxima *
                 </Text>
@@ -238,7 +241,7 @@ export function RoomModal({
                 />
               </Box>
 
-              <Box flex="1" minW="200px">
+              <Box flex="1" minW={{ base: "100%", md: "200px" }}>
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Estado *
                 </Text>
@@ -305,7 +308,7 @@ export function RoomModal({
               />
             </Box>
 
-            <Flex gap={3} justify="flex-end" pt={2}>
+            <Flex gap={3} justify="flex-end" pt={2} direction={{ base: "column", md: "row" }}>
               <Button
                 variant="outline"
                 onClick={onClose}
@@ -313,6 +316,7 @@ export function RoomModal({
                 color={colors.subtext}
                 _hover={{ bg: colors.surface, borderColor: colors.gold, color: colors.gold }}
                 transition="all 0.2s"
+                w={{ base: "100%", md: "auto" }}
               >
                 Cancelar
               </Button>
@@ -333,6 +337,7 @@ export function RoomModal({
                 transition="all 0.2s"
                 fontWeight="bold"
                 boxShadow={`0 2px 8px ${colors.gold}50`}
+                w={{ base: "100%", md: "auto" }}
               >
                 {isLoading ? (isEditing ? "Actualizando..." : "Registrando...") : (isEditing ? "Actualizar" : "Registrar")}
               </Button>

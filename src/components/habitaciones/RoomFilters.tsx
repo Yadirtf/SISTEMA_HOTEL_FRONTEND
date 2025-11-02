@@ -30,8 +30,14 @@ export function RoomFilters({
   const { colors } = useThemeMode();
   
   return (
-    <Flex gap={4} align="end" flexWrap="wrap">
-      <Box>
+    <Flex 
+      gap={4} 
+      align="end" 
+      flexWrap="wrap"
+      direction={{ base: "column", md: "row" }}
+      w={{ base: "100%", md: "auto" }}
+    >
+      <Box w={{ base: "100%", md: "auto" }}>
         <Text color={colors.gold} mb={1} fontSize="sm" fontWeight="semibold">
           Filtrar por Piso
         </Text>
@@ -39,7 +45,8 @@ export function RoomFilters({
           value={floorFilter}
           onChange={(e) => onFloorChange(e.target.value)}
           style={{
-            width: '180px',
+            width: '100%',
+            minWidth: '180px',
             backgroundColor: colors.surface,
             color: colors.text,
             borderRadius: '6px',
@@ -74,7 +81,7 @@ export function RoomFilters({
         </select>
       </Box>
       
-      <Box>
+      <Box w={{ base: "100%", md: "auto" }}>
         <Text color={colors.gold} mb={1} fontSize="sm" fontWeight="semibold">
           Filtrar por Tipo
         </Text>
@@ -82,7 +89,8 @@ export function RoomFilters({
           value={typeFilter}
           onChange={(e) => onTypeChange(e.target.value)}
           style={{
-            width: '180px',
+            width: '100%',
+            minWidth: '180px',
             backgroundColor: colors.surface,
             color: colors.text,
             borderRadius: '6px',
@@ -121,7 +129,7 @@ export function RoomFilters({
         </select>
       </Box>
 
-      <Box>
+      <Box w={{ base: "100%", md: "auto" }}>
         <Text color={colors.gold} mb={1} fontSize="sm" fontWeight="semibold">
           Estado de Habitación
         </Text>
@@ -129,7 +137,8 @@ export function RoomFilters({
           value={statusFilter}
           onChange={(e) => onStatusChange(e.target.value)}
           style={{
-            width: '180px',
+            width: '100%',
+            minWidth: '180px',
             backgroundColor: colors.surface,
             color: colors.text,
             borderRadius: '6px',

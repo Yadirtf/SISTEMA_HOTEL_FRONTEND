@@ -87,7 +87,7 @@ export default function HabitacionesPage() {
     } catch (error: any) {
       showNotification("error", "Error", error?.message || "Error al cargar habitaciones");
     } finally {
-      setLoading(false);
+    setLoading(false);
     }
   };
 
@@ -293,7 +293,7 @@ export default function HabitacionesPage() {
           align={{ base: "stretch", md: "end" }}
           direction={{ base: "column", md: "row" }}
           gap={4}
-          p={5}
+          p={{ base: 3, md: 5 }}
           bg={colors.surface}
           borderRadius="lg"
           borderWidth="2px"
@@ -309,9 +309,14 @@ export default function HabitacionesPage() {
             onStatusChange={setStatusFilter}
           />
 
-          <Flex gap={3} align="end">
+          <Flex 
+            gap={3} 
+            align="end" 
+            direction={{ base: "column", md: "row" }}
+            w={{ base: "100%", md: "auto" }}
+          >
             <Button
-              size="sm"
+              size={{ base: "md", md: "sm" }}
               onClick={load}
               disabled={loading}
               variant="outline"
@@ -320,6 +325,7 @@ export default function HabitacionesPage() {
               bg="transparent"
               _hover={{ bg: colors.surface, borderColor: colors.gold, color: colors.gold }}
               transition="all 0.2s"
+              w={{ base: "100%", md: "auto" }}
             >
               {loading ? "Cargando..." : "Refrescar"}
             </Button>
@@ -328,7 +334,7 @@ export default function HabitacionesPage() {
               bg={colors.gold}
               color={colors.bg}
               fontWeight="bold"
-              size="md"
+              size={{ base: "md", md: "md" }}
               _hover={{ 
                 bg: "#b8941f",
                 transform: "translateY(-2px)",
@@ -336,6 +342,7 @@ export default function HabitacionesPage() {
               }}
               transition="all 0.2s"
               boxShadow={`0 2px 8px ${colors.gold}50`}
+              w={{ base: "100%", md: "auto" }}
             >
               Registrar Habitación
             </Button>
@@ -348,26 +355,31 @@ export default function HabitacionesPage() {
           borderColor={colors.border}
           borderWidth="2px"
           borderRadius="lg"
-          p={5}
+          p={{ base: 3, md: 5 }}
           boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
         >
           <Heading 
-            size="md" 
+            size={{ base: "sm", md: "md" }}
             color={colors.gold} 
             mb={4}
             borderBottom="2px solid"
             borderBottomColor={colors.border}
             pb={3}
+            fontSize={{ base: "lg", md: "xl" }}
           >
             Listado de Habitaciones
             {hasFilters && (
-              <Text as="span" color={colors.subtext} fontSize="sm" fontWeight="normal" ml={2}>
+              <Text as="span" color={colors.subtext} fontSize={{ base: "xs", md: "sm" }} fontWeight="normal" ml={2}>
                 ({filteredRooms.length} de {rooms.length})
               </Text>
             )}
           </Heading>
 
-          <Box overflowX="auto">
+          {/* Vista de tabla para desktop */}
+          <Box 
+            overflowX="auto" 
+            display={{ base: "none", lg: "block" }}
+          >
             <Box
               as="table"
               w="100%"
@@ -580,6 +592,137 @@ export default function HabitacionesPage() {
             </Box>
           </Box>
 
+          {/* Vista de cards para móvil/tablet */}
+          <Box display={{ base: "block", lg: "none" }}>
+            {paginatedRooms.length === 0 && !loading ? (
+              <Box
+                textAlign="center"
+                p={8}
+                color={colors.subtext}
+                fontSize="sm"
+              >
+                {rooms.length === 0
+                  ? "No hay habitaciones registradas"
+                  : "No hay habitaciones que coincidan con los filtros"}
+              </Box>
+            ) : (
+              <Stack gap={4}>
+                {paginatedRooms.map((r) => {
+                  return (
+                    <Box
+                      key={r._id}
+                      p={4}
+                      bg={colors.bg}
+                      borderWidth="1px"
+                      borderColor={colors.border}
+                      borderRadius="md"
+                      boxShadow="sm"
+                    >
+                      <Flex justify="space-between" align="start" mb={3} wrap="wrap" gap={2}>
+                        <Box>
+                          <Text fontSize="lg" fontWeight="bold" color={colors.gold} mb={1}>
+                            Habitación {r.number}
+                          </Text>
+                          <Text fontSize="sm" color={colors.subtext}>
+                            {typeToEs[r.type] || r.type}
+                          </Text>
+                        </Box>
+                        <Box textAlign="right">
+                          <Text fontSize="xl" fontWeight="bold" color={colors.gold}>
+                            ${r.pricePerNight.toFixed(2)}
+                          </Text>
+                          <Text fontSize="xs" color={colors.subtext}>
+                            por noche
+                          </Text>
+                        </Box>
+                      </Flex>
+
+                      <Flex gap={4} mb={4} wrap="wrap">
+                        <Box>
+                          <Text fontSize="xs" color={colors.subtext} mb={0.5}>
+                            Estado
+                          </Text>
+                          <Text fontSize="sm" color={colors.text} fontWeight="medium">
+                            {statusToEs[r.status] || r.status}
+                          </Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" color={colors.subtext} mb={0.5}>
+                            Piso
+                          </Text>
+                          <Text fontSize="sm" color={colors.text} fontWeight="medium">
+                            {r.floor ?? "-"}
+                          </Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" color={colors.subtext} mb={0.5}>
+                            Capacidad
+                          </Text>
+                          <Text fontSize="sm" color={colors.text} fontWeight="medium">
+                            {r.maxOccupancy ?? "-"} personas
+                          </Text>
+                        </Box>
+                      </Flex>
+
+                      <Flex gap={2} wrap="wrap">
+                        <Button
+                          size="sm"
+                          bg={colors.gold}
+                          color={colors.bg}
+                          onClick={() => openEditModal(r)}
+                          _hover={{ 
+                            bg: "#b8941f",
+                            transform: "scale(1.05)"
+                          }}
+                          transition="all 0.2s"
+                          fontWeight="semibold"
+                          flex="1"
+                          minW="80px"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          borderColor={colors.border}
+                          color={colors.subtext}
+                          onClick={() => toggleActive(r)}
+                          _hover={{
+                            borderColor: colors.gold,
+                            color: colors.gold,
+                            bg: "transparent"
+                          }}
+                          transition="all 0.2s"
+                          flex="1"
+                          minW="80px"
+                        >
+                          {r.isActive === true ? "Desactivar" : "Activar"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          borderColor="#dc2626"
+                          color="#dc2626"
+                          onClick={() => deletePermanent(r._id, r.number)}
+                          _hover={{ 
+                            bg: "#dc2626",
+                            color: "white",
+                            transform: "scale(1.05)"
+                          }}
+                          transition="all 0.2s"
+                          flex="1"
+                          minW="80px"
+                        >
+                          Eliminar
+                        </Button>
+                      </Flex>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Box>
+
           {/* Controles de paginación */}
           {filteredRooms.length > 0 && (
             <PaginationControls
@@ -592,14 +735,16 @@ export default function HabitacionesPage() {
           )}
         </Box>
 
-        {/* Notificaciones */}
+          {/* Notificaciones */}
         {notification && (
           <Box
             position="fixed"
-            top="20px"
-            right="20px"
+            top={{ base: "10px", md: "20px" }}
+            right={{ base: "10px", md: "20px" }}
+            left={{ base: "10px", md: "auto" }}
             zIndex={1000}
-            maxW="400px"
+            maxW={{ base: "calc(100% - 20px)", md: "400px" }}
+            w={{ base: "auto", md: "400px" }}
             p={4}
             borderRadius="md"
             bg={notification.type === "success" ? "#16a34a" : notification.type === "error" ? "#dc2626" : colors.gold}
