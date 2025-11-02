@@ -3,11 +3,12 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
-import { apiGet, apiPatch } from "@/lib/api";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { getSessionUser, getToken } from "@/lib/session";
 import { useRouter } from "next/navigation";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { UserFilters } from "@/components/admin/UserFilters";
+import { UserModal, UserFormData } from "@/components/admin/UserModal";
 
 type UsuarioListItem = {
   idUsuario: number;
@@ -28,6 +29,19 @@ export default function AdminUsuariosPage() {
   // Filtros
   const [rolFilter, setRolFilter] = useState<string>("all");
   const [estadoFilter, setEstadoFilter] = useState<string>("all");
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<UserFormData>({
+    correo: "",
+    contrasena: "",
+    nombre: "",
+    apellido: "",
+    telefono: "",
+    rol: "Recepcionista",
+    estado: "Activo",
+  });
 
   const token = getToken() || undefined;
   const sessionUser = getSessionUser();
@@ -98,6 +112,54 @@ export default function AdminUsuariosPage() {
     }
   };
 
+  const openCreateModal = () => {
+    setFormData({
+      correo: "",
+      contrasena: "",
+      nombre: "",
+      apellido: "",
+      telefono: "",
+      rol: "Recepcionista",
+      estado: "Activo",
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      correo: "",
+      contrasena: "",
+      nombre: "",
+      apellido: "",
+      telefono: "",
+      rol: "Recepcionista",
+      estado: "Activo",
+    });
+  };
+
+  const handleFormChange = (field: keyof UserFormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const submit = async () => {
+    setIsSubmitting(true);
+    try {
+      const resp = await apiPost<any, UserFormData>(`/auth/usuarios`, formData, token);
+      if (resp.success) {
+        showNotification("success", "Usuario creado", resp.message || "Usuario creado exitosamente");
+        closeModal();
+        await cargarUsuarios();
+      } else {
+        showNotification("error", "Error", resp.message || "Error al crear usuario");
+      }
+    } catch (e: any) {
+      showNotification("error", "Error", e?.message || "Error desconocido al crear usuario");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const usuariosFiltrados = useMemo(() => {
     return usuarios.filter((u) => {
       const matchesSession = sessionUser ? u.idUsuario !== sessionUser.idUsuario : true;
@@ -154,6 +216,23 @@ export default function AdminUsuariosPage() {
               w={{ base: "100%", md: "auto" }}
             >
               {loadingUsuarios ? "Cargando..." : "Refrescar"}
+            </Button>
+            <Button
+              onClick={openCreateModal}
+              bg={colors.gold}
+              color={colors.bg}
+              fontWeight="bold"
+              size={{ base: "md", md: "md" }}
+              _hover={{ 
+                bg: "#b8941f",
+                transform: "translateY(-2px)",
+                boxShadow: `0 4px 12px ${colors.gold}40`
+              }}
+              transition="all 0.2s"
+              boxShadow={`0 2px 8px ${colors.gold}50`}
+              w={{ base: "100%", md: "auto" }}
+            >
+              Crear Usuario
             </Button>
           </Flex>
         </Flex>
@@ -546,6 +625,16 @@ export default function AdminUsuariosPage() {
             </Flex>
           </Box>
         )}
+
+        {/* Modal de creación de usuario */}
+        <UserModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onSubmit={submit}
+          formData={formData}
+          onFormChange={handleFormChange}
+          isLoading={isSubmitting}
+        />
       </Stack>
     </DashboardShell>
   );

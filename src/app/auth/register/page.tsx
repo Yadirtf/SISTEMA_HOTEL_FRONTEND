@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { Box, Button, Container, Field, Heading, Input, Link, Stack, Text, Flex } from "@chakra-ui/react";
 import NextLink from "next/link";
 
@@ -22,6 +22,29 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPass, setShowPass] = useState(false);
+  const [isRegisterAvailable, setIsRegisterAvailable] = useState<boolean | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
+
+  // Verificar si el registro está disponible
+  useEffect(() => {
+    const checkRegisterAvailability = async () => {
+      setIsChecking(true);
+      try {
+        const resp = await apiGet<{ available: boolean }>("/auth/register/available");
+        if (resp.success && resp.data) {
+          setIsRegisterAvailable(resp.data.available);
+        } else {
+          setIsRegisterAvailable(false);
+        }
+      } catch (err) {
+        setIsRegisterAvailable(false);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkRegisterAvailability();
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,23 +64,81 @@ export default function RegisterPage() {
 
       if (!resp || resp.success === false || !resp.data) {
         setErrorMsg(resp?.message || "No se pudo registrar");
+        // Si el error indica que el registro está desactivado, actualizar el estado
+        if (resp?.message?.includes("desactivado")) {
+          setIsRegisterAvailable(false);
+        }
         return;
       }
 
+      // Después de registrar exitosamente, verificar de nuevo la disponibilidad
+      setIsRegisterAvailable(false);
       router.push("/auth/login");
-    } catch (err) {
-      setErrorMsg("No se pudo registrar");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "No se pudo registrar");
+      // Si hay una excepción, asumir que el registro podría estar desactivado
+      setIsRegisterAvailable(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Mostrar mensaje de carga mientras verifica
+  if (isChecking) {
+    return (
+      <Box minH="100vh" bgGradient="linear(to-br, blue.50, purple.50)" py={{ base: 10, md: 16 }}>
+        <Flex direction="column" align="center" justify="center">
+          <Container maxW="md">
+            <Box borderWidth="1px" borderRadius="lg" p={{ base: 6, md: 8 }} boxShadow="lg" bg="white" textAlign="center">
+              <Text color="gray.600">Verificando disponibilidad...</Text>
+            </Box>
+          </Container>
+        </Flex>
+      </Box>
+    );
+  }
+
+  // Si el registro no está disponible, mostrar mensaje
+  if (isRegisterAvailable === false) {
+    return (
+      <Box minH="100vh" bgGradient="linear(to-br, blue.50, purple.50)" py={{ base: 10, md: 16 }}>
+        <Flex direction="column" align="center" justify="center">
+          <Box textAlign="center" mb={8} px={4}>
+            <Heading size="lg">Registro Desactivado</Heading>
+          </Box>
+          <Container maxW="md">
+            <Box borderWidth="1px" borderRadius="lg" p={{ base: 6, md: 8 }} boxShadow="lg" bg="white">
+              <Stack gap={5}>
+                <Box bg="yellow.50" color="yellow.800" borderWidth="1px" borderColor="yellow.200" borderRadius="md" p={4}>
+                  <Text fontWeight="semibold" mb={2}>
+                    El registro público ha sido desactivado
+                  </Text>
+                  <Text fontSize="sm">
+                    El sistema ya ha sido inicializado. Para crear una cuenta, contacte al administrador del sistema.
+                  </Text>
+                </Box>
+                <Button
+                  as={NextLink}
+                  href="/auth/login"
+                  colorScheme="blue"
+                  w="full"
+                >
+                  Volver al Inicio de Sesión
+                </Button>
+              </Stack>
+            </Box>
+          </Container>
+        </Flex>
+      </Box>
+    );
+  }
+
   return (
     <Box minH="100vh" bgGradient="linear(to-br, blue.50, purple.50)" py={{ base: 10, md: 16 }}>
       <Flex direction="column" align="center" justify="center">
         <Box textAlign="center" mb={8} px={4}>
-          <Heading size="lg">Crear cuenta</Heading>
-          <Text color="gray.600">Regístrate para comenzar</Text>
+          <Heading size="lg">Crear cuenta de Administrador</Heading>
+          <Text color="gray.600">Primer registro del sistema - Se asignará rol de Administrador</Text>
         </Box>
         <Container maxW="md">
           <Box as="form" onSubmit={onSubmit} borderWidth="1px" borderRadius="lg" p={{ base: 6, md: 8 }} boxShadow="lg" bg="white">
