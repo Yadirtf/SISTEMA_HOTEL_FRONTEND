@@ -9,13 +9,20 @@ import { getSessionUser, clearSession } from "@/lib/session";
 const GOLD = "#d4af37";
 const BLACK = "#0b0b0b";
 
-type NavItem = { label: string; href: string };
+type NavItem = { label: string; href: string; subItems?: { label: string; href: string }[] };
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Panel", href: "/panel" },
   { label: "Reservas", href: "/reservas" },
   { label: "Huéspedes", href: "/huespedes" },
-  { label: "Habitaciones", href: "/habitaciones" },
+  { 
+    label: "Gestionar habitaciones", 
+    href: "/habitaciones",
+    subItems: [
+      { label: "Crear habitación", href: "/habitaciones" },
+      { label: "Crear tipo", href: "/habitaciones/crear-tipo" }
+    ]
+  },
 ];
 
 export function Sidebar() {
@@ -26,14 +33,17 @@ export function Sidebar() {
   const user = getSessionUser();
   const isAdmin = user?.rol === "Administrador";
   const isAdminSection = pathname.startsWith("/panel/admin");
+  const isHabitacionesSection = pathname.startsWith("/habitaciones");
   // Evitar mismatch SSR/CSR: hidratar y luego decidir render condicional
   const [hydrated, setHydrated] = React.useState(false);
   const [adminOpen, setAdminOpen] = React.useState<boolean>(false);
+  const [habitacionesOpen, setHabitacionesOpen] = React.useState<boolean>(false);
   React.useEffect(() => {
     setHydrated(true);
     setAdminOpen(isAdminSection);
+    setHabitacionesOpen(isHabitacionesSection);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdminSection]);
+  }, [isAdminSection, isHabitacionesSection]);
 
   const logout = () => {
     clearSession();
@@ -59,7 +69,53 @@ export function Sidebar() {
       </Text>
       <Stack gap={2} flex="1">
         {[...NAV_ITEMS].map((item) => {
-          const active = pathname === item.href;
+          const active = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
+          const hasSubItems = item.subItems && item.subItems.length > 0;
+          
+          if (hasSubItems) {
+            const isOpen = item.label === "Gestionar habitaciones" ? habitacionesOpen : false;
+            const isSection = item.label === "Gestionar habitaciones" ? isHabitacionesSection : false;
+            
+            return (
+              <React.Fragment key={item.href}>
+                <Button
+                  onClick={() => {
+                    if (item.label === "Gestionar habitaciones") {
+                      setHabitacionesOpen((v) => !v);
+                    }
+                  }}
+                  justifyContent="flex-start"
+                  variant="ghost"
+                  bg={isSection ? "rgba(212,175,55,0.16)" : "transparent"}
+                  _hover={{ bg: "rgba(212,175,55,0.22)" }}
+                  color={colors.text}
+                >
+                  {item.label}
+                </Button>
+                {item.label === "Gestionar habitaciones" && isOpen && item.subItems && (
+                  <Stack pl={4} gap={1}>
+                    {item.subItems.map((subItem) => {
+                      const subActive = pathname === subItem.href;
+                      return (
+                        <Button
+                          key={subItem.href}
+                          onClick={() => router.push(subItem.href)}
+                          justifyContent="flex-start"
+                          variant="ghost"
+                          bg={subActive ? "rgba(212,175,55,0.16)" : "transparent"}
+                          _hover={{ bg: "rgba(212,175,55,0.22)" }}
+                          color={colors.text}
+                        >
+                          {subItem.label}
+                        </Button>
+                      );
+                    })}
+                  </Stack>
+                )}
+              </React.Fragment>
+            );
+          }
+          
           return (
             <Button
               key={item.href}

@@ -22,7 +22,10 @@ export async function apiPost<TResponse, TBody = unknown>(path: string, body: TB
   if (!res.ok) {
     try {
       const errJson = await res.json();
-      return errJson as Caja<TResponse>;
+      // NestJS devuelve errores en formato { statusCode, message, error }
+      // Extraer el mensaje si está disponible
+      const message = errJson.message || errJson.error || `HTTP ${res.status}`;
+      return { success: false, message, data: undefined as unknown as TResponse } as Caja<TResponse>;
     } catch {
       const errText = await res.text().catch(() => "");
       return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
@@ -51,7 +54,10 @@ export async function apiGet<TResponse>(path: string, token?: string): Promise<C
   if (!res.ok) {
     try {
       const errJson = await res.json();
-      return errJson as Caja<TResponse>;
+      // NestJS devuelve errores en formato { statusCode, message, error }
+      // Extraer el mensaje si está disponible
+      const message = errJson.message || errJson.error || `HTTP ${res.status}`;
+      return { success: false, message, data: undefined as unknown as TResponse } as Caja<TResponse>;
     } catch {
       const errText = await res.text().catch(() => "");
       return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
@@ -81,7 +87,10 @@ export async function apiPatch<TResponse, TBody = unknown>(path: string, body: T
   if (!res.ok) {
     try {
       const errJson = await res.json();
-      return errJson as Caja<TResponse>;
+      // NestJS devuelve errores en formato { statusCode, message, error }
+      // Extraer el mensaje si está disponible
+      const message = errJson.message || errJson.error || `HTTP ${res.status}`;
+      return { success: false, message, data: undefined as unknown as TResponse } as Caja<TResponse>;
     } catch {
       const errText = await res.text().catch(() => "");
       return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
@@ -111,7 +120,10 @@ export async function apiPut<TResponse, TBody = unknown>(path: string, body: TBo
   if (!res.ok) {
     try {
       const errJson = await res.json();
-      return errJson as Caja<TResponse>;
+      // NestJS devuelve errores en formato { statusCode, message, error }
+      // Extraer el mensaje si está disponible
+      const message = errJson.message || errJson.error || `HTTP ${res.status}`;
+      return { success: false, message, data: undefined as unknown as TResponse } as Caja<TResponse>;
     } catch {
       const errText = await res.text().catch(() => "");
       return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;
@@ -142,7 +154,10 @@ export async function apiDelete<TResponse>(path: string, token?: string): Promis
   if (!res.ok) {
     try {
       const errJson = await res.json();
-      return errJson as Caja<TResponse>;
+      // NestJS devuelve errores en formato { statusCode, message, error }
+      // Extraer el mensaje si está disponible
+      const message = errJson.message || errJson.error || `HTTP ${res.status}`;
+      return { success: false, message, data: undefined as unknown as TResponse } as Caja<TResponse>;
     } catch {
       const errText = await res.text().catch(() => "");
       return { success: false, message: errText || `HTTP ${res.status}`, data: undefined as unknown as TResponse } as Caja<TResponse>;

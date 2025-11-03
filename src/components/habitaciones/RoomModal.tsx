@@ -13,12 +13,19 @@ import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 export type RoomFormData = {
   number: string;
-  type: "single" | "double" | "suite";
+  roomType: string;
   pricePerNight: number;
   floor: number;
   maxOccupancy: number;
   description: string;
   status: "available" | "occupied" | "maintenance" | "cleaning";
+};
+
+type RoomType = {
+  _id: string;
+  tipo: string;
+  descripcion?: string;
+  isActive: boolean;
 };
 
 interface RoomModalProps {
@@ -29,13 +36,8 @@ interface RoomModalProps {
   formData: RoomFormData;
   onFormChange: (field: keyof RoomFormData, value: any) => void;
   isLoading?: boolean;
+  roomTypes: RoomType[];
 }
-
-const typeToEs: Record<string, string> = {
-  single: "Individual",
-  double: "Doble",
-  suite: "Suite",
-};
 
 const statusToEs: Record<string, string> = {
   available: "Disponible",
@@ -52,8 +54,13 @@ export function RoomModal({
   formData,
   onFormChange,
   isLoading = false,
+  roomTypes,
 }: RoomModalProps) {
   const { colors } = useThemeMode();
+  
+  // Debug: verificar que los tipos lleguen al modal
+  console.log("RoomModal - roomTypes recibidos:", roomTypes);
+  console.log("RoomModal - roomTypes activos:", roomTypes.filter((type) => type.isActive));
   
   if (!isOpen) return null;
 
@@ -140,8 +147,8 @@ export function RoomModal({
                   Tipo de Habitación *
                 </Text>
                 <select
-                  value={formData.type}
-                  onChange={(e) => onFormChange("type", e.target.value)}
+                  value={formData.roomType}
+                  onChange={(e) => onFormChange("roomType", e.target.value)}
                   style={{
                     width: "100%",
                     backgroundColor: colors.bg,
@@ -166,16 +173,28 @@ export function RoomModal({
                     e.currentTarget.style.borderColor = colors.border;
                     e.currentTarget.style.boxShadow = "none";
                   }}
+                  required
                 >
-                  <option value="single" style={{ backgroundColor: colors.bg, color: colors.text }}>
-                    {typeToEs.single}
+                  <option value="" style={{ backgroundColor: colors.bg, color: colors.text }}>
+                    {roomTypes.length === 0 ? "Cargando tipos..." : "Seleccione un tipo"}
                   </option>
-                  <option value="double" style={{ backgroundColor: colors.bg, color: colors.text }}>
-                    {typeToEs.double}
-                  </option>
-                  <option value="suite" style={{ backgroundColor: colors.bg, color: colors.text }}>
-                    {typeToEs.suite}
-                  </option>
+                  {roomTypes.length === 0 ? (
+                    <option value="" disabled style={{ backgroundColor: colors.bg, color: colors.subtext }}>
+                      No hay tipos disponibles
+                    </option>
+                  ) : (
+                    roomTypes
+                      .filter((type) => type.isActive)
+                      .map((type) => (
+                        <option
+                          key={type._id}
+                          value={type._id}
+                          style={{ backgroundColor: colors.bg, color: colors.text }}
+                        >
+                          {type.tipo}
+                        </option>
+                      ))
+                  )}
                 </select>
               </Box>
             </Flex>

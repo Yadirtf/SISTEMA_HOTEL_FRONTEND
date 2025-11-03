@@ -10,10 +10,17 @@ import { RoomModal, RoomFormData } from "@/components/habitaciones/RoomModal";
 import { PaginationControls } from "@/components/habitaciones/PaginationControls";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
+type RoomType = {
+  _id: string;
+  tipo: string;
+  descripcion?: string;
+  isActive: boolean;
+};
+
 type Room = {
   _id: string;
   number: string;
-  type: "single" | "double" | "suite" | string;
+  roomType: string | RoomType; // Puede ser ObjectId string o el objeto poblado
   pricePerNight: number;
   status: "available" | "occupied" | "maintenance" | "cleaning" | string;
   floor?: number;
@@ -26,6 +33,7 @@ export default function HabitacionesPage() {
   const token = getToken() || undefined;
   const { colors, mode } = useThemeMode();
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
@@ -45,7 +53,7 @@ export default function HabitacionesPage() {
   // Form state
   const [formData, setFormData] = useState<RoomFormData>({
     number: "",
-    type: "single",
+    roomType: "",
     pricePerNight: 0,
     floor: 1,
     maxOccupancy: 1,
@@ -53,12 +61,7 @@ export default function HabitacionesPage() {
     status: "available",
   });
 
-  // Mapas de traducción
-  const typeToEs: Record<string, string> = {
-    single: "Individual",
-    double: "Doble",
-    suite: "Suite",
-  };
+  // Mapa de traducción de estados
   const statusToEs: Record<string, string> = {
     available: "Disponible",
     occupied: "Ocupada",
@@ -66,9 +69,36 @@ export default function HabitacionesPage() {
     cleaning: "Limpieza",
   };
 
+  // Función helper para obtener el nombre del tipo de habitación
+  const getRoomTypeName = (room: Room): string => {
+    if (typeof room.roomType === "object" && room.roomType.tipo) {
+      return room.roomType.tipo;
+    }
+    // Si es solo el ID, buscar en roomTypes
+    const type = roomTypes.find(t => t._id === room.roomType);
+    return type?.tipo || String(room.roomType);
+  };
+
   const showNotification = (type: "success" | "error" | "info", title: string, description?: string) => {
     setNotification({ type, title, description });
     setTimeout(() => setNotification(null), type === "error" ? 5000 : 3000);
+  };
+
+  const loadRoomTypes = async () => {
+    try {
+      const resp = await apiGet<RoomType[]>("/rooms/types", token);
+      console.log("Respuesta de tipos de habitación:", resp); // Debug
+      if (resp.success && resp.data) {
+        console.log("Tipos cargados:", resp.data); // Debug
+        setRoomTypes(resp.data);
+      } else {
+        console.error("Error al cargar tipos - respuesta no exitosa:", resp.message);
+        showNotification("error", "Error", resp.message || "Error al cargar tipos de habitación");
+      }
+    } catch (error: any) {
+      console.error("Error al cargar tipos de habitación:", error);
+      showNotification("error", "Error", error?.message || "Error al cargar tipos de habitación");
+    }
   };
 
   const load = async () => {
@@ -92,6 +122,7 @@ export default function HabitacionesPage() {
   };
 
   useEffect(() => {
+    loadRoomTypes();
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -106,7 +137,8 @@ export default function HabitacionesPage() {
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
       const matchesFloor = floorFilter === "all" || room.floor?.toString() === floorFilter;
-      const matchesType = typeFilter === "all" || room.type === typeFilter;
+      const roomTypeId = typeof room.roomType === "object" ? room.roomType._id : room.roomType;
+      const matchesType = typeFilter === "all" || roomTypeId === typeFilter;
       const matchesStatus = 
         statusFilter === "all" || 
         (statusFilter === "active" && room.isActive === true) ||
@@ -140,9 +172,10 @@ export default function HabitacionesPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    const defaultRoomType = roomTypes.find((type) => type.isActive)?._id || "";
     setFormData({
       number: "",
-      type: "single",
+      roomType: defaultRoomType,
       pricePerNight: 0,
       floor: 1,
       maxOccupancy: 1,
@@ -151,20 +184,44 @@ export default function HabitacionesPage() {
     });
   };
 
+  // Actualizar el formulario cuando se carguen los tipos
+  useEffect(() => {
+    if (roomTypes.length > 0) {
+      const defaultRoomType = roomTypes.find((type) => type.isActive)?._id || "";
+      setFormData((prev) => {
+        // Solo actualizar si no hay un valor ya seleccionado o si el valor actual no existe
+        if (!prev.roomType || !roomTypes.find(t => t._id === prev.roomType && t.isActive)) {
+          return { ...prev, roomType: defaultRoomType };
+        }
+        return prev;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomTypes]);
+
   const handleFormChange = (field: keyof RoomFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const openCreateModal = () => {
+  const openCreateModal = async () => {
+    // Asegurar que los tipos estén cargados antes de abrir el modal
+    if (roomTypes.length === 0) {
+      await loadRoomTypes();
+    }
     resetForm();
     setIsModalOpen(true);
   };
 
-  const openEditModal = (room: Room) => {
+  const openEditModal = async (room: Room) => {
+    // Asegurar que los tipos estén cargados antes de abrir el modal
+    if (roomTypes.length === 0) {
+      await loadRoomTypes();
+    }
     setEditingId(room._id);
+    const roomTypeId = typeof room.roomType === "object" ? room.roomType._id : room.roomType;
     setFormData({
       number: room.number || "",
-      type: (room.type as "single" | "double" | "suite") || "single",
+      roomType: roomTypeId || "",
       pricePerNight: room.pricePerNight || 0,
       floor: room.floor || 1,
       maxOccupancy: room.maxOccupancy || 1,
@@ -181,9 +238,19 @@ export default function HabitacionesPage() {
 
   const submit = async () => {
     setIsSubmitting(true);
+    
+    // Validar que se haya seleccionado un tipo
+    if (!formData.roomType || formData.roomType === "") {
+      showNotification("error", "Error", "Por favor seleccione un tipo de habitación");
+      setIsSubmitting(false);
+      return;
+    }
+
+    console.log("Datos a enviar:", { ...formData, roomType: formData.roomType }); // Debug
+    
     const body: any = {
       number: formData.number,
-      type: formData.type,
+      roomType: formData.roomType,
       pricePerNight: formData.pricePerNight,
       floor: formData.floor,
       maxOccupancy: formData.maxOccupancy,
@@ -191,6 +258,8 @@ export default function HabitacionesPage() {
       status: formData.status,
       isActive: true,
     };
+
+    console.log("Body completo:", body); // Debug
 
     try {
       const resp = editingId
@@ -307,6 +376,7 @@ export default function HabitacionesPage() {
             onFloorChange={setFloorFilter}
             onTypeChange={setTypeFilter}
             onStatusChange={setStatusFilter}
+            roomTypes={roomTypes}
           />
 
           <Flex 
@@ -512,7 +582,7 @@ export default function HabitacionesPage() {
                             {r.number}
                           </Box>
                           <Box as="td" p={3} color={subtextColor}>
-                            {typeToEs[r.type] || r.type}
+                            {getRoomTypeName(r)}
                           </Box>
                       <Box as="td" p={3} color={priceColor} fontWeight="semibold">
                         ${r.pricePerNight.toFixed(2)}
@@ -624,7 +694,7 @@ export default function HabitacionesPage() {
                             Habitación {r.number}
                           </Text>
                           <Text fontSize="sm" color={colors.subtext}>
-                            {typeToEs[r.type] || r.type}
+                            {getRoomTypeName(r)}
                           </Text>
                         </Box>
                         <Box textAlign="right">
@@ -789,6 +859,7 @@ export default function HabitacionesPage() {
           formData={formData}
           onFormChange={handleFormChange}
           isLoading={isSubmitting}
+          roomTypes={roomTypes}
         />
       </Stack>
     </DashboardShell>

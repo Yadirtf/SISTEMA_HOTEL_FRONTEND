@@ -3,6 +3,13 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
+type RoomType = {
+  _id: string;
+  tipo: string;
+  descripcion?: string;
+  isActive: boolean;
+};
+
 interface RoomFiltersProps {
   floorFilter: string;
   typeFilter: string;
@@ -10,14 +17,8 @@ interface RoomFiltersProps {
   onFloorChange: (value: string) => void;
   onTypeChange: (value: string) => void;
   onStatusChange: (value: string) => void;
+  roomTypes: RoomType[];
 }
-
-const typeToEs: Record<string, string> = { 
-  single: "Individual", 
-  double: "Doble", 
-  suite: "Suite",
-  all: "Todos los tipos"
-};
 
 export function RoomFilters({
   floorFilter,
@@ -26,6 +27,7 @@ export function RoomFilters({
   onFloorChange,
   onTypeChange,
   onStatusChange,
+  roomTypes,
 }: RoomFiltersProps) {
   const { colors } = useThemeMode();
   
@@ -115,17 +117,19 @@ export function RoomFilters({
           }}
         >
           <option value="all" style={{ backgroundColor: colors.surface, color: colors.text }}>
-            {typeToEs.all}
+            Todos los tipos
           </option>
-          <option value="single" style={{ backgroundColor: colors.surface, color: colors.text }}>
-            {typeToEs.single}
-          </option>
-          <option value="double" style={{ backgroundColor: colors.surface, color: colors.text }}>
-            {typeToEs.double}
-          </option>
-          <option value="suite" style={{ backgroundColor: colors.surface, color: colors.text }}>
-            {typeToEs.suite}
-          </option>
+          {roomTypes
+            .filter((type) => type.isActive)
+            .map((type) => (
+              <option
+                key={type._id}
+                value={type._id}
+                style={{ backgroundColor: colors.surface, color: colors.text }}
+              >
+                {type.tipo}
+              </option>
+            ))}
         </select>
       </Box>
 
