@@ -630,15 +630,17 @@ export default function CrearPisosPage() {
         {notification && (
           <Box
             position="fixed"
-            bottom={4}
-            right={4}
+            top={{ base: "10px", md: "20px" }}
+            right={{ base: "10px", md: "20px" }}
+            left={{ base: "10px", md: "auto" }}
             zIndex={2000}
+            maxW={{ base: "calc(100% - 20px)", md: "400px" }}
+            w={{ base: "auto", md: "400px" }}
             p={4}
-            bg={notification.type === "success" ? "#22c55e" : notification.type === "error" ? "#ef4444" : "#b8941f"}
+            borderRadius="md"
+            bg={notification.type === "success" ? "#16a34a" : notification.type === "error" ? "#dc2626" : colors.gold}
             color="white"
-            borderRadius="lg"
-            boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
-            maxW={{ base: "90%", md: "400px" }}
+            boxShadow={`0 4px 12px ${notification.type === "success" ? "#16a34a40" : notification.type === "error" ? "#dc262640" : `${colors.gold}40`}`}
             borderLeft="4px solid"
             borderLeftColor={notification.type === "success" ? "#22c55e" : notification.type === "error" ? "#ef4444" : "#b8941f"}
           >
