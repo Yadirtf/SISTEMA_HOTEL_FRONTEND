@@ -10,6 +10,13 @@ type RoomType = {
   isActive: boolean;
 };
 
+type Floor = {
+  _id: string;
+  numero: number;
+  descripcion?: string;
+  isActive: boolean;
+};
+
 interface RoomFiltersProps {
   floorFilter: string;
   typeFilter: string;
@@ -18,6 +25,7 @@ interface RoomFiltersProps {
   onTypeChange: (value: string) => void;
   onStatusChange: (value: string) => void;
   roomTypes: RoomType[];
+  floors: Floor[];
 }
 
 export function RoomFilters({
@@ -28,6 +36,7 @@ export function RoomFilters({
   onTypeChange,
   onStatusChange,
   roomTypes,
+  floors,
 }: RoomFiltersProps) {
   const { colors } = useThemeMode();
   
@@ -75,11 +84,17 @@ export function RoomFilters({
           <option value="all" style={{ backgroundColor: colors.surface, color: colors.text }}>
             Todos los pisos
           </option>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((floor) => (
-            <option key={floor} value={floor.toString()} style={{ backgroundColor: colors.surface, color: colors.text }}>
-              Piso {floor}
-            </option>
-          ))}
+          {floors
+            .filter((floor) => floor.isActive)
+            .map((floor) => (
+              <option
+                key={floor._id}
+                value={floor._id}
+                style={{ backgroundColor: colors.surface, color: colors.text }}
+              >
+                Piso {floor.numero}
+              </option>
+            ))}
         </select>
       </Box>
       

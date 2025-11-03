@@ -17,13 +17,20 @@ type RoomType = {
   isActive: boolean;
 };
 
+type Floor = {
+  _id: string;
+  numero: number;
+  descripcion?: string;
+  isActive: boolean;
+};
+
 type Room = {
   _id: string;
   number: string;
   roomType: string | RoomType; // Puede ser ObjectId string o el objeto poblado
   pricePerNight: number;
   status: "available" | "occupied" | "maintenance" | "cleaning" | string;
-  floor?: number;
+  floor?: string | Floor; // Puede ser ObjectId string o el objeto poblado
   maxOccupancy?: number;
   description?: string;
   isActive: boolean;
@@ -34,6 +41,7 @@ export default function HabitacionesPage() {
   const { colors, mode } = useThemeMode();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
+  const [floors, setFloors] = useState<Floor[]>([]);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
@@ -55,7 +63,7 @@ export default function HabitacionesPage() {
     number: "",
     roomType: "",
     pricePerNight: 0,
-    floor: 1,
+    floor: "",
     maxOccupancy: 1,
     description: "",
     status: "available",
@@ -79,6 +87,22 @@ export default function HabitacionesPage() {
     return type?.tipo || String(room.roomType);
   };
 
+  // Función helper para obtener el número del piso
+  const getFloorNumber = (room: Room): number => {
+    if (room.floor === null || room.floor === undefined) {
+      return 0;
+    }
+    if (typeof room.floor === "object" && room.floor !== null && room.floor.numero) {
+      return room.floor.numero;
+    }
+    // Si es solo el ID, buscar en floors
+    if (typeof room.floor === "string") {
+      const floor = floors.find(f => f._id === room.floor);
+      return floor?.numero || 0;
+    }
+    return 0;
+  };
+
   const showNotification = (type: "success" | "error" | "info", title: string, description?: string) => {
     setNotification({ type, title, description });
     setTimeout(() => setNotification(null), type === "error" ? 5000 : 3000);
@@ -98,6 +122,23 @@ export default function HabitacionesPage() {
     } catch (error: any) {
       console.error("Error al cargar tipos de habitación:", error);
       showNotification("error", "Error", error?.message || "Error al cargar tipos de habitación");
+    }
+  };
+
+  const loadFloors = async () => {
+    try {
+      const resp = await apiGet<Floor[]>("/floors", token);
+      console.log("Respuesta de pisos:", resp); // Debug
+      if (resp.success && resp.data) {
+        console.log("Pisos cargados:", resp.data); // Debug
+        setFloors(resp.data);
+      } else {
+        console.error("Error al cargar pisos - respuesta no exitosa:", resp.message);
+        showNotification("error", "Error", resp.message || "Error al cargar pisos");
+      }
+    } catch (error: any) {
+      console.error("Error al cargar pisos:", error);
+      showNotification("error", "Error", error?.message || "Error al cargar pisos");
     }
   };
 
@@ -123,6 +164,7 @@ export default function HabitacionesPage() {
 
   useEffect(() => {
     loadRoomTypes();
+    loadFloors();
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -136,8 +178,9 @@ export default function HabitacionesPage() {
   // Filtrar habitaciones según los filtros seleccionados
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
-      const matchesFloor = floorFilter === "all" || room.floor?.toString() === floorFilter;
-      const roomTypeId = typeof room.roomType === "object" ? room.roomType._id : room.roomType;
+      const floorId = typeof room.floor === "object" && room.floor !== null ? room.floor._id : (room.floor || null);
+      const matchesFloor = floorFilter === "all" || floorId === floorFilter;
+      const roomTypeId = typeof room.roomType === "object" && room.roomType !== null ? room.roomType._id : room.roomType;
       const matchesType = typeFilter === "all" || roomTypeId === typeFilter;
       const matchesStatus = 
         statusFilter === "all" || 
@@ -173,61 +216,93 @@ export default function HabitacionesPage() {
   const resetForm = () => {
     setEditingId(null);
     const defaultRoomType = roomTypes.find((type) => type.isActive)?._id || "";
+    const defaultFloor = floors.find((floor) => floor.isActive)?._id || "";
     setFormData({
       number: "",
       roomType: defaultRoomType,
       pricePerNight: 0,
-      floor: 1,
+      floor: defaultFloor,
       maxOccupancy: 1,
       description: "",
       status: "available",
     });
   };
 
-  // Actualizar el formulario cuando se carguen los tipos
+  // Actualizar el formulario cuando se carguen los tipos y pisos
   useEffect(() => {
-    if (roomTypes.length > 0) {
+    if (roomTypes.length > 0 || floors.length > 0) {
       const defaultRoomType = roomTypes.find((type) => type.isActive)?._id || "";
+      const defaultFloor = floors.find((floor) => floor.isActive)?._id || "";
       setFormData((prev) => {
+        let updated = { ...prev };
         // Solo actualizar si no hay un valor ya seleccionado o si el valor actual no existe
         if (!prev.roomType || !roomTypes.find(t => t._id === prev.roomType && t.isActive)) {
-          return { ...prev, roomType: defaultRoomType };
+          updated.roomType = defaultRoomType;
         }
-        return prev;
+        if (!prev.floor || !floors.find(f => f._id === prev.floor && f.isActive)) {
+          updated.floor = defaultFloor;
+        }
+        return updated;
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomTypes]);
+  }, [roomTypes, floors]);
 
   const handleFormChange = (field: keyof RoomFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const openCreateModal = async () => {
-    // Asegurar que los tipos estén cargados antes de abrir el modal
+    // Asegurar que los tipos y pisos estén cargados antes de abrir el modal
     if (roomTypes.length === 0) {
       await loadRoomTypes();
+    }
+    if (floors.length === 0) {
+      await loadFloors();
     }
     resetForm();
     setIsModalOpen(true);
   };
 
   const openEditModal = async (room: Room) => {
-    // Asegurar que los tipos estén cargados antes de abrir el modal
+    // Asegurar que los tipos y pisos estén cargados antes de abrir el modal
     if (roomTypes.length === 0) {
       await loadRoomTypes();
     }
+    if (floors.length === 0) {
+      await loadFloors();
+    }
     setEditingId(room._id);
-    const roomTypeId = typeof room.roomType === "object" ? room.roomType._id : room.roomType;
+    const roomTypeId = typeof room.roomType === "object" && room.roomType !== null 
+      ? (typeof room.roomType._id === "string" ? room.roomType._id : String(room.roomType._id))
+      : String(room.roomType || "");
+    const floorId = typeof room.floor === "object" && room.floor !== null 
+      ? (typeof room.floor._id === "string" ? room.floor._id : String(room.floor._id))
+      : String(room.floor || "");
+    
+    console.log("[openEditModal] Room recibido:", {
+      _id: room._id,
+      number: room.number,
+      roomType: room.roomType,
+      floor: room.floor
+    });
+    console.log("[openEditModal] IDs extraídos:", {
+      roomTypeId,
+      floorId,
+      roomTypeIdType: typeof roomTypeId,
+      floorIdType: typeof floorId
+    });
+    
     setFormData({
       number: room.number || "",
       roomType: roomTypeId || "",
       pricePerNight: room.pricePerNight || 0,
-      floor: room.floor || 1,
+      floor: floorId || "",
       maxOccupancy: room.maxOccupancy || 1,
       description: room.description || "",
       status: (room.status as "available" | "occupied" | "maintenance" | "cleaning") || "available",
     });
+    console.log("[openEditModal] FormData establecido:", formData);
     setIsModalOpen(true);
   };
 
@@ -246,20 +321,44 @@ export default function HabitacionesPage() {
       return;
     }
 
-    console.log("Datos a enviar:", { ...formData, roomType: formData.roomType }); // Debug
+    // Validar que se haya seleccionado un piso
+    if (!formData.floor || formData.floor === "") {
+      showNotification("error", "Error", "Por favor seleccione un piso");
+      setIsSubmitting(false);
+      return;
+    }
+
+    console.log("[submit] FormData actual:", formData); // Debug
+    console.log("[submit] editingId:", editingId); // Debug
+    
+    // Asegurar que roomType y floor sean strings válidos
+    const roomTypeToSend = String(formData.roomType || "").trim();
+    const floorToSend = String(formData.floor || "").trim();
+    
+    if (!roomTypeToSend || roomTypeToSend.length !== 24) {
+      showNotification("error", "Error", "El tipo de habitación seleccionado no es válido");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (!floorToSend || floorToSend.length !== 24) {
+      showNotification("error", "Error", "El piso seleccionado no es válido");
+      setIsSubmitting(false);
+      return;
+    }
     
     const body: any = {
       number: formData.number,
-      roomType: formData.roomType,
+      roomType: roomTypeToSend,
       pricePerNight: formData.pricePerNight,
-      floor: formData.floor,
+      floor: floorToSend,
       maxOccupancy: formData.maxOccupancy,
       description: formData.description,
       status: formData.status,
       isActive: true,
     };
 
-    console.log("Body completo:", body); // Debug
+    console.log("[submit] Body completo a enviar:", body); // Debug
 
     try {
       const resp = editingId
@@ -377,6 +476,7 @@ export default function HabitacionesPage() {
             onTypeChange={setTypeFilter}
             onStatusChange={setStatusFilter}
             roomTypes={roomTypes}
+            floors={floors}
           />
 
           <Flex 
@@ -591,7 +691,7 @@ export default function HabitacionesPage() {
                         {statusToEs[r.status] || r.status}
                       </Box>
                           <Box as="td" p={3} color={subtextColor}>
-                            {r.floor ?? "-"}
+                            {getFloorNumber(r) > 0 ? getFloorNumber(r) : "-"}
                           </Box>
                           <Box as="td" p={3} color={subtextColor}>
                             {r.maxOccupancy ?? "-"}
@@ -721,7 +821,7 @@ export default function HabitacionesPage() {
                             Piso
                           </Text>
                           <Text fontSize="sm" color={colors.text} fontWeight="medium">
-                            {r.floor ?? "-"}
+                            {getFloorNumber(r) || "-"}
                           </Text>
                         </Box>
                         <Box>
@@ -860,6 +960,7 @@ export default function HabitacionesPage() {
           onFormChange={handleFormChange}
           isLoading={isSubmitting}
           roomTypes={roomTypes}
+          floors={floors}
         />
       </Stack>
     </DashboardShell>

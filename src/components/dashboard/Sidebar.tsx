@@ -20,7 +20,8 @@ const NAV_ITEMS: NavItem[] = [
     href: "/habitaciones",
     subItems: [
       { label: "Crear habitación", href: "/habitaciones" },
-      { label: "Crear tipo", href: "/habitaciones/crear-tipo" }
+      { label: "Crear tipo", href: "/habitaciones/crear-tipo" },
+      { label: "Crear pisos", href: "/habitaciones/crear-pisos" }
     ]
   },
 ];

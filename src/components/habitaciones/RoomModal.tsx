@@ -15,7 +15,7 @@ export type RoomFormData = {
   number: string;
   roomType: string;
   pricePerNight: number;
-  floor: number;
+  floor: string;
   maxOccupancy: number;
   description: string;
   status: "available" | "occupied" | "maintenance" | "cleaning";
@@ -24,6 +24,13 @@ export type RoomFormData = {
 type RoomType = {
   _id: string;
   tipo: string;
+  descripcion?: string;
+  isActive: boolean;
+};
+
+type Floor = {
+  _id: string;
+  numero: number;
   descripcion?: string;
   isActive: boolean;
 };
@@ -37,6 +44,7 @@ interface RoomModalProps {
   onFormChange: (field: keyof RoomFormData, value: any) => void;
   isLoading?: boolean;
   roomTypes: RoomType[];
+  floors: Floor[];
 }
 
 const statusToEs: Record<string, string> = {
@@ -55,6 +63,7 @@ export function RoomModal({
   onFormChange,
   isLoading = false,
   roomTypes,
+  floors,
 }: RoomModalProps) {
   const { colors } = useThemeMode();
   
@@ -224,20 +233,56 @@ export function RoomModal({
                 <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
                   Piso *
                 </Text>
-                <Input
-                  type="number"
+                <select
                   value={formData.floor || ""}
-                  onChange={(e) => onFormChange("floor", Number(e.target.value))}
-                  bg={colors.bg}
-                  color={colors.text}
-                  borderColor={colors.border}
-                  placeholder="1"
-                  min="1"
-                  max="20"
-                  _hover={{ borderColor: colors.gold }}
-                  _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                  _placeholder={{ color: colors.subtext }}
-                />
+                  onChange={(e) => onFormChange("floor", e.target.value)}
+                  style={{
+                    width: "100%",
+                    backgroundColor: colors.bg,
+                    color: colors.text,
+                    borderRadius: "6px",
+                    padding: "8px 12px",
+                    border: `1px solid ${colors.border}`,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = colors.gold;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = colors.border;
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.gold;
+                    e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = colors.border;
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                  required
+                >
+                  <option value="" style={{ backgroundColor: colors.bg, color: colors.text }}>
+                    {floors.length === 0 ? "Cargando pisos..." : "Seleccione un piso"}
+                  </option>
+                  {floors.length === 0 ? (
+                    <option value="" disabled style={{ backgroundColor: colors.bg, color: colors.subtext }}>
+                      No hay pisos disponibles
+                    </option>
+                  ) : (
+                    floors
+                      .filter((floor) => floor.isActive)
+                      .map((floor) => (
+                        <option
+                          key={floor._id}
+                          value={floor._id}
+                          style={{ backgroundColor: colors.bg, color: colors.text }}
+                        >
+                          Piso {floor.numero}
+                        </option>
+                      ))
+                  )}
+                </select>
               </Box>
 
               <Box flex="1" minW={{ base: "100%", md: "200px" }}>
