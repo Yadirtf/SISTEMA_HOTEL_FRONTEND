@@ -460,7 +460,6 @@ export default function CrearPisosPage() {
                               <Button
                                 size="xs"
                                 variant="outline"
-                                borderColor={f.isActive ? "#dc2626" : "#22c55e"}
                                 color={f.isActive ? "#dc2626" : "#22c55e"}
                                 onClick={() => toggleActive(f)}
                                 _hover={{ 
@@ -478,7 +477,6 @@ export default function CrearPisosPage() {
                               <Button
                                 size="xs"
                                 variant="outline"
-                                borderColor="#dc2626"
                                 color="#dc2626"
                                 onClick={() => deletePermanent(f)}
                                 _hover={{ 
@@ -621,6 +619,8 @@ export default function CrearPisosPage() {
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
+              totalItems={filteredFloors.length}
+              itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
             />
           )}

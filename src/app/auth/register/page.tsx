@@ -117,14 +117,19 @@ export default function RegisterPage() {
                     El sistema ya ha sido inicializado. Para crear una cuenta, contacte al administrador del sistema.
                   </Text>
                 </Box>
-                <Button
+                <Link
                   as={NextLink}
                   href="/auth/login"
-                  colorScheme="blue"
                   w="full"
+                  display="block"
                 >
-                  Volver al Inicio de Sesión
-                </Button>
+                  <Button
+                    colorScheme="blue"
+                    w="full"
+                  >
+                    Volver al Inicio de Sesión
+                  </Button>
+                </Link>
               </Stack>
             </Box>
           </Container>
