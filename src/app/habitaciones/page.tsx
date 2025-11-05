@@ -3,6 +3,7 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
+import { formatPrice } from "@/lib/format";
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
 import { getToken } from "@/lib/session";
 import { RoomFilters } from "@/components/habitaciones/RoomFilters";
@@ -685,7 +686,7 @@ export default function HabitacionesPage() {
                             {getRoomTypeName(r)}
                           </Box>
                       <Box as="td" p={3} color={priceColor} fontWeight="semibold">
-                        ${r.pricePerNight.toFixed(2)}
+                        ${formatPrice(r.pricePerNight)}
                       </Box>
                       <Box as="td" p={3} color={subtextColor}>
                         {statusToEs[r.status] || r.status}
@@ -799,7 +800,7 @@ export default function HabitacionesPage() {
                         </Box>
                         <Box textAlign="right">
                           <Text fontSize="xl" fontWeight="bold" color={colors.gold}>
-                            ${r.pricePerNight.toFixed(2)}
+                            ${formatPrice(r.pricePerNight)}
                           </Text>
                           <Text fontSize="xs" color={colors.subtext}>
                             por noche

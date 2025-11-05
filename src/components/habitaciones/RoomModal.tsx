@@ -10,6 +10,7 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice, parseFormattedPrice, formatPriceFromString } from "@/lib/format";
 
 export type RoomFormData = {
   number: string;
@@ -214,15 +215,21 @@ export function RoomModal({
                   Precio por Noche *
                 </Text>
                 <Input
-                  type="number"
-                  value={formData.pricePerNight || ""}
-                  onChange={(e) => onFormChange("pricePerNight", Number(e.target.value))}
+                  type="text"
+                  inputMode="numeric"
+                  value={formData.pricePerNight === 0 ? "" : formatPrice(formData.pricePerNight)}
+                  onChange={(e) => {
+                    const n = parseFormattedPrice(e.target.value);
+                    onFormChange("pricePerNight", n);
+                  }}
+                  onBlur={(e) => {
+                    const n = parseFormattedPrice(e.target.value);
+                    onFormChange("pricePerNight", n);
+                  }}
                   bg={colors.bg}
                   color={colors.text}
                   borderColor={colors.border}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
+                  placeholder="0"
                   _hover={{ borderColor: colors.gold }}
                   _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
                   _placeholder={{ color: colors.subtext }}

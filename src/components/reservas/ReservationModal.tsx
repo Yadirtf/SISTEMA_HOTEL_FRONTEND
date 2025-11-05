@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Button, Flex, Stack, Text, Input, Textarea, Heading } from "@chakra-ui/react";
+import { formatPrice, formatPriceFromString } from "@/lib/format";
 import { useState } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
@@ -333,18 +334,19 @@ export function ReservationModal({
                     <Text fontSize="sm" color={colors.subtext} mb={1}>
                       Consumo de Snacks (COP)
                     </Text>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.snackConsumption}
-                      onChange={(e) => handleChange("snackConsumption", e.target.value)}
-                      bg={colors.bg}
-                      borderColor={colors.border}
-                      color={colors.text}
-                      _hover={{ borderColor: colors.gold }}
-                      _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    />
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={formatPriceFromString(formData.snackConsumption)}
+                    onChange={(e) => handleChange("snackConsumption", e.target.value)}
+                    onBlur={(e) => handleChange("snackConsumption", formatPriceFromString(e.target.value))}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                    placeholder="0"
+                  />
                   </Box>
                 </Flex>
 
@@ -423,7 +425,7 @@ export function ReservationModal({
                   Precio por Noche:
                 </Text>
                 <Text fontSize="xl" fontWeight="bold" color={colors.gold}>
-                  ${roomPrice.toFixed(2)}
+                  ${formatPrice(roomPrice)}
                 </Text>
               </Flex>
             </Box>

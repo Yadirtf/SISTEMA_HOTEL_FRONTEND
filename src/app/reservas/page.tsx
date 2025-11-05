@@ -3,6 +3,7 @@
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState, useMemo } from "react";
+import { formatPrice, parseFormattedPrice } from "@/lib/format";
 import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { getToken, getSessionUser } from "@/lib/session";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
@@ -195,7 +196,7 @@ export default function ReservasPage() {
         roomNumber: selectedRoom.number,
         checkInTime: formData.checkInTime ? new Date(formData.checkInTime).toISOString() : new Date().toISOString(),
         checkOutTime: formData.checkOutTime ? new Date(formData.checkOutTime).toISOString() : undefined,
-        snackConsumption: formData.snackConsumption ? parseFloat(formData.snackConsumption) : 0,
+        snackConsumption: formData.snackConsumption ? parseFormattedPrice(formData.snackConsumption) : 0,
         numberOfGuests: formData.numberOfGuests ? parseInt(formData.numberOfGuests) : 1,
         specialRequests: formData.specialRequests.trim() || undefined,
         notes: formData.notes.trim() || undefined,
@@ -543,7 +544,7 @@ export default function ReservasPage() {
                               color={colors.text}
                               fontWeight="bold"
                             >
-                              ${room.pricePerNight.toFixed(2)}
+                              ${formatPrice(room.pricePerNight)}
                             </Text>
                           </Box>
 

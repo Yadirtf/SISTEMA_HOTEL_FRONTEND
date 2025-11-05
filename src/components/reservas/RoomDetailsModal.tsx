@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Button, Flex, Stack, Text, Heading } from "@chakra-ui/react";
+import { formatPrice } from "@/lib/format";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 type RoomType = {
@@ -215,7 +216,7 @@ export function RoomDetailsModal({
                   Precio por Noche
                 </Text>
                 <Text fontSize="xl" color={colors.gold} fontWeight="bold">
-                  ${room.pricePerNight.toFixed(2)}
+                  ${formatPrice(room.pricePerNight)}
                 </Text>
               </Box>
 

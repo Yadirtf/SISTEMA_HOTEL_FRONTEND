@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Button, Flex, Stack, Text, Heading } from "@chakra-ui/react";
+import { formatPrice } from "@/lib/format";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 type Guest = {
@@ -369,19 +370,19 @@ export function ReservationDetailsModal({
               <Flex justify="space-between">
                 <Text fontSize="sm" color={colors.subtext}>Precio Habitación:</Text>
                 <Text fontSize="sm" color={colors.text} fontWeight="semibold">
-                  ${reservation.roomPrice.toFixed(2)}
+                  ${formatPrice(reservation.roomPrice)}
                 </Text>
               </Flex>
               <Flex justify="space-between">
                 <Text fontSize="sm" color={colors.subtext}>Consumo de Snacks:</Text>
                 <Text fontSize="sm" color={colors.text} fontWeight="semibold">
-                  ${reservation.snackConsumption.toFixed(2)}
+                  ${formatPrice(reservation.snackConsumption)}
                 </Text>
               </Flex>
               <Flex justify="space-between" pt={2} borderTop="1px solid" borderColor={colors.border}>
                 <Text fontSize="md" color={colors.text} fontWeight="bold">Total:</Text>
                 <Text fontSize="lg" color={colors.gold} fontWeight="bold">
-                  ${reservation.totalPrice.toFixed(2)}
+                  ${formatPrice(reservation.totalPrice)}
                 </Text>
               </Flex>
               {reservation.paymentMethod && (
