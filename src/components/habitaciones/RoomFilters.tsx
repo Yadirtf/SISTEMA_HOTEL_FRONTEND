@@ -2,20 +2,7 @@
 
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
-
-type RoomType = {
-  _id: string;
-  tipo: string;
-  descripcion?: string;
-  isActive: boolean;
-};
-
-type Floor = {
-  _id: string;
-  numero: number;
-  descripcion?: string;
-  isActive: boolean;
-};
+import type { RoomType, Floor } from "@/app/habitaciones/types";
 
 interface RoomFiltersProps {
   floorFilter: string;

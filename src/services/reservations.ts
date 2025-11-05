@@ -1,7 +1,8 @@
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, Caja } from "@/lib/api";
+import type { Floor } from "@/app/habitaciones/types";
 
-export async function getFloors(token?: string) {
-  return apiGet<any[]>("/floors", token);
+export async function getFloors(token?: string): Promise<Caja<Floor[]>> {
+  return apiGet<Floor[]>("/floors", token);
 }
 
 export async function getActiveReservationByRoom(roomNumber: string, token?: string) {

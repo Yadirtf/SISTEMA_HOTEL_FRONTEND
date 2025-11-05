@@ -11,30 +11,9 @@ import {
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice, parseFormattedPrice, formatPriceFromString } from "@/lib/format";
+import type { RoomFormData, RoomType, Floor } from "@/app/habitaciones/types";
 
-export type RoomFormData = {
-  number: string;
-  roomType: string;
-  pricePerNight: number;
-  floor: string;
-  maxOccupancy: number;
-  description: string;
-  status: "available" | "occupied" | "maintenance" | "cleaning";
-};
-
-type RoomType = {
-  _id: string;
-  tipo: string;
-  descripcion?: string;
-  isActive: boolean;
-};
-
-type Floor = {
-  _id: string;
-  numero: number;
-  descripcion?: string;
-  isActive: boolean;
-};
+export type { RoomFormData };
 
 interface RoomModalProps {
   isOpen: boolean;
