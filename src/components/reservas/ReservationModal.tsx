@@ -30,6 +30,7 @@ type ReservationModalProps = {
   onSubmit: (data: ReservationFormData) => void;
   roomNumber: string;
   roomPrice: number;
+  roomType?: { guestPricing?: Record<number, number> } | null;
   isLoading?: boolean;
 };
 
@@ -39,6 +40,7 @@ export function ReservationModal({
   onSubmit,
   roomNumber,
   roomPrice,
+  roomType,
   isLoading = false,
 }: ReservationModalProps) {
   const { colors } = useThemeMode();
@@ -140,6 +142,34 @@ export function ReservationModal({
     setSearchResults([]);
     setShowResults(false);
   };
+
+  // Función para calcular el precio según número de huéspedes
+  const calculatePriceForGuests = (guestCount: number): number => {
+    const numGuests = parseInt(guestCount.toString()) || 1;
+    const guestPricing = roomType?.guestPricing;
+
+    if (guestPricing && numGuests > 0) {
+      // Buscar precio exacto
+      if (guestPricing[numGuests] !== undefined) {
+        return guestPricing[numGuests];
+      }
+      // Si no hay precio exacto, buscar el precio más cercano (menor o igual)
+      const availableGuestCounts = Object.keys(guestPricing)
+        .map(Number)
+        .filter(count => count <= numGuests)
+        .sort((a, b) => b - a);
+      
+      if (availableGuestCounts.length > 0) {
+        return guestPricing[availableGuestCounts[0]];
+      }
+    }
+    
+    // Si no hay estructura de precios, usar precio base
+    return roomPrice;
+  };
+
+  // Calcular precio actual según número de huéspedes
+  const currentPricePerNight = calculatePriceForGuests(parseInt(formData.numberOfGuests) || 1);
 
   // Limpiar formulario al cerrar el modal
   useEffect(() => {
@@ -666,14 +696,22 @@ export function ReservationModal({
               borderWidth="1px"
               borderColor={colors.border}
             >
-              <Flex justify="space-between" align="center">
+              <Flex justify="space-between" align="center" mb={2}>
                 <Text fontSize="md" fontWeight="bold" color={colors.text}>
                   Precio por Noche:
                 </Text>
                 <Text fontSize="xl" fontWeight="bold" color={colors.gold}>
-                  ${formatPrice(roomPrice)}
+                  ${formatPrice(currentPricePerNight)}
                 </Text>
               </Flex>
+              {roomType?.guestPricing && (
+                <Text fontSize="xs" color={colors.subtext} textAlign="right">
+                  {parseInt(formData.numberOfGuests) || 1} {parseInt(formData.numberOfGuests) === 1 ? 'huésped' : 'huéspedes'}
+                  {roomType.guestPricing[parseInt(formData.numberOfGuests) || 1] !== undefined && (
+                    <span> • Precio especial</span>
+                  )}
+                </Text>
+              )}
             </Box>
 
             {/* Botones */}

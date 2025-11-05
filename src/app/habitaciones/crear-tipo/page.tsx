@@ -8,6 +8,7 @@ import { getToken } from "@/lib/session";
 import { RoomTypeFilters } from "@/components/habitaciones/RoomTypeFilters";
 import { RoomTypeModal, RoomTypeFormData } from "@/components/habitaciones/RoomTypeModal";
 import { PaginationControls } from "@/components/habitaciones/PaginationControls";
+import { GuestPricingModal } from "@/components/habitaciones/GuestPricingModal";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 type RoomType = {
@@ -15,6 +16,7 @@ type RoomType = {
   tipo: string;
   descripcion?: string;
   isActive: boolean;
+  guestPricing?: Record<number, number>;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -35,6 +37,8 @@ export default function CrearTipoPage() {
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [selectedRoomTypeForPricing, setSelectedRoomTypeForPricing] = useState<RoomType | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form state
@@ -482,6 +486,24 @@ export default function CrearTipoPage() {
                       <Flex gap={2} justify="flex-end">
                         <Button
                           size="sm"
+                          variant="outline"
+                          borderColor={colors.border}
+                          color={colors.text}
+                          onClick={() => {
+                            setSelectedRoomTypeForPricing(type);
+                            setIsPricingModalOpen(true);
+                          }}
+                          _hover={{ 
+                            bg: colors.surface,
+                            borderColor: colors.gold,
+                            color: colors.gold,
+                          }}
+                          title="Configurar precios por número de huéspedes"
+                        >
+                          💰 Precios
+                        </Button>
+                        <Button
+                          size="sm"
                           bg={colors.gold}
                           color={colors.bg}
                           onClick={() => openEditModal(type)}
@@ -581,6 +603,26 @@ export default function CrearTipoPage() {
                     <Flex gap={2} wrap="wrap">
                       <Button
                         size="sm"
+                        variant="outline"
+                        borderColor={colors.border}
+                        color={colors.text}
+                        onClick={() => {
+                          setSelectedRoomTypeForPricing(type);
+                          setIsPricingModalOpen(true);
+                        }}
+                        _hover={{ 
+                          bg: colors.surface,
+                          borderColor: colors.gold,
+                          color: colors.gold,
+                        }}
+                        title="Configurar precios por número de huéspedes"
+                        flex="1"
+                        minW="80px"
+                      >
+                        💰 Precios
+                      </Button>
+                      <Button
+                        size="sm"
                         bg={colors.gold}
                         color={colors.bg}
                         onClick={() => openEditModal(type)}
@@ -658,6 +700,24 @@ export default function CrearTipoPage() {
           onFormChange={(field, value) => setFormData({ ...formData, [field]: value })}
           isLoading={isSubmitting}
         />
+
+        {/* Modal de gestión de precios */}
+        {selectedRoomTypeForPricing && (
+          <GuestPricingModal
+            isOpen={isPricingModalOpen}
+            onClose={() => {
+              setIsPricingModalOpen(false);
+              setSelectedRoomTypeForPricing(null);
+            }}
+            roomTypeId={selectedRoomTypeForPricing._id}
+            roomTypeName={selectedRoomTypeForPricing.tipo}
+            currentPricing={selectedRoomTypeForPricing.guestPricing}
+            onSuccess={() => {
+              showNotification("success", "Precios actualizados", "Los precios por número de huéspedes se han actualizado correctamente");
+              load(); // Recargar tipos para obtener los precios actualizados
+            }}
+          />
+        )}
 
         {/* Notificaciones */}
         {notification && (

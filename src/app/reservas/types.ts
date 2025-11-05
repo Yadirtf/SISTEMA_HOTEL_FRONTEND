@@ -3,6 +3,7 @@ export type RoomType = {
   tipo: string;
   descripcion?: string;
   isActive?: boolean;
+  guestPricing?: Record<number, number>; // Mapa: número de huéspedes -> precio por noche
 };
 
 export type Floor = {

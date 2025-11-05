@@ -198,6 +198,7 @@ export default function ReservasPage() {
               onSubmit={handleSubmitReservationForm}
               roomNumber={selectedRoom.number}
               roomPrice={selectedRoom.pricePerNight}
+              roomType={typeof selectedRoom.roomType === 'object' && selectedRoom.roomType !== null ? selectedRoom.roomType : null}
               isLoading={isSubmitting}
             />
             <RoomDetailsModal
