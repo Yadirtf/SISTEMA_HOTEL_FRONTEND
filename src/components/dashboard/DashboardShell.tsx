@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Box, Flex } from "@chakra-ui/react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { ReservationsBell } from "@/components/notifications/ReservationsBell";
 import { getToken } from "@/lib/session";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
@@ -44,7 +45,7 @@ export function DashboardShell({ title, children }: { title: string; children: R
         color={colors.text}
         ml={{ base: 0, md: "256px" }}
       >
-        <TopBar title={title} onOpenMenu={() => setOpen(true)} />
+        <TopBar title={title} onOpenMenu={() => setOpen(true)} extra={<ReservationsBell />} />
         <Box p={6}>{children}</Box>
       </Box>
     </Flex>
