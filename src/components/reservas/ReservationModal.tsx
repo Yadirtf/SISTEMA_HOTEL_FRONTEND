@@ -2,8 +2,10 @@
 
 import { Box, Button, Flex, Stack, Text, Input, Textarea, Heading } from "@chakra-ui/react";
 import { formatPrice, formatPriceFromString } from "@/lib/format";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { searchGuests, Guest } from "@/services/reservations";
+import { getToken } from "@/lib/session";
 
 export type ReservationFormData = {
   documentNumber: string;
@@ -40,6 +42,7 @@ export function ReservationModal({
   isLoading = false,
 }: ReservationModalProps) {
   const { colors } = useThemeMode();
+  const token = getToken() || undefined;
   const [formData, setFormData] = useState<ReservationFormData>({
     documentNumber: "",
     guestFirstName: "",
@@ -56,6 +59,112 @@ export function ReservationModal({
     notes: "",
     paymentMethod: "pending",
   });
+
+  // Estados para el buscador de clientes
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Guest[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Efecto para buscar clientes con debounce
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await searchGuests(searchQuery, token);
+        if (response.success && Array.isArray(response.data)) {
+          setSearchResults(response.data);
+          setShowResults(true);
+        } else {
+          setSearchResults([]);
+          setShowResults(false);
+        }
+      } catch (error) {
+        console.error("Error al buscar clientes:", error);
+        setSearchResults([]);
+        setShowResults(false);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, token]);
+
+  // Cerrar resultados al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+
+    if (showResults) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showResults]);
+
+  // Función para seleccionar un cliente y autocompletar
+  const handleSelectGuest = (guest: Guest) => {
+    setFormData((prev) => ({
+      ...prev,
+      documentNumber: guest.documentNumber,
+      guestFirstName: guest.firstName,
+      guestLastName: guest.lastName,
+      phoneNumber: guest.phoneNumber,
+      email: guest.email || "",
+      origin: guest.origin || "",
+      profession: guest.profession || "",
+    }));
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowResults(false);
+  };
+
+  // Limpiar formulario al cerrar el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        documentNumber: "",
+        guestFirstName: "",
+        guestLastName: "",
+        phoneNumber: "",
+        email: "",
+        origin: "",
+        profession: "",
+        checkInTime: "",
+        checkOutTime: "",
+        snackConsumption: "0",
+        numberOfGuests: "1",
+        specialRequests: "",
+        notes: "",
+        paymentMethod: "pending",
+      });
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowResults(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -127,6 +236,143 @@ export function ReservationModal({
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
           <Stack gap={4} p={6}>
+            {/* Buscador de clientes */}
+            <Box position="relative" ref={searchContainerRef}>
+              <Text
+                fontSize="md"
+                fontWeight="bold"
+                color={colors.gold}
+                mb={3}
+                textTransform="uppercase"
+                letterSpacing="0.5px"
+              >
+                Buscar Cliente Existente
+              </Text>
+              <Box position="relative">
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchResults.length > 0 && setShowResults(true)}
+                  bg={colors.bg}
+                  borderColor={colors.border}
+                  color={colors.text}
+                  _hover={{ borderColor: colors.gold }}
+                  _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  placeholder="Buscar por documento, nombre o teléfono..."
+                  pl={10}
+                />
+                <Box
+                  position="absolute"
+                  left={3}
+                  top="50%"
+                  transform="translateY(-50%)"
+                  color={colors.subtext}
+                  fontSize="lg"
+                >
+                  🔍
+                </Box>
+                {isSearching && (
+                  <Box
+                    position="absolute"
+                    right={3}
+                    top="50%"
+                    transform="translateY(-50%)"
+                    color={colors.subtext}
+                    fontSize="sm"
+                  >
+                    Buscando...
+                  </Box>
+                )}
+              </Box>
+
+              {/* Dropdown de resultados */}
+              {showResults && searchResults.length > 0 && (
+                <Box
+                  position="absolute"
+                  top="100%"
+                  left={0}
+                  right={0}
+                  mt={1}
+                  bg={colors.surface}
+                  borderWidth="1px"
+                  borderColor={colors.border}
+                  borderRadius="md"
+                  boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
+                  zIndex={1001}
+                  maxH="300px"
+                  overflowY="auto"
+                >
+                  <Stack gap={0}>
+                    {searchResults.map((guest) => (
+                      <Box
+                        key={guest._id}
+                        p={3}
+                        cursor="pointer"
+                        _hover={{ bg: colors.bg }}
+                        borderBottomWidth="1px"
+                        borderBottomColor={colors.border}
+                        onClick={() => handleSelectGuest(guest)}
+                      >
+                        <Flex justify="space-between" align="center">
+                          <Box flex="1">
+                            <Text fontWeight="bold" color={colors.text} fontSize="sm">
+                              {guest.firstName} {guest.lastName}
+                            </Text>
+                            <Text fontSize="xs" color={colors.subtext} mt={1}>
+                              Doc: {guest.documentNumber} • Tel: {guest.phoneNumber}
+                            </Text>
+                            {guest.email && (
+                              <Text fontSize="xs" color={colors.subtext}>
+                                {guest.email}
+                              </Text>
+                            )}
+                          </Box>
+                        </Flex>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+              {showResults && searchResults.length === 0 && searchQuery.trim().length >= 2 && !isSearching && (
+                <Box
+                  position="absolute"
+                  top="100%"
+                  left={0}
+                  right={0}
+                  mt={1}
+                  bg={colors.surface}
+                  borderWidth="1px"
+                  borderColor={colors.border}
+                  borderRadius="md"
+                  boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
+                  zIndex={1001}
+                  p={3}
+                >
+                  <Text fontSize="sm" color={colors.subtext} textAlign="center">
+                    No se encontraron clientes
+                  </Text>
+                </Box>
+              )}
+            </Box>
+
+            {/* Separador */}
+            <Box
+              borderTopWidth="1px"
+              borderTopColor={colors.border}
+              pt={4}
+            >
+              <Text
+                fontSize="xs"
+                color={colors.subtext}
+                textAlign="center"
+                mb={2}
+                textTransform="uppercase"
+                letterSpacing="0.5px"
+              >
+                O complete los datos manualmente
+              </Text>
+            </Box>
+
             {/* Información del huésped */}
             <Box>
               <Text

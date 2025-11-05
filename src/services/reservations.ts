@@ -20,4 +20,22 @@ export async function getExpiringReservations(minutes: number, token?: string) {
   return apiGet<any[]>(`/reservations/expiring?minutes=${minutes}`, token);
 }
 
+export type Guest = {
+  _id: string;
+  documentNumber: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email?: string;
+  origin?: string;
+  profession?: string;
+};
+
+export async function searchGuests(query: string, token?: string) {
+  if (!query || query.trim().length < 2) {
+    return { success: true, data: [], message: '' };
+  }
+  return apiGet<Guest[]>(`/reservations/guests/search?q=${encodeURIComponent(query.trim())}`, token);
+}
+
 
