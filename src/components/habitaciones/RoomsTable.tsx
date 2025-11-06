@@ -149,8 +149,7 @@ export function RoomsTable({
           <Box as="tbody">
             {rooms.length === 0 && !loading ? (
               <Box as="tr">
-                <Box
-                  as="td"
+                <td
                   colSpan={7}
                   style={{
                     textAlign: "center",
@@ -161,7 +160,7 @@ export function RoomsTable({
                   {totalCount === 0
                     ? "No hay habitaciones registradas"
                     : "No hay habitaciones que coincidan con los filtros"}
-                </Box>
+                </td>
               </Box>
             ) : (
               rooms.map((room) => (
