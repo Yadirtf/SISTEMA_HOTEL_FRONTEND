@@ -1,0 +1,255 @@
+"use client";
+
+import { Box, Button, Input, Text, Stack, Flex, IconButton, Badge } from "@chakra-ui/react";
+import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { useProductsData } from "../hooks/useProductsData";
+import { useState } from "react";
+import type { SaleItem, Product } from "../types";
+
+interface SaleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+  items: SaleItem[];
+  addItem: (item: SaleItem) => void;
+  removeItem: (productId: string) => void;
+  updateItemQuantity: (productId: string, quantity: number) => void;
+  isLoading: boolean;
+}
+
+export function SaleModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  items,
+  addItem,
+  removeItem,
+  updateItemQuantity,
+  isLoading,
+}: SaleModalProps) {
+  const { colors } = useThemeMode();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { products } = useProductsData(undefined, searchQuery);
+
+  if (!isOpen) return null;
+
+  const handleAddProduct = (product: Product) => {
+    if (product.stock <= 0) {
+      alert("El producto no tiene stock disponible");
+      return;
+    }
+    addItem({
+      productId: product._id!,
+      quantity: 1,
+    });
+    setSearchQuery("");
+  };
+
+  const total = items.reduce((sum, item) => {
+    const product = products.find((p) => p._id === item.productId);
+    if (!product) return sum;
+    return sum + product.salePrice * item.quantity;
+  }, 0);
+
+  const totalProfit = items.reduce((sum, item) => {
+    const product = products.find((p) => p._id === item.productId);
+    if (!product) return sum;
+    return sum + (product.salePrice - product.purchasePrice) * item.quantity;
+  }, 0);
+
+  return (
+    <Box
+      position="fixed"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      zIndex={1000}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      bg="rgba(0, 0, 0, 0.8)"
+      backdropFilter="blur(3px)"
+      onClick={onClose}
+    >
+      <Box
+        bg={colors.surface}
+        color={colors.text}
+        borderRadius="lg"
+        w={{ base: "95%", md: "90%" }}
+        maxW="800px"
+        maxH="90vh"
+        overflowY="auto"
+        boxShadow={`0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 2px ${colors.border}`}
+        onClick={(e) => e.stopPropagation()}
+        m={{ base: 2, md: 0 }}
+      >
+        <Box
+          p={{ base: 4, md: 6 }}
+          borderBottom="2px"
+          borderColor={colors.border}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={colors.gold}>
+            Registrar Venta
+          </Text>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="sm"
+            color={colors.subtext}
+            _hover={{ bg: colors.bg, color: colors.gold }}
+            minW="auto"
+            w="32px"
+            h="32px"
+            p={0}
+            fontSize="xl"
+          >
+            ×
+          </Button>
+        </Box>
+
+        <Box p={{ base: 4, md: 6 }}>
+          <Stack gap={4}>
+            <Input
+              placeholder="Buscar producto por código o nombre..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              bg={colors.bg}
+              borderColor={colors.border}
+              color={colors.text}
+            />
+
+            {searchQuery && products.length > 0 && (
+              <Box maxH="200px" overflowY="auto" borderWidth="1px" borderColor={colors.border} borderRadius="md" p={2}>
+                {products.filter(p => p.isActive && p.stock > 0).map((product) => (
+                  <Flex
+                    key={product._id}
+                    justify="space-between"
+                    align="center"
+                    p={2}
+                    _hover={{ bg: colors.bg }}
+                    cursor="pointer"
+                    onClick={() => handleAddProduct(product)}
+                  >
+                    <Box>
+                      <Text fontWeight="bold">{product.name}</Text>
+                      <Text fontSize="sm" color={colors.subtext}>
+                        ${product.salePrice.toLocaleString()} - Stock: {product.stock}
+                      </Text>
+                    </Box>
+                    <Button size="sm" bg={colors.gold} color="white">
+                      Agregar
+                    </Button>
+                  </Flex>
+                ))}
+              </Box>
+            )}
+
+            {items.length > 0 && (
+              <Box>
+                <Text fontWeight="bold" mb={2} color={colors.text}>
+                  Productos en la venta
+                </Text>
+                <Stack gap={2}>
+                  {items.map((item) => {
+                    const product = products.find((p) => p._id === item.productId);
+                    if (!product) return null;
+                    return (
+                      <Flex
+                        key={item.productId}
+                        justify="space-between"
+                        align="center"
+                        p={3}
+                        bg={colors.bg}
+                        borderRadius="md"
+                      >
+                        <Box flex={1}>
+                          <Text fontWeight="bold">{product.name}</Text>
+                          <Text fontSize="sm" color={colors.subtext}>
+                            ${product.salePrice.toLocaleString()} c/u
+                          </Text>
+                        </Box>
+                        <Flex align="center" gap={2}>
+                          <IconButton
+                            size="sm"
+                            aria-label="Decrementar"
+                            onClick={() => updateItemQuantity(item.productId, item.quantity - 1)}
+                            bg={colors.border}
+                            color={colors.text}
+                          >
+                            -
+                          </IconButton>
+                          <Text minW="40px" textAlign="center" fontWeight="bold">
+                            {item.quantity}
+                          </Text>
+                          <IconButton
+                            size="sm"
+                            aria-label="Incrementar"
+                            onClick={() => {
+                              if (item.quantity < product.stock) {
+                                updateItemQuantity(item.productId, item.quantity + 1);
+                              }
+                            }}
+                            bg={colors.border}
+                            color={colors.text}
+                            isDisabled={item.quantity >= product.stock}
+                          >
+                            +
+                          </IconButton>
+                          <Text minW="100px" textAlign="right" fontWeight="bold">
+                            ${(product.salePrice * item.quantity).toLocaleString()}
+                          </Text>
+                          <IconButton
+                            size="sm"
+                            aria-label="Eliminar"
+                            onClick={() => removeItem(item.productId)}
+                            bg="red.500"
+                            color="white"
+                          >
+                            🗑️
+                          </IconButton>
+                        </Flex>
+                      </Flex>
+                    );
+                  })}
+                </Stack>
+              </Box>
+            )}
+
+            {items.length > 0 && (
+              <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
+                <Flex justify="space-between" mb={2}>
+                  <Text fontWeight="bold" color={colors.text}>Total:</Text>
+                  <Text fontWeight="bold" fontSize="xl" color={colors.gold}>${total.toLocaleString()}</Text>
+                </Flex>
+                <Flex justify="space-between">
+                  <Text color={colors.subtext}>Ganancia:</Text>
+                  <Badge colorScheme="green" fontSize="md">${totalProfit.toLocaleString()}</Badge>
+                </Flex>
+              </Box>
+            )}
+
+            <Flex gap={3} justify="flex-end">
+              <Button onClick={onClose} variant="ghost" color={colors.subtext}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={onSubmit}
+                bg={colors.gold}
+                color="white"
+                _hover={{ bg: "#b8941f" }}
+                disabled={isLoading || items.length === 0}
+              >
+                {isLoading ? "Registrando..." : "Registrar Venta"}
+              </Button>
+            </Flex>
+          </Stack>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+

@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Panel", href: "/panel" },
   { label: "Reservas", href: "/reservas" },
   { label: "Huéspedes", href: "/huespedes" },
+  { label: "Tienda", href: "/tienda" },
   { 
     label: "Gestionar habitaciones", 
     href: "/habitaciones",
