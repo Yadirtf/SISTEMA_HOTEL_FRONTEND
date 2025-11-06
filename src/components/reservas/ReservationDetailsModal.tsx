@@ -33,7 +33,6 @@ type Reservation = {
   checkInTime: Date | string;
   checkOutTime?: Date | string;
   roomPrice: number;
-  snackConsumption: number;
   totalPrice: number;
   status: string;
   numberOfGuests: number;
@@ -444,12 +443,6 @@ export function ReservationDetailsModal({
                 <Text fontSize="sm" color={colors.subtext}>Precio Habitación:</Text>
                 <Text fontSize="sm" color={colors.text} fontWeight="semibold">
                   ${formatPrice(reservation.roomPrice)}
-                </Text>
-              </Flex>
-              <Flex justify="space-between">
-                <Text fontSize="sm" color={colors.subtext}>Consumo de Snacks:</Text>
-                <Text fontSize="sm" color={colors.text} fontWeight="semibold">
-                  ${formatPrice(reservation.snackConsumption)}
                 </Text>
               </Flex>
               

@@ -17,7 +17,6 @@ export type ReservationFormData = {
   profession: string;
   checkInTime: string;
   checkOutTime: string;
-  snackConsumption: string;
   numberOfGuests: string;
   specialRequests: string;
   notes: string;
@@ -55,7 +54,6 @@ export function ReservationModal({
     profession: "",
     checkInTime: "",
     checkOutTime: "",
-    snackConsumption: "0",
     numberOfGuests: "1",
     specialRequests: "",
     notes: "",
@@ -184,7 +182,6 @@ export function ReservationModal({
         profession: "",
         checkInTime: "",
         checkOutTime: "",
-        snackConsumption: "0",
         numberOfGuests: "1",
         specialRequests: "",
         notes: "",
@@ -588,43 +585,23 @@ export function ReservationModal({
                   </Box>
                 </Flex>
 
-                <Flex gap={3}>
-                  <Box flex="1">
-                    <Text fontSize="sm" color={colors.subtext} mb={1}>
-                      Número de Huéspedes
-                    </Text>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="6"
-                      value={formData.numberOfGuests}
-                      onChange={(e) => handleChange("numberOfGuests", e.target.value)}
-                      bg={colors.bg}
-                      borderColor={colors.border}
-                      color={colors.text}
-                      _hover={{ borderColor: colors.gold }}
-                      _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    />
-                  </Box>
-                  <Box flex="1">
-                    <Text fontSize="sm" color={colors.subtext} mb={1}>
-                      Consumo de Snacks (COP)
-                    </Text>
+                <Box>
+                  <Text fontSize="sm" color={colors.subtext} mb={1}>
+                    Número de Huéspedes
+                  </Text>
                   <Input
-                    type="text"
-                    inputMode="numeric"
-                    value={formatPriceFromString(formData.snackConsumption)}
-                    onChange={(e) => handleChange("snackConsumption", e.target.value)}
-                    onBlur={(e) => handleChange("snackConsumption", formatPriceFromString(e.target.value))}
+                    type="number"
+                    min="1"
+                    max="6"
+                    value={formData.numberOfGuests}
+                    onChange={(e) => handleChange("numberOfGuests", e.target.value)}
                     bg={colors.bg}
                     borderColor={colors.border}
                     color={colors.text}
                     _hover={{ borderColor: colors.gold }}
                     _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    placeholder="0"
                   />
-                  </Box>
-                </Flex>
+                </Box>
 
                 <Box>
                   <Text fontSize="sm" color={colors.subtext} mb={1}>

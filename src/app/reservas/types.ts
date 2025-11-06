@@ -51,7 +51,6 @@ export type Reservation = {
   checkInTime: Date | string;
   checkOutTime?: Date | string;
   roomPrice: number;
-  snackConsumption: number;
   totalPrice: number;
   status: string;
   numberOfGuests: number;

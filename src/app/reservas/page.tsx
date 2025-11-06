@@ -68,7 +68,6 @@ export default function ReservasPage() {
       roomNumber: selectedRoom.number,
       checkInTime: formData.checkInTime ? new Date(formData.checkInTime).toISOString() : new Date().toISOString(),
       checkOutTime: formData.checkOutTime ? new Date(formData.checkOutTime).toISOString() : undefined,
-      snackConsumption: formData.snackConsumption ? parseFormattedPrice(formData.snackConsumption) : 0,
       numberOfGuests: formData.numberOfGuests ? parseInt(formData.numberOfGuests) : 1,
       specialRequests: formData.specialRequests.trim() || undefined,
       notes: formData.notes.trim() || undefined,
