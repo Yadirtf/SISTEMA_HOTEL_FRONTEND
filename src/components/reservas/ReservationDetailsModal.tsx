@@ -1,8 +1,13 @@
 "use client";
 
-import { Box, Button, Flex, Stack, Text, Heading } from "@chakra-ui/react";
+import { Box, Button, Flex, Stack, Text, Heading, Badge, Spinner } from "@chakra-ui/react";
 import { formatPrice } from "@/lib/format";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { useState, useEffect } from "react";
+import { getPendingSalesByReservation } from "@/services/sales";
+import { checkOutReservation, type CheckOutData } from "@/services/reservations";
+import { getToken } from "@/lib/session";
+import type { Sale } from "@/app/tienda/types";
 
 type Guest = {
   _id: string;
@@ -44,6 +49,7 @@ type ReservationDetailsModalProps = {
   onClose: () => void;
   reservation: Reservation | null;
   isLoading?: boolean;
+  onCheckoutSuccess?: () => void;
 };
 
 const statusToEs: Record<string, string> = {
@@ -66,8 +72,75 @@ export function ReservationDetailsModal({
   onClose,
   reservation,
   isLoading = false,
+  onCheckoutSuccess,
 }: ReservationDetailsModalProps) {
   const { colors } = useThemeMode();
+  const [pendingSales, setPendingSales] = useState<Sale[]>([]);
+  const [loadingPendingSales, setLoadingPendingSales] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
+  const [additionalCharges, setAdditionalCharges] = useState<string>('0');
+  const [checkoutNotes, setCheckoutNotes] = useState('');
+
+  // Cargar productos fiados cuando se abre el modal
+  useEffect(() => {
+    if (isOpen && reservation && reservation.status === 'checked_in' && reservation._id) {
+      loadPendingSales();
+    } else {
+      setPendingSales([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, reservation?._id, reservation?.status]);
+
+  const loadPendingSales = async () => {
+    if (!reservation?._id) return;
+    const token = getToken();
+    if (!token) return;
+
+    setLoadingPendingSales(true);
+    try {
+      const resp = await getPendingSalesByReservation(reservation._id, token);
+      if (resp.success && resp.data) {
+        setPendingSales(resp.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar productos fiados:', error);
+    } finally {
+      setLoadingPendingSales(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!reservation?._id) return;
+    const token = getToken();
+    if (!token) return;
+
+    setIsCheckingOut(true);
+    try {
+      const checkoutData: CheckOutData = {
+        paymentMethod,
+        additionalCharges: parseFloat(additionalCharges) || 0,
+        notes: checkoutNotes.trim() || undefined,
+      };
+
+      const resp = await checkOutReservation(reservation._id, checkoutData, token);
+      if (resp.success) {
+        if (onCheckoutSuccess) {
+          onCheckoutSuccess();
+        }
+        onClose();
+      } else {
+        alert(resp.message || 'Error al realizar el checkout');
+      }
+    } catch (error: any) {
+      alert(error.message || 'Error inesperado al realizar el checkout');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  const pendingSalesTotal = pendingSales.reduce((sum, sale) => sum + sale.total, 0);
 
   if (!isOpen) return null;
 
@@ -379,10 +452,57 @@ export function ReservationDetailsModal({
                   ${formatPrice(reservation.snackConsumption)}
                 </Text>
               </Flex>
+              
+              {/* Productos fiados */}
+              {reservation.status === 'checked_in' && (
+                <>
+                  {loadingPendingSales ? (
+                    <Flex justify="center" py={2}>
+                      <Spinner size="sm" color={colors.gold} />
+                    </Flex>
+                  ) : pendingSales.length > 0 ? (
+                    <Box pt={2} borderTop="1px solid" borderColor={colors.border}>
+                      <Text fontSize="sm" color={colors.gold} fontWeight="semibold" mb={2}>
+                        Productos Fiados ({pendingSales.length}):
+                      </Text>
+                      <Stack gap={1} mb={2} maxH="150px" overflowY="auto">
+                        {pendingSales.map((sale) => (
+                          <Box key={sale._id} p={2} bg={colors.bg} borderRadius="md" fontSize="xs">
+                            <Flex justify="space-between" mb={1}>
+                              <Text color={colors.subtext}>
+                                {new Date(sale.saleDate).toLocaleDateString('es-CO', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </Text>
+                              <Badge colorScheme="orange" fontSize="xs">Fiado</Badge>
+                            </Flex>
+                            <Text color={colors.text} fontSize="xs" mb={1}>
+                              {sale.items.length} producto(s)
+                            </Text>
+                            <Text color={colors.gold} fontWeight="bold" fontSize="sm">
+                              ${formatPrice(sale.total)}
+                            </Text>
+                          </Box>
+                        ))}
+                      </Stack>
+                      <Flex justify="space-between" pt={2} borderTop="1px solid" borderColor={colors.border}>
+                        <Text fontSize="sm" color={colors.subtext}>Total Productos Fiados:</Text>
+                        <Text fontSize="sm" color={colors.gold} fontWeight="bold">
+                          ${formatPrice(pendingSalesTotal)}
+                        </Text>
+                      </Flex>
+                    </Box>
+                  ) : null}
+                </>
+              )}
+
               <Flex justify="space-between" pt={2} borderTop="1px solid" borderColor={colors.border}>
                 <Text fontSize="md" color={colors.text} fontWeight="bold">Total:</Text>
                 <Text fontSize="lg" color={colors.gold} fontWeight="bold">
-                  ${formatPrice(reservation.totalPrice)}
+                  ${formatPrice(reservation.totalPrice + (reservation.status === 'checked_in' ? pendingSalesTotal : 0))}
                 </Text>
               </Flex>
               {reservation.paymentMethod && (
@@ -401,6 +521,154 @@ export function ReservationDetailsModal({
               </Flex>
             </Stack>
           </Box>
+
+          {/* Formulario de checkout (solo si está checked_in) */}
+          {reservation.status === 'checked_in' && (
+            <Box>
+              {!showCheckoutForm ? (
+                <Button
+                  w="100%"
+                  bg={colors.gold}
+                  color={colors.bg}
+                  fontWeight="bold"
+                  _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
+                  onClick={() => setShowCheckoutForm(true)}
+                  boxShadow={`0 2px 8px ${colors.gold}50`}
+                >
+                  Realizar Check-out
+                </Button>
+              ) : (
+                <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
+                  <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
+                    Proceso de Check-out
+                  </Text>
+                  <Stack gap={3}>
+                    {pendingSales.length > 0 && (
+                      <Box p={3} bg={colors.surface} borderRadius="md" borderWidth="1px" borderColor={colors.gold}>
+                        <Text fontSize="sm" color={colors.gold} fontWeight="semibold" mb={1}>
+                          Productos fiados incluidos:
+                        </Text>
+                        <Text fontSize="sm" color={colors.text}>
+                          {pendingSales.length} venta(s) por un total de ${formatPrice(pendingSalesTotal)}
+                        </Text>
+                      </Box>
+                    )}
+                    
+                    <Box>
+                      <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
+                        Método de Pago <Text as="span" color="red.500">*</Text>
+                      </Text>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'transfer')}
+                        style={{
+                          width: '100%',
+                          backgroundColor: colors.surface,
+                          color: colors.text,
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          border: `2px solid ${colors.border}`,
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = colors.gold;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = colors.border;
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = colors.gold;
+                          e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = colors.border;
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      >
+                        <option value="cash" style={{ backgroundColor: colors.surface, color: colors.text }}>Efectivo</option>
+                        <option value="card" style={{ backgroundColor: colors.surface, color: colors.text }}>Tarjeta</option>
+                        <option value="transfer" style={{ backgroundColor: colors.surface, color: colors.text }}>Transferencia</option>
+                      </select>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
+                        Cargos Adicionales
+                      </Text>
+                      <input
+                        type="number"
+                        value={additionalCharges}
+                        onChange={(e) => setAdditionalCharges(e.target.value)}
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                        style={{
+                          width: '100%',
+                          backgroundColor: colors.surface,
+                          color: colors.text,
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          border: `2px solid ${colors.border}`,
+                          fontSize: '14px',
+                        }}
+                      />
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
+                        Notas
+                      </Text>
+                      <textarea
+                        value={checkoutNotes}
+                        onChange={(e) => setCheckoutNotes(e.target.value)}
+                        placeholder="Notas adicionales..."
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          backgroundColor: colors.surface,
+                          color: colors.text,
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          border: `2px solid ${colors.border}`,
+                          fontSize: '14px',
+                          resize: 'vertical',
+                        }}
+                      />
+                    </Box>
+
+                    <Flex gap={2} mt={2}>
+                      <Button
+                        flex={1}
+                        variant="ghost"
+                        color={colors.subtext}
+                        onClick={() => {
+                          setShowCheckoutForm(false);
+                          setPaymentMethod('cash');
+                          setAdditionalCharges('0');
+                          setCheckoutNotes('');
+                        }}
+                        disabled={isCheckingOut}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        flex={1}
+                        bg={colors.gold}
+                        color={colors.bg}
+                        fontWeight="bold"
+                        _hover={{ bg: "#b8941f" }}
+                        onClick={handleCheckout}
+                        disabled={isCheckingOut}
+                      >
+                        {isCheckingOut ? "Procesando..." : "Confirmar Check-out"}
+                      </Button>
+                    </Flex>
+                  </Stack>
+                </Box>
+              )}
+            </Box>
+          )}
 
           {/* Solicitudes especiales y notas */}
           {(reservation.specialRequests || reservation.notes) && (

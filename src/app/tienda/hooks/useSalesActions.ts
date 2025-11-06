@@ -12,9 +12,13 @@ export function useSalesActions(
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [items, setItems] = useState<SaleItem[]>([]);
+  const [selectedReservationId, setSelectedReservationId] = useState<string | undefined>(undefined);
+  const [isCreditSale, setIsCreditSale] = useState(false);
 
   const resetForm = useCallback(() => {
     setItems([]);
+    setSelectedReservationId(undefined);
+    setIsCreditSale(false);
   }, []);
 
   const openModal = useCallback(() => {
@@ -75,6 +79,8 @@ export function useSalesActions(
       const formData: SaleFormData = {
         items,
         notes: undefined,
+        reservationId: selectedReservationId,
+        paymentStatus: isCreditSale && selectedReservationId ? 'pending' : 'paid',
       };
       const resp = await createSale(formData, token);
       if (resp.success) {
@@ -89,12 +95,16 @@ export function useSalesActions(
     } finally {
       setIsSubmitting(false);
     }
-  }, [items, showNotification, reloadSales, closeModal]);
+  }, [items, selectedReservationId, isCreditSale, showNotification, reloadSales, closeModal]);
 
   return {
     isModalOpen,
     isSubmitting,
     items,
+    selectedReservationId,
+    isCreditSale,
+    setSelectedReservationId,
+    setIsCreditSale,
     openModal,
     closeModal,
     addItem,

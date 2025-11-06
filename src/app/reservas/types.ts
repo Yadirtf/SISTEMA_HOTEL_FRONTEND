@@ -25,4 +25,42 @@ export type Room = {
   isActive: boolean;
 };
 
+export type Guest = {
+  _id: string;
+  documentNumber: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email?: string;
+  origin?: string;
+  profession?: string;
+};
+
+export type Reservation = {
+  _id: string;
+  guest: Guest | string;
+  room: {
+    _id: string;
+    number: string;
+    type?: string;
+    floor?: number;
+    pricePerNight: number;
+  } | string;
+  documentNumber: string;
+  roomNumber: string;
+  checkInTime: Date | string;
+  checkOutTime?: Date | string;
+  roomPrice: number;
+  snackConsumption: number;
+  totalPrice: number;
+  status: string;
+  numberOfGuests: number;
+  specialRequests?: string;
+  notes?: string;
+  paymentMethod?: string;
+  isPaid?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
+
 

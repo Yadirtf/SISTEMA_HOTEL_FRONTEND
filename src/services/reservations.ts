@@ -1,4 +1,4 @@
-import { apiGet, apiPost, Caja } from "@/lib/api";
+import { apiGet, apiPost, apiPatch, Caja } from "@/lib/api";
 import type { Floor } from "@/app/habitaciones/types";
 
 export async function getFloors(token?: string): Promise<Caja<Floor[]>> {
@@ -37,6 +37,34 @@ export async function searchGuests(query: string, token?: string) {
     return { success: true, data: [], message: '' };
   }
   return apiGet<Guest[]>(`/reservations/guests/search?q=${encodeURIComponent(query.trim())}`, token);
+}
+
+export interface ActiveReservation {
+  _id: string;
+  roomNumber: string;
+  documentNumber: string;
+  guest?: {
+    firstName: string;
+    lastName: string;
+    documentNumber: string;
+  };
+  room?: {
+    number: string;
+  };
+}
+
+export async function getActiveReservations(token?: string): Promise<Caja<ActiveReservation[]>> {
+  return apiGet<ActiveReservation[]>("/reservations?status=checked_in", token);
+}
+
+export interface CheckOutData {
+  additionalCharges?: number;
+  paymentMethod?: 'cash' | 'card' | 'transfer';
+  notes?: string;
+}
+
+export async function checkOutReservation(reservationId: string, data: CheckOutData, token?: string) {
+  return apiPatch(`/reservations/${reservationId}/check-out`, data, token);
 }
 
 

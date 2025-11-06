@@ -1,4 +1,4 @@
-import { apiGet, apiPost, Caja } from "@/lib/api";
+import { apiGet, apiPost, apiPatch, Caja } from "@/lib/api";
 import type { Sale, SaleFormData, SalesReport, ReportPeriod } from "@/app/tienda/types";
 
 export async function createSale(data: SaleFormData, token?: string): Promise<Caja<Sale>> {
@@ -53,5 +53,13 @@ export async function getBiweeklyReport(token?: string): Promise<Caja<SalesRepor
 
 export async function getMonthlyReport(token?: string): Promise<Caja<SalesReport>> {
   return apiGet<SalesReport>("/store/sales/report/monthly", token);
+}
+
+export async function getPendingSalesByReservation(reservationId: string, token?: string): Promise<Caja<Sale[]>> {
+  return apiGet<Sale[]>(`/store/sales/pending/${reservationId}`, token);
+}
+
+export async function markSaleAsPaid(saleId: string, token?: string): Promise<Caja<Sale>> {
+  return apiPatch<Sale>(`/store/sales/${saleId}/mark-paid`, {}, token);
 }
 

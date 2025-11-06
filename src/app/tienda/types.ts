@@ -50,6 +50,8 @@ export interface Sale {
   userId: number;
   saleDate: Date;
   notes?: string;
+  reservationId?: string;
+  paymentStatus: 'paid' | 'pending';
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -94,6 +96,8 @@ export interface CategoryFormData {
 export interface SaleFormData {
   items: SaleItem[];
   notes?: string;
+  reservationId?: string;
+  paymentStatus?: 'paid' | 'pending';
 }
 
 export type ReportPeriod = 'weekly' | 'biweekly' | 'monthly' | 'custom';

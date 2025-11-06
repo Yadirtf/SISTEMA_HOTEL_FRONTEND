@@ -3,7 +3,9 @@
 import { Box, Button, Input, Text, Stack, Flex, IconButton, Badge } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useProductsData } from "../hooks/useProductsData";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getActiveReservations, type ActiveReservation } from "@/services/reservations";
+import { getToken } from "@/lib/session";
 import type { SaleItem, Product } from "../types";
 
 interface SaleModalProps {
@@ -14,6 +16,10 @@ interface SaleModalProps {
   addItem: (item: SaleItem) => void;
   removeItem: (productId: string) => void;
   updateItemQuantity: (productId: string, quantity: number) => void;
+  selectedReservationId?: string;
+  isCreditSale: boolean;
+  setSelectedReservationId: (id: string | undefined) => void;
+  setIsCreditSale: (value: boolean) => void;
   isLoading: boolean;
 }
 
@@ -25,11 +31,57 @@ export function SaleModal({
   addItem,
   removeItem,
   updateItemQuantity,
+  selectedReservationId,
+  isCreditSale,
+  setSelectedReservationId,
+  setIsCreditSale,
   isLoading,
 }: SaleModalProps) {
   const { colors } = useThemeMode();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeReservations, setActiveReservations] = useState<ActiveReservation[]>([]);
+  const [loadingReservations, setLoadingReservations] = useState(false);
   const { products } = useProductsData(undefined, searchQuery);
+
+  // Cargar reservas activas cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      loadActiveReservations();
+    }
+  }, [isOpen]);
+
+  const loadActiveReservations = async () => {
+    const token = getToken();
+    if (!token) {
+      console.error('[SaleModal] No hay token disponible');
+      return;
+    }
+    
+    setLoadingReservations(true);
+    try {
+      console.log('[SaleModal] Cargando reservas activas...');
+      const resp = await getActiveReservations(token);
+      console.log('[SaleModal] Respuesta completa:', JSON.stringify(resp, null, 2));
+      
+      if (resp.success && resp.data) {
+        console.log('[SaleModal] Reservas activas cargadas:', resp.data.length, 'reservas');
+        console.log('[SaleModal] Datos de reservas:', resp.data);
+        
+        // Asegurarse de que los datos sean un array
+        const reservations = Array.isArray(resp.data) ? resp.data : [];
+        setActiveReservations(reservations);
+      } else {
+        console.warn('[SaleModal] No se pudieron cargar las reservas activas:', resp.message);
+        setActiveReservations([]);
+      }
+    } catch (error: any) {
+      console.error('[SaleModal] Error al cargar reservas activas:', error);
+      console.error('[SaleModal] Detalles del error:', error.message, error.stack);
+      setActiveReservations([]);
+    } finally {
+      setLoadingReservations(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -113,6 +165,112 @@ export function SaleModal({
 
         <Box p={{ base: 4, md: 6 }}>
           <Stack gap={4}>
+            {/* Selector de reserva para ventas fiadas */}
+            <Box>
+              <Text mb={2} fontWeight="semibold" color={colors.text}>
+                ¿Venta fiada a una habitación?
+              </Text>
+              <Flex gap={2} align="center" mb={2}>
+                <input
+                  type="checkbox"
+                  checked={isCreditSale}
+                  onChange={(e) => {
+                    setIsCreditSale(e.target.checked);
+                    if (!e.target.checked) {
+                      setSelectedReservationId(undefined);
+                    }
+                  }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <Text color={colors.text} fontSize="sm">
+                  Marcar como fiada
+                </Text>
+              </Flex>
+              
+              {isCreditSale && (
+                <Box>
+                  <select
+                    value={selectedReservationId || ""}
+                    onChange={(e) => setSelectedReservationId(e.target.value || undefined)}
+                    style={{
+                      width: '100%',
+                      backgroundColor: colors.surface,
+                      color: colors.text,
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      border: `2px solid ${colors.border}`,
+                      fontSize: '14px',
+                      cursor: loadingReservations ? 'wait' : 'pointer',
+                      opacity: loadingReservations ? 0.6 : 1,
+                    }}
+                    disabled={loadingReservations}
+                    onMouseEnter={(e) => {
+                      if (!loadingReservations) {
+                        e.currentTarget.style.borderColor = colors.gold;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loadingReservations) {
+                        e.currentTarget.style.borderColor = colors.border;
+                      }
+                    }}
+                    onFocus={(e) => {
+                      if (!loadingReservations) {
+                        e.currentTarget.style.borderColor = colors.gold;
+                        e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
+                      }
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.border;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
+                      {loadingReservations ? "Cargando habitaciones..." : "Seleccionar habitación..."}
+                    </option>
+                    {!loadingReservations && activeReservations.length === 0 && (
+                      <option value="" disabled style={{ backgroundColor: colors.surface, color: colors.subtext }}>
+                        No hay habitaciones ocupadas actualmente
+                      </option>
+                    )}
+                    {!loadingReservations && activeReservations.map((reservation) => {
+                      // Manejar diferentes formatos de respuesta del backend
+                      const guest = typeof reservation.guest === 'object' && reservation.guest !== null 
+                        ? reservation.guest 
+                        : null;
+                      const room = typeof reservation.room === 'object' && reservation.room !== null 
+                        ? reservation.room 
+                        : null;
+                      
+                      const guestName = guest 
+                        ? `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || guest.documentNumber || reservation.documentNumber
+                        : reservation.documentNumber;
+                      const roomNumber = room?.number || reservation.roomNumber || 'N/A';
+                      
+                      return (
+                        <option
+                          key={reservation._id}
+                          value={reservation._id}
+                          style={{ backgroundColor: colors.surface, color: colors.text }}
+                        >
+                          Habitación {roomNumber} - {guestName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {!loadingReservations && activeReservations.length === 0 && (
+                    <Text fontSize="xs" color={colors.subtext} mt={1} fontStyle="italic">
+                      Solo se muestran habitaciones con estado "Ocupada" (checked_in)
+                    </Text>
+                  )}
+                </Box>
+              )}
+            </Box>
+
             <Input
               placeholder="Buscar producto por código o nombre..."
               value={searchQuery}
@@ -241,9 +399,13 @@ export function SaleModal({
                 bg={colors.gold}
                 color="white"
                 _hover={{ bg: "#b8941f" }}
-                disabled={isLoading || items.length === 0}
+                disabled={isLoading || items.length === 0 || (isCreditSale && !selectedReservationId)}
               >
-                {isLoading ? "Registrando..." : "Registrar Venta"}
+                {isLoading 
+                  ? "Registrando..." 
+                  : isCreditSale 
+                    ? "Registrar Venta Fiada" 
+                    : "Registrar Venta"}
               </Button>
             </Flex>
           </Stack>

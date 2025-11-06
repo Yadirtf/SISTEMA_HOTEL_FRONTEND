@@ -18,6 +18,10 @@ export function SalesTab({ showNotification }: SalesTabProps) {
     isModalOpen,
     isSubmitting,
     items,
+    selectedReservationId,
+    isCreditSale,
+    setSelectedReservationId,
+    setIsCreditSale,
     openModal,
     closeModal,
     addItem,
@@ -75,6 +79,7 @@ export function SalesTab({ showNotification }: SalesTabProps) {
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Productos</th>
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Total</th>
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Ganancia</th>
+                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Estado</th>
               </tr>
             </thead>
             <tbody>
@@ -94,6 +99,11 @@ export function SalesTab({ showNotification }: SalesTabProps) {
                   <td style={{ padding: "12px", color: colors.text }}>
                     <Badge colorScheme="green">${sale.totalProfit.toLocaleString()}</Badge>
                   </td>
+                  <td style={{ padding: "12px", color: colors.text }}>
+                    <Badge colorScheme={(sale.paymentStatus || 'paid') === 'paid' ? 'green' : 'orange'}>
+                      {(sale.paymentStatus || 'paid') === 'paid' ? 'Pagado' : 'Fiado'}
+                    </Badge>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -109,6 +119,10 @@ export function SalesTab({ showNotification }: SalesTabProps) {
         addItem={addItem}
         removeItem={removeItem}
         updateItemQuantity={updateItemQuantity}
+        selectedReservationId={selectedReservationId}
+        isCreditSale={isCreditSale}
+        setSelectedReservationId={setSelectedReservationId}
+        setIsCreditSale={setIsCreditSale}
         isLoading={isSubmitting}
       />
     </Box>
