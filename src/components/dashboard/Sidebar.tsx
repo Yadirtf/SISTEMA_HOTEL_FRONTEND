@@ -167,6 +167,16 @@ export function Sidebar() {
                 >
                   Usuarios
                 </Button>
+                <Button
+                  onClick={() => router.push("/panel/admin/pagos")}
+                  justifyContent="flex-start"
+                  variant="ghost"
+                  bg={pathname === "/panel/admin/pagos" ? "rgba(212,175,55,0.16)" : "transparent"}
+                  _hover={{ bg: "rgba(212,175,55,0.22)" }}
+                  color={colors.text}
+                >
+                  Medios y Tipos de Pago
+                </Button>
               </Stack>
             )}
           </>

@@ -16,7 +16,8 @@ export function useBillingActions(
 
   const handleCheckout = async (
     reservationId: string,
-    paymentMethod: 'cash' | 'card' | 'transfer',
+    paymentMethodId: string | undefined,
+    paymentTypeId: string | undefined,
     additionalCharges: number = 0,
     notes?: string
   ) => {
@@ -29,7 +30,8 @@ export function useBillingActions(
     setIsProcessingCheckout(true);
     try {
       const checkoutData: CheckOutData = {
-        paymentMethod,
+        paymentMethodId,
+        paymentTypeId,
         additionalCharges,
         notes: notes?.trim() || undefined,
       };

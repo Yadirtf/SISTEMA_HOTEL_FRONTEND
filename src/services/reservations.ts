@@ -59,7 +59,8 @@ export async function getActiveReservations(token?: string): Promise<Caja<Active
 
 export interface CheckOutData {
   additionalCharges?: number;
-  paymentMethod?: 'cash' | 'card' | 'transfer';
+  paymentMethodId?: string;
+  paymentTypeId?: string;
   notes?: string;
 }
 

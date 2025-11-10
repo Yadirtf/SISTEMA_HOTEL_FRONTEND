@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { searchGuests, Guest } from "@/services/reservations";
 import { getToken } from "@/lib/session";
+import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
 
 export type ReservationFormData = {
   documentNumber: string;
@@ -20,7 +21,9 @@ export type ReservationFormData = {
   numberOfGuests: string;
   specialRequests: string;
   notes: string;
-  paymentMethod: "cash" | "card" | "transfer" | "pending";
+  paymentStatus: "paid" | "pending";
+  paymentMethodId?: string;
+  paymentTypeId?: string;
 };
 
 type ReservationModalProps = {
@@ -57,8 +60,13 @@ export function ReservationModal({
     numberOfGuests: "1",
     specialRequests: "",
     notes: "",
-    paymentMethod: "pending",
+    paymentStatus: "pending",
+    paymentMethodId: undefined,
+    paymentTypeId: undefined,
   });
+
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
 
   // Estados para el buscador de clientes
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,6 +75,29 @@ export function ReservationModal({
   const [showResults, setShowResults] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Cargar medios y tipos de pago
+  useEffect(() => {
+    const loadPaymentData = async () => {
+      try {
+        const [methodsResp, typesResp] = await Promise.all([
+          getPaymentMethods(false, token),
+          getPaymentTypes(false, token),
+        ]);
+        if (methodsResp.success && methodsResp.data) {
+          setPaymentMethods(methodsResp.data);
+        }
+        if (typesResp.success && typesResp.data) {
+          setPaymentTypes(typesResp.data);
+        }
+      } catch (error) {
+        console.error("Error loading payment data:", error);
+      }
+    };
+    if (isOpen) {
+      loadPaymentData();
+    }
+  }, [isOpen, token]);
 
   // Efecto para buscar clientes con debounce
   useEffect(() => {
@@ -185,7 +216,9 @@ export function ReservationModal({
         numberOfGuests: "1",
         specialRequests: "",
         notes: "",
-        paymentMethod: "pending",
+        paymentStatus: "pending",
+        paymentMethodId: undefined,
+        paymentTypeId: undefined,
       });
       setSearchQuery("");
       setSearchResults([]);
@@ -200,7 +233,7 @@ export function ReservationModal({
     onSubmit(formData);
   };
 
-  const handleChange = (field: keyof ReservationFormData, value: string) => {
+  const handleChange = (field: keyof ReservationFormData, value: string | undefined) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -605,11 +638,19 @@ export function ReservationModal({
 
                 <Box>
                   <Text fontSize="sm" color={colors.subtext} mb={1}>
-                    Método de Pago
+                    Estado de Pago
                   </Text>
                   <select
-                    value={formData.paymentMethod}
-                    onChange={(e) => handleChange("paymentMethod", e.target.value)}
+                    value={formData.paymentStatus}
+                    onChange={(e) => {
+                      const newStatus = e.target.value as "paid" | "pending";
+                      handleChange("paymentStatus", newStatus);
+                      // Si cambia a "pending", limpiar los campos de pago
+                      if (newStatus === "pending") {
+                        handleChange("paymentMethodId", undefined);
+                        handleChange("paymentTypeId", undefined);
+                      }
+                    }}
                     style={{
                       width: "100%",
                       padding: "8px 12px",
@@ -621,11 +662,65 @@ export function ReservationModal({
                     }}
                   >
                     <option value="pending">Pendiente</option>
-                    <option value="cash">Efectivo</option>
-                    <option value="card">Tarjeta</option>
-                    <option value="transfer">Transferencia</option>
+                    <option value="paid">Pagó</option>
                   </select>
                 </Box>
+
+                {formData.paymentStatus === "paid" && (
+                  <>
+                    <Box>
+                      <Text fontSize="sm" color={colors.subtext} mb={1}>
+                        Método de Pago
+                      </Text>
+                      <select
+                        value={formData.paymentMethodId || ""}
+                        onChange={(e) => handleChange("paymentMethodId", e.target.value || undefined)}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          backgroundColor: colors.bg,
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: "6px",
+                          color: colors.text,
+                          fontSize: "14px",
+                        }}
+                      >
+                        <option value="">Seleccionar método de pago</option>
+                        {paymentMethods.map((method) => (
+                          <option key={method._id} value={method._id}>
+                            {method.icon ? `${method.icon} ` : ""}{method.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="sm" color={colors.subtext} mb={1}>
+                        Tipo de Pago
+                      </Text>
+                      <select
+                        value={formData.paymentTypeId || ""}
+                        onChange={(e) => handleChange("paymentTypeId", e.target.value || undefined)}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          backgroundColor: colors.bg,
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: "6px",
+                          color: colors.text,
+                          fontSize: "14px",
+                        }}
+                      >
+                        <option value="">Seleccionar tipo de pago</option>
+                        {paymentTypes.map((type) => (
+                          <option key={type._id} value={type._id}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Box>
+                  </>
+                )}
 
                 <Box>
                   <Text fontSize="sm" color={colors.subtext} mb={1}>

@@ -60,12 +60,13 @@ export function BillingTab({ showNotification, onCheckoutSuccess }: BillingTabPr
   }, [loadBillingDetails]);
 
   const handleCheckoutClick = useCallback(async (
-    paymentMethod: 'cash' | 'card' | 'transfer',
+    paymentMethodId: string | undefined,
+    paymentTypeId: string | undefined,
     additionalCharges: number,
     notes?: string
   ) => {
     if (!selectedReservation?._id) return;
-    await handleCheckout(selectedReservation._id, paymentMethod, additionalCharges, notes);
+    await handleCheckout(selectedReservation._id, paymentMethodId, paymentTypeId, additionalCharges, notes);
   }, [selectedReservation, handleCheckout]);
 
   return (

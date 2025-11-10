@@ -1,16 +1,18 @@
 "use client";
 
 import { Box, Text, Flex, Stack, Button, Badge, Spinner, Textarea } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import type { BillingDetails as BillingDetailsType } from "../services/billing";
+import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
+import { getToken } from "@/lib/session";
 
 interface BillingDetailsProps {
   billingDetails: BillingDetailsType | null;
   loading: boolean;
   isProcessingCheckout: boolean;
-  onCheckout: (paymentMethod: 'cash' | 'card' | 'transfer', additionalCharges: number, notes?: string) => void;
+  onCheckout: (paymentMethodId: string | undefined, paymentTypeId: string | undefined, additionalCharges: number, notes?: string) => void;
   onGenerateInvoice: () => void;
   isGeneratingInvoice: boolean;
   onOpenInvoice?: () => void;
@@ -26,9 +28,33 @@ export function BillingDetails({
   onOpenInvoice,
 }: BillingDetailsProps) {
   const { colors } = useThemeMode();
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
+  const token = getToken() || undefined;
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
+  const [paymentTypeId, setPaymentTypeId] = useState<string>('');
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
   const [additionalCharges, setAdditionalCharges] = useState<string>('0');
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    const loadPaymentData = async () => {
+      try {
+        const [methodsResp, typesResp] = await Promise.all([
+          getPaymentMethods(false, token),
+          getPaymentTypes(false, token),
+        ]);
+        if (methodsResp.success && methodsResp.data) {
+          setPaymentMethods(methodsResp.data);
+        }
+        if (typesResp.success && typesResp.data) {
+          setPaymentTypes(typesResp.data);
+        }
+      } catch (error) {
+        console.error("Error loading payment data:", error);
+      }
+    };
+    loadPaymentData();
+  }, [token]);
 
   if (loading) {
     return (
@@ -215,49 +241,58 @@ export function BillingDetails({
             Desglose de Pagos
           </Text>
           <Stack gap={2}>
-            <Flex justify="space-between">
-              <Text fontSize="sm" color={colors.subtext}>Precio Habitación:</Text>
+            <Flex justify="space-between" align="center">
+              <Flex align="center" gap={2}>
+                <Text fontSize="sm" color={colors.subtext}>Precio Habitación:</Text>
+                <Badge colorScheme={reservation.isPaid ? "green" : "orange"} fontSize="xs">
+                  {reservation.isPaid ? "Pagado" : "Pendiente"}
+                </Badge>
+              </Flex>
               <Text fontSize="sm" color={colors.text} fontWeight="semibold">
                 ${formatPrice(reservation.roomPrice || 0)}
               </Text>
             </Flex>
-            {pendingSalesTotal > 0 && (
-              <Flex justify="space-between">
+            <Flex justify="space-between" align="center">
+              <Flex align="center" gap={2}>
                 <Text fontSize="sm" color={colors.subtext}>Productos Fiados:</Text>
-                <Text fontSize="sm" color={colors.text} fontWeight="semibold">
-                  ${formatPrice(pendingSalesTotal)}
-                </Text>
+                <Badge colorScheme={pendingSales.length > 0 ? "orange" : "green"} fontSize="xs">
+                  {pendingSales.length > 0 ? "Pendiente" : "Pagado"}
+                </Badge>
               </Flex>
-            )}
+              <Text fontSize="sm" color={colors.text} fontWeight="semibold">
+                ${formatPrice(pendingSalesTotal)}
+              </Text>
+            </Flex>
             <Flex justify="space-between" pt={2} borderTop="1px solid" borderColor={colors.border}>
               <Text fontSize="lg" color={colors.text} fontWeight="bold">Total a Pagar:</Text>
               <Text fontSize="xl" color={colors.gold} fontWeight="bold">
                 ${formatPrice(totalToPay)}
               </Text>
             </Flex>
-            <Flex justify="space-between">
-              <Text fontSize="sm" color={colors.subtext}>Estado de Pago:</Text>
-              <Badge colorScheme={reservation.isPaid ? "green" : "orange"} fontSize="sm">
-                {reservation.isPaid ? "Pagado" : "Pendiente"}
-              </Badge>
-            </Flex>
           </Stack>
         </Box>
 
         {/* Formulario de checkout */}
-        {!reservation.isPaid && (
+        {(!reservation.isPaid || pendingSales.length > 0) && (
           <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.gold}>
             <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-              Proceso de Pago
+              {reservation.isPaid && pendingSales.length > 0 
+                ? "Pagar Productos Fiados" 
+                : "Proceso de Pago"}
             </Text>
+            {reservation.isPaid && pendingSales.length > 0 && (
+              <Text fontSize="sm" color={colors.subtext} mb={3} fontStyle="italic">
+                La habitación ya está pagada. Estás pagando los productos fiados pendientes.
+              </Text>
+            )}
             <Stack gap={3}>
               <Box>
                 <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
                   Método de Pago <Text as="span" color="red.500">*</Text>
                 </Text>
                 <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'transfer')}
+                  value={paymentMethodId}
+                  onChange={(e) => setPaymentMethodId(e.target.value)}
                   style={{
                     width: '100%',
                     backgroundColor: colors.surface,
@@ -269,9 +304,39 @@ export function BillingDetails({
                     cursor: 'pointer',
                   }}
                 >
-                  <option value="cash" style={{ backgroundColor: colors.surface, color: colors.text }}>Efectivo</option>
-                  <option value="card" style={{ backgroundColor: colors.surface, color: colors.text }}>Tarjeta</option>
-                  <option value="transfer" style={{ backgroundColor: colors.surface, color: colors.text }}>Transferencia</option>
+                  <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar método de pago</option>
+                  {paymentMethods.map((method) => (
+                    <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                      {method.icon ? `${method.icon} ` : ""}{method.name}
+                    </option>
+                  ))}
+                </select>
+              </Box>
+
+              <Box>
+                <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
+                  Tipo de Pago
+                </Text>
+                <select
+                  value={paymentTypeId}
+                  onChange={(e) => setPaymentTypeId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    border: `2px solid ${colors.border}`,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar tipo de pago</option>
+                  {paymentTypes.map((type) => (
+                    <option key={type._id} value={type._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                      {type.name}
+                    </option>
+                  ))}
                 </select>
               </Box>
 
@@ -338,10 +403,14 @@ export function BillingDetails({
                   color={colors.bg}
                   fontWeight="bold"
                   _hover={{ bg: "#b8941f" }}
-                  onClick={() => onCheckout(paymentMethod, parseFloat(additionalCharges) || 0, notes.trim() || undefined)}
-                  disabled={isProcessingCheckout}
+                  onClick={() => onCheckout(paymentMethodId || undefined, paymentTypeId || undefined, parseFloat(additionalCharges) || 0, notes.trim() || undefined)}
+                  disabled={isProcessingCheckout || (!paymentMethodId && (pendingSales.length > 0 || !reservation.isPaid))}
                 >
-                  {isProcessingCheckout ? "Procesando..." : "Realizar Check-out"}
+                  {isProcessingCheckout 
+                    ? "Procesando..." 
+                    : reservation.isPaid && pendingSales.length > 0
+                    ? "Pagar Productos Fiados"
+                    : "Realizar Check-out"}
                 </Button>
               </Flex>
             </Stack>
