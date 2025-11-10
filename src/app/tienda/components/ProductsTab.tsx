@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Box, Button, Flex, Input, Text, Spinner, SimpleGrid, Badge, IconButton } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice } from "@/lib/format";
 import { useProductsData } from "../hooks/useProductsData";
 import { useProductsActions } from "../hooks/useProductsActions";
 import { useCategoriesData } from "../hooks/useCategoriesData";
@@ -220,16 +221,16 @@ export function ProductsTab({ showNotification }: ProductsTabProps) {
               
               <Box mb={3}>
                 <Text fontSize="sm" color={colors.subtext}>
-                  Compra: ${product.purchasePrice.toLocaleString()}
+                  Compra: ${formatPrice(product.purchasePrice)}
                 </Text>
                 <Text fontSize="sm" color={colors.subtext}>
-                  Venta: ${product.salePrice.toLocaleString()}
+                  Venta: ${formatPrice(product.salePrice)}
                 </Text>
                 <Text fontSize="sm" color={colors.subtext}>
-                  Ganancia: ${(product.salePrice - product.purchasePrice).toLocaleString()}
+                  Ganancia: ${formatPrice(product.salePrice - product.purchasePrice)}
                 </Text>
                 <Text fontSize="sm" color={product.stock <= 10 ? "red" : colors.subtext} fontWeight="bold">
-                  Stock: {product.stock}
+                  Stock: {formatPrice(product.stock)}
                 </Text>
               </Box>
 

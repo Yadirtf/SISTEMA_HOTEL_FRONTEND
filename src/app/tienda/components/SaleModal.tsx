@@ -2,6 +2,7 @@
 
 import { Box, Button, Input, Text, Stack, Flex, IconButton, Badge } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice } from "@/lib/format";
 import { useProductsData } from "../hooks/useProductsData";
 import { useState, useEffect } from "react";
 import { getActiveReservations, type ActiveReservation } from "@/services/reservations";
@@ -295,7 +296,7 @@ export function SaleModal({
                     <Box>
                       <Text fontWeight="bold">{product.name}</Text>
                       <Text fontSize="sm" color={colors.subtext}>
-                        ${product.salePrice.toLocaleString()} - Stock: {product.stock}
+                        ${formatPrice(product.salePrice)} - Stock: {product.stock}
                       </Text>
                     </Box>
                     <Button size="sm" bg={colors.gold} color="white">
@@ -327,7 +328,7 @@ export function SaleModal({
                         <Box flex={1}>
                           <Text fontWeight="bold">{product.name}</Text>
                           <Text fontSize="sm" color={colors.subtext}>
-                            ${product.salePrice.toLocaleString()} c/u
+                            ${formatPrice(product.salePrice)} c/u
                           </Text>
                         </Box>
                         <Flex align="center" gap={2}>
@@ -358,7 +359,7 @@ export function SaleModal({
                             +
                           </IconButton>
                           <Text minW="100px" textAlign="right" fontWeight="bold">
-                            ${(product.salePrice * item.quantity).toLocaleString()}
+                            ${formatPrice(product.salePrice * item.quantity)}
                           </Text>
                           <IconButton
                             size="sm"
@@ -381,11 +382,11 @@ export function SaleModal({
               <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
                 <Flex justify="space-between" mb={2}>
                   <Text fontWeight="bold" color={colors.text}>Total:</Text>
-                  <Text fontWeight="bold" fontSize="xl" color={colors.gold}>${total.toLocaleString()}</Text>
+                  <Text fontWeight="bold" fontSize="xl" color={colors.gold}>${formatPrice(total)}</Text>
                 </Flex>
                 <Flex justify="space-between">
                   <Text color={colors.subtext}>Ganancia:</Text>
-                  <Badge colorScheme="green" fontSize="md">${totalProfit.toLocaleString()}</Badge>
+                  <Badge colorScheme="green" fontSize="md">${formatPrice(totalProfit)}</Badge>
                 </Flex>
               </Box>
             )}

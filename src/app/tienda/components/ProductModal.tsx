@@ -1,7 +1,9 @@
 "use client";
 
+import React, { useState } from "react";
 import { Box, Button, Input, Textarea, Text, Stack, Flex } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice, parseFormattedPrice, formatNumberWhileTyping } from "@/lib/format";
 import type { ProductFormData, Category } from "../types";
 
 interface ProductModalProps {
@@ -26,6 +28,34 @@ export function ProductModal({
   categories,
 }: ProductModalProps) {
   const { colors } = useThemeMode();
+  const [purchasePriceInput, setPurchasePriceInput] = useState<string>("");
+  const [salePriceInput, setSalePriceInput] = useState<string>("");
+  const [stockInput, setStockInput] = useState<string>("");
+
+  // Sincronizar los inputs cuando cambia formData (al editar o resetear)
+  React.useEffect(() => {
+    if (formData.purchasePrice === 0) {
+      setPurchasePriceInput("");
+    } else if (!purchasePriceInput || parseFormattedPrice(purchasePriceInput) !== formData.purchasePrice) {
+      setPurchasePriceInput(formData.purchasePrice.toString());
+    }
+  }, [formData.purchasePrice]);
+
+  React.useEffect(() => {
+    if (formData.salePrice === 0) {
+      setSalePriceInput("");
+    } else if (!salePriceInput || parseFormattedPrice(salePriceInput) !== formData.salePrice) {
+      setSalePriceInput(formData.salePrice.toString());
+    }
+  }, [formData.salePrice]);
+
+  React.useEffect(() => {
+    if ((formData.stock || 0) === 0) {
+      setStockInput("");
+    } else if (!stockInput || parseFormattedPrice(stockInput) !== (formData.stock || 0)) {
+      setStockInput((formData.stock || 0).toString());
+    }
+  }, [formData.stock]);
 
   if (!isOpen) return null;
 
@@ -124,14 +154,30 @@ export function ProductModal({
                   Precio de Compra <Text as="span" color="red.500">*</Text>
                 </Text>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.purchasePrice}
-                  onChange={(e) => onFormChange("purchasePrice", parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={purchasePriceInput}
+                  onChange={(e) => {
+                    const rawValue = e.target.value;
+                    // Formatear mientras se escribe
+                    const formatted = formatNumberWhileTyping(rawValue);
+                    setPurchasePriceInput(formatted);
+                    // Actualizar el valor numérico (sin formato)
+                    const n = parseFloat(rawValue.replace(/\./g, "").replace(",", ".")) || 0;
+                    onFormChange("purchasePrice", n);
+                  }}
+                  onBlur={(e) => {
+                    const n = parseFloat(e.target.value.replace(/\./g, "").replace(",", ".")) || 0;
+                    onFormChange("purchasePrice", n);
+                    setPurchasePriceInput(n === 0 ? "" : formatNumberWhileTyping(n.toString()));
+                  }}
                   bg={colors.bg}
                   borderColor={colors.border}
                   color={colors.text}
+                  placeholder="0"
+                  _hover={{ borderColor: colors.gold }}
+                  _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  _placeholder={{ color: colors.subtext }}
                   required
                 />
               </Box>
@@ -141,14 +187,30 @@ export function ProductModal({
                   Precio de Venta <Text as="span" color="red.500">*</Text>
                 </Text>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.salePrice}
-                  onChange={(e) => onFormChange("salePrice", parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={salePriceInput}
+                  onChange={(e) => {
+                    const rawValue = e.target.value;
+                    // Formatear mientras se escribe
+                    const formatted = formatNumberWhileTyping(rawValue);
+                    setSalePriceInput(formatted);
+                    // Actualizar el valor numérico (sin formato)
+                    const n = parseFloat(rawValue.replace(/\./g, "").replace(",", ".")) || 0;
+                    onFormChange("salePrice", n);
+                  }}
+                  onBlur={(e) => {
+                    const n = parseFloat(e.target.value.replace(/\./g, "").replace(",", ".")) || 0;
+                    onFormChange("salePrice", n);
+                    setSalePriceInput(n === 0 ? "" : formatNumberWhileTyping(n.toString()));
+                  }}
                   bg={colors.bg}
                   borderColor={colors.border}
                   color={colors.text}
+                  placeholder="0"
+                  _hover={{ borderColor: colors.gold }}
+                  _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  _placeholder={{ color: colors.subtext }}
                   required
                 />
               </Box>
@@ -158,13 +220,28 @@ export function ProductModal({
                   Stock
                 </Text>
                 <Input
-                  type="number"
-                  min="0"
-                  value={formData.stock || 0}
-                  onChange={(e) => onFormChange("stock", parseInt(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={stockInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setStockInput(value);
+                    // Permitir escribir libremente, solo actualizar el valor numérico
+                    const n = parseInt(value.replace(/\D/g, "")) || 0;
+                    onFormChange("stock", n);
+                  }}
+                  onBlur={(e) => {
+                    const n = parseInt(e.target.value.replace(/\D/g, "")) || 0;
+                    onFormChange("stock", n);
+                    setStockInput(n === 0 ? "" : n.toString());
+                  }}
                   bg={colors.bg}
                   borderColor={colors.border}
                   color={colors.text}
+                  placeholder="0"
+                  _hover={{ borderColor: colors.gold }}
+                  _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  _placeholder={{ color: colors.subtext }}
                 />
               </Box>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Box, Button, Flex, Text, Spinner, SimpleGrid, Badge } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice } from "@/lib/format";
 import { useSalesData } from "../hooks/useSalesData";
 
 interface ReportsTabProps {
@@ -84,11 +85,11 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
           <SimpleGrid columns={{ base: 2, md: 4 }} gap={4} mb={6}>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
               <Text fontSize="sm" color={colors.subtext}>Total Ventas</Text>
-              <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${report.totalSales.toLocaleString()}</Text>
+              <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(report.totalSales)}</Text>
             </Box>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
               <Text fontSize="sm" color={colors.subtext}>Total Ganancia</Text>
-              <Text fontSize="2xl" fontWeight="bold" color="green.500">${report.totalProfit.toLocaleString()}</Text>
+              <Text fontSize="2xl" fontWeight="bold" color="green.500">${formatPrice(report.totalProfit)}</Text>
             </Box>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
               <Text fontSize="sm" color={colors.subtext}>Cantidad Ventas</Text>
@@ -126,10 +127,10 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
                           <Badge>{product.quantity}</Badge>
                         </td>
                         <td style={{ padding: "12px", textAlign: "right", color: colors.text }}>
-                          <Text>{`$${product.totalSales.toLocaleString()}`}</Text>
+                          <Text>{`$${formatPrice(product.totalSales)}`}</Text>
                         </td>
                         <td style={{ padding: "12px", textAlign: "right", color: colors.text }}>
-                          <Badge colorScheme="green">{`$${product.totalProfit.toLocaleString()}`}</Badge>
+                          <Badge colorScheme="green">{`$${formatPrice(product.totalProfit)}`}</Badge>
                         </td>
                       </tr>
                     ))}

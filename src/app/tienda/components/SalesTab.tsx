@@ -2,6 +2,7 @@
 
 import { Box, Button, Flex, Text, Spinner, Badge } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice } from "@/lib/format";
 import { useSalesData } from "../hooks/useSalesData";
 import { useSalesActions } from "../hooks/useSalesActions";
 import { SaleModal } from "./SaleModal";
@@ -50,19 +51,19 @@ export function SalesTab({ showNotification }: SalesTabProps) {
         <Flex gap={4} mb={6} flexWrap="wrap">
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
             <Text fontSize="sm" color={colors.subtext}>Ventas de Hoy</Text>
-            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${stats.todaySales?.toLocaleString() || 0}</Text>
+            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.todaySales || 0)}</Text>
           </Box>
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
             <Text fontSize="sm" color={colors.subtext}>Ganancia de Hoy</Text>
-            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${stats.todayProfit?.toLocaleString() || 0}</Text>
+            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.todayProfit || 0)}</Text>
           </Box>
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
             <Text fontSize="sm" color={colors.subtext}>Total Ventas</Text>
-            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${stats.totalSales?.toLocaleString() || 0}</Text>
+            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.totalSales || 0)}</Text>
           </Box>
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
             <Text fontSize="sm" color={colors.subtext}>Total Ganancia</Text>
-            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${stats.totalProfit?.toLocaleString() || 0}</Text>
+            <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.totalProfit || 0)}</Text>
           </Box>
         </Flex>
       )}
@@ -100,9 +101,9 @@ export function SalesTab({ showNotification }: SalesTabProps) {
                     })}
                   </td>
                   <td style={{ padding: "12px", color: colors.text }}>{sale.items.length} producto(s)</td>
-                  <td style={{ padding: "12px", color: colors.text }}>${sale.total.toLocaleString()}</td>
+                  <td style={{ padding: "12px", color: colors.text }}>${formatPrice(sale.total)}</td>
                   <td style={{ padding: "12px", color: colors.text }}>
-                    <Badge colorScheme="green">${sale.totalProfit.toLocaleString()}</Badge>
+                    <Badge colorScheme="green">${formatPrice(sale.totalProfit)}</Badge>
                   </td>
                   <td style={{ padding: "12px", color: colors.text }}>
                     <Badge colorScheme={(sale.paymentStatus || 'paid') === 'paid' ? 'green' : 'orange'}>

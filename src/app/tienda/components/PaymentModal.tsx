@@ -2,6 +2,7 @@
 
 import { Box, Button, Input, Text, Stack, Flex } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatPrice } from "@/lib/format";
 import { useState, useEffect } from "react";
 
 interface PaymentModalProps {
@@ -47,7 +48,7 @@ export function PaymentModal({
     }
 
     if (amount < total) {
-      setError(`El monto recibido ($${amount.toLocaleString()}) es menor que el total ($${total.toLocaleString()})`);
+      setError(`El monto recibido ($${formatPrice(amount)}) es menor que el total ($${formatPrice(total)})`);
       setChange(0);
       return;
     }
@@ -145,7 +146,7 @@ export function PaymentModal({
                 Total a pagar:
               </Text>
               <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>
-                ${total.toLocaleString()}
+                ${formatPrice(total)}
               </Text>
             </Box>
 
@@ -195,7 +196,7 @@ export function PaymentModal({
                   fontWeight="bold"
                   color={change > 0 ? "green.600" : colors.gold}
                 >
-                  ${change.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${formatPrice(change)}
                 </Text>
               </Box>
             )}
