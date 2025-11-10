@@ -52,6 +52,8 @@ export interface Sale {
   notes?: string;
   reservationId?: string;
   paymentStatus: 'paid' | 'pending';
+  amountReceived?: number;
+  change?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -98,6 +100,7 @@ export interface SaleFormData {
   notes?: string;
   reservationId?: string;
   paymentStatus?: 'paid' | 'pending';
+  amountReceived?: number;
 }
 
 export type ReportPeriod = 'weekly' | 'biweekly' | 'monthly' | 'custom';

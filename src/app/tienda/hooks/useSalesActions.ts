@@ -10,10 +10,12 @@ export function useSalesActions(
   reloadSales: () => Promise<void>
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [items, setItems] = useState<SaleItem[]>([]);
   const [selectedReservationId, setSelectedReservationId] = useState<string | undefined>(undefined);
   const [isCreditSale, setIsCreditSale] = useState(false);
+  const [saleTotal, setSaleTotal] = useState<number>(0);
 
   const resetForm = useCallback(() => {
     setItems([]);
@@ -62,7 +64,18 @@ export function useSalesActions(
     );
   }, [removeItem]);
 
-  const handleSubmit = useCallback(async () => {
+  // Calcular el total de la venta (necesario para el modal de pago)
+  const calculateTotal = useCallback((items: SaleItem[], products: any[]) => {
+    return items.reduce((sum, item) => {
+      const product = products.find((p) => p._id === item.productId);
+      if (!product) return sum;
+      return sum + product.salePrice * item.quantity;
+    }, 0);
+  }, []);
+
+  // Función que se llama cuando se hace clic en "Registrar Venta"
+  // Abre el modal de pago si es una venta pagada, o registra directamente si es fiada
+  const handleSubmit = useCallback(async (products: any[]) => {
     if (items.length === 0) {
       showNotification("error", "Error", "Debes agregar al menos un producto");
       return;
@@ -74,18 +87,61 @@ export function useSalesActions(
       return;
     }
 
+    // Si es una venta fiada, registrar directamente sin modal de pago
+    if (isCreditSale && selectedReservationId) {
+      setIsSubmitting(true);
+      try {
+        const formData: SaleFormData = {
+          items,
+          notes: undefined,
+          reservationId: selectedReservationId,
+          paymentStatus: 'pending',
+        };
+        const resp = await createSale(formData, token);
+        if (resp.success) {
+          showNotification("success", "Venta registrada", resp.message);
+          await reloadSales();
+          closeModal();
+        } else {
+          showNotification("error", "Error al registrar venta", resp.message);
+        }
+      } catch (error: any) {
+        showNotification("error", "Error", error.message || "Error inesperado");
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Si es una venta pagada, abrir el modal de pago
+    const total = calculateTotal(items, products);
+    setSaleTotal(total);
+    setIsPaymentModalOpen(true);
+  }, [items, selectedReservationId, isCreditSale, showNotification, reloadSales, closeModal, calculateTotal]);
+
+  // Función que se llama cuando se confirma el pago en el modal
+  const handleConfirmPayment = useCallback(async (amountReceived: number) => {
+    const token = getToken();
+    if (!token) {
+      showNotification("error", "Error", "No hay sesión activa");
+      setIsPaymentModalOpen(false);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const formData: SaleFormData = {
         items,
         notes: undefined,
         reservationId: selectedReservationId,
-        paymentStatus: isCreditSale && selectedReservationId ? 'pending' : 'paid',
+        paymentStatus: 'paid',
+        amountReceived: amountReceived,
       };
       const resp = await createSale(formData, token);
       if (resp.success) {
         showNotification("success", "Venta registrada", resp.message);
         await reloadSales();
+        setIsPaymentModalOpen(false);
         closeModal();
       } else {
         showNotification("error", "Error al registrar venta", resp.message);
@@ -95,14 +151,20 @@ export function useSalesActions(
     } finally {
       setIsSubmitting(false);
     }
-  }, [items, selectedReservationId, isCreditSale, showNotification, reloadSales, closeModal]);
+  }, [items, selectedReservationId, showNotification, reloadSales, closeModal]);
+
+  const closePaymentModal = useCallback(() => {
+    setIsPaymentModalOpen(false);
+  }, []);
 
   return {
     isModalOpen,
+    isPaymentModalOpen,
     isSubmitting,
     items,
     selectedReservationId,
     isCreditSale,
+    saleTotal,
     setSelectedReservationId,
     setIsCreditSale,
     openModal,
@@ -111,6 +173,8 @@ export function useSalesActions(
     removeItem,
     updateItemQuantity,
     handleSubmit,
+    handleConfirmPayment,
+    closePaymentModal,
     resetForm,
   };
 }

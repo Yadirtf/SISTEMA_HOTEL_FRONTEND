@@ -5,6 +5,7 @@ import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useSalesData } from "../hooks/useSalesData";
 import { useSalesActions } from "../hooks/useSalesActions";
 import { SaleModal } from "./SaleModal";
+import { PaymentModal } from "./PaymentModal";
 
 interface SalesTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
@@ -16,10 +17,12 @@ export function SalesTab({ showNotification }: SalesTabProps) {
 
   const {
     isModalOpen,
+    isPaymentModalOpen,
     isSubmitting,
     items,
     selectedReservationId,
     isCreditSale,
+    saleTotal,
     setSelectedReservationId,
     setIsCreditSale,
     openModal,
@@ -28,6 +31,8 @@ export function SalesTab({ showNotification }: SalesTabProps) {
     removeItem,
     updateItemQuantity,
     handleSubmit,
+    handleConfirmPayment,
+    closePaymentModal,
   } = useSalesActions(showNotification, loadSales);
 
   return (
@@ -123,6 +128,14 @@ export function SalesTab({ showNotification }: SalesTabProps) {
         isCreditSale={isCreditSale}
         setSelectedReservationId={setSelectedReservationId}
         setIsCreditSale={setIsCreditSale}
+        isLoading={isSubmitting}
+      />
+
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={closePaymentModal}
+        onConfirm={handleConfirmPayment}
+        total={saleTotal}
         isLoading={isSubmitting}
       />
     </Box>

@@ -11,7 +11,7 @@ import type { SaleItem, Product } from "../types";
 interface SaleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (products: Product[]) => void;
   items: SaleItem[];
   addItem: (item: SaleItem) => void;
   removeItem: (productId: string) => void;
@@ -353,7 +353,7 @@ export function SaleModal({
                             }}
                             bg={colors.border}
                             color={colors.text}
-                            isDisabled={item.quantity >= product.stock}
+                            disabled={item.quantity >= product.stock}
                           >
                             +
                           </IconButton>
@@ -395,7 +395,7 @@ export function SaleModal({
                 Cancelar
               </Button>
               <Button
-                onClick={onSubmit}
+                onClick={() => onSubmit(products)}
                 bg={colors.gold}
                 color="white"
                 _hover={{ bg: "#b8941f" }}

@@ -13,6 +13,7 @@ interface BillingDetailsProps {
   onCheckout: (paymentMethod: 'cash' | 'card' | 'transfer', additionalCharges: number, notes?: string) => void;
   onGenerateInvoice: () => void;
   isGeneratingInvoice: boolean;
+  onOpenInvoice?: () => void;
 }
 
 export function BillingDetails({
