@@ -6,11 +6,16 @@ import { useHistoryData } from "../hooks/useHistoryData";
 import { formatPrice } from "@/lib/format";
 import { getToken } from "@/lib/session";
 import { useState } from "react";
+import { InvoiceModal } from "./InvoiceModal";
+import { getBillingDetails, type BillingDetails as BillingDetailsType } from "../services/billing";
 
 export function HistoryTab() {
   const { colors } = useThemeMode();
   const token = getToken() || undefined;
   const [showFilters, setShowFilters] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [billingDetails, setBillingDetails] = useState<BillingDetailsType | null>(null);
+  const [loadingInvoice, setLoadingInvoice] = useState(false);
   const {
     reservations,
     loading,
@@ -73,6 +78,32 @@ export function HistoryTab() {
       return guest.profession;
     }
     return "-";
+  };
+
+  // Función para cargar y mostrar la factura
+  const handleViewInvoice = async (reservationId: string) => {
+    if (!reservationId) return;
+    
+    setLoadingInvoice(true);
+    try {
+      const currentToken = token || getToken() || undefined;
+      if (!currentToken) {
+        console.error("No hay token disponible");
+        return;
+      }
+
+      const resp = await getBillingDetails(reservationId, currentToken);
+      if (resp.success && resp.data) {
+        setBillingDetails(resp.data);
+        setIsInvoiceModalOpen(true);
+      } else {
+        console.error("Error al cargar detalles de facturación:", resp.message);
+      }
+    } catch (error) {
+      console.error("Error al cargar la factura:", error);
+    } finally {
+      setLoadingInvoice(false);
+    }
   };
 
   return (
@@ -370,8 +401,22 @@ export function HistoryTab() {
                     fontWeight="bold"
                     textTransform="uppercase"
                     letterSpacing="0.5px"
+                    borderRight="1px solid"
+                    borderColor={colors.border}
                   >
                     Total Pagado
+                  </Box>
+                  <Box
+                    as="th"
+                    textAlign="center"
+                    p={4}
+                    color={colors.gold}
+                    fontSize="sm"
+                    fontWeight="bold"
+                    textTransform="uppercase"
+                    letterSpacing="0.5px"
+                  >
+                    Acción
                   </Box>
                 </Box>
               </Box>
@@ -435,8 +480,28 @@ export function HistoryTab() {
                         color={colors.gold}
                         fontWeight="bold"
                         textAlign="right"
+                        borderRight="1px solid"
+                        borderColor={colors.border}
                       >
                         ${formatPrice(roomTotal)}
+                      </Box>
+                      <Box
+                        as="td"
+                        p={4}
+                        textAlign="center"
+                      >
+                        <Button
+                          size="sm"
+                          bg={colors.gold}
+                          color={colors.bg}
+                          fontWeight="bold"
+                          _hover={{ bg: "#b8941f" }}
+                          onClick={() => handleViewInvoice(reservation._id)}
+                          disabled={loadingInvoice}
+                          isLoading={loadingInvoice}
+                        >
+                          Ver Factura
+                        </Button>
                       </Box>
                     </Box>
                   );
@@ -502,6 +567,20 @@ export function HistoryTab() {
                         </Text>
                       </Box>
                     </Flex>
+                    <Button
+                      size="sm"
+                      w="100%"
+                      mt={3}
+                      bg={colors.gold}
+                      color={colors.bg}
+                      fontWeight="bold"
+                      _hover={{ bg: "#b8941f" }}
+                      onClick={() => handleViewInvoice(reservation._id)}
+                      disabled={loadingInvoice}
+                      isLoading={loadingInvoice}
+                    >
+                      Ver Factura
+                    </Button>
                   </Box>
                 );
               })}
@@ -509,6 +588,16 @@ export function HistoryTab() {
           </Box>
         </>
       )}
+
+      {/* Modal de factura */}
+      <InvoiceModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => {
+          setIsInvoiceModalOpen(false);
+          setBillingDetails(null);
+        }}
+        billingDetails={billingDetails}
+      />
     </Box>
   );
 }

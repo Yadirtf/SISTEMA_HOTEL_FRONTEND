@@ -45,7 +45,12 @@ export function BillingTab({ showNotification, onCheckoutSuccess }: BillingTabPr
       await onCheckoutSuccess();
     }
     await reload();
-    setSelectedReservation(null);
+    // Recargar los detalles de facturación de la reserva seleccionada después del checkout
+    if (selectedReservation?._id) {
+      await loadBillingDetails(selectedReservation._id);
+      // Abrir automáticamente el modal de factura después del checkout exitoso
+      setIsInvoiceModalOpen(true);
+    }
   });
 
   const handleSelectReservation = useCallback(async (reservation: Reservation) => {

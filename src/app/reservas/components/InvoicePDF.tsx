@@ -183,14 +183,18 @@ interface InvoicePDFProps {
   invoiceNumber: string;
   invoiceDate: Date;
   status: "paid" | "pending" | "overdue";
+  includeProducts?: boolean; // Por defecto true para mantener compatibilidad
 }
 
 type InvoiceStatus = "paid" | "pending" | "overdue";
 
-export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status }: InvoicePDFProps) {
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay } = billingDetails;
+export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true }: InvoicePDFProps) {
+  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales } = billingDetails;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
+  
+  // Usar allSales si está disponible (incluye pendientes y pagadas), sino usar pendingSales
+  const salesToShow = allSales && allSales.length > 0 ? allSales : pendingSales;
 
   const formatDate = (date: Date | string | undefined): string => {
     if (!date) return "No definida";
@@ -225,6 +229,20 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status 
 
   const nights = calculateNights();
   const roomTotal = (reservation.roomPrice || 0) * nights;
+
+  // Calcular total según si se incluyen productos o no
+  let calculatedTotal: number;
+  if (includeProducts) {
+    // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
+    // Si no, usar totalToPay (antes del checkout, incluye solo pendientes)
+    if (allSalesTotal !== undefined) {
+      calculatedTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
+    } else {
+      calculatedTotal = totalToPay; // Incluye habitación + productos pendientes
+    }
+  } else {
+    calculatedTotal = roomTotal; // Solo habitación
+  }
 
   const statusText: Record<InvoiceStatus, string> = {
     paid: "PAGADA",
@@ -341,8 +359,8 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status 
               <Text style={styles.tableCol4}>{formatCurrency(roomTotal)}</Text>
             </View>
 
-            {/* Productos fiados */}
-            {pendingSales.map((sale) =>
+            {/* Productos fiados - solo si includeProducts es true */}
+            {includeProducts && salesToShow.map((sale) =>
               sale.items.map((item, idx) => (
                 <View key={`${sale._id}-${idx}`} style={styles.tableRow}>
                   <Text style={styles.tableCol1}>
@@ -364,7 +382,7 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status 
               <Text style={[styles.tableCol1, { fontWeight: "bold", fontSize: 11 }]}>TOTAL A PAGAR</Text>
               <Text style={styles.tableCol2}></Text>
               <Text style={styles.tableCol3}></Text>
-              <Text style={[styles.tableCol4, { fontSize: 12, color: "#d4af37" }]}>{formatCurrency(totalToPay)}</Text>
+              <Text style={[styles.tableCol4, { fontSize: 12, color: "#d4af37" }]}>{formatCurrency(calculatedTotal)}</Text>
             </View>
           </View>
         </View>

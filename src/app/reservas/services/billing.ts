@@ -16,6 +16,19 @@ export interface BillingDetails {
   }>;
   pendingSalesTotal: number;
   totalToPay: number;
+  allSales?: Array<{
+    _id: string;
+    items: Array<{
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+      subtotal: number;
+    }>;
+    total: number;
+    saleDate: Date | string;
+    paymentStatus?: 'paid' | 'pending';
+  }>;
+  allSalesTotal?: number;
 }
 
 export async function getBillingActiveReservations(token?: string): Promise<Caja<Reservation[]>> {

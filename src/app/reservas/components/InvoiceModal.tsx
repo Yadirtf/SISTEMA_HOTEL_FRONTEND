@@ -26,6 +26,7 @@ function generateInvoiceNumber(reservationId: string, date: Date): string {
 export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalProps) {
   const { colors } = useThemeMode();
   const [viewMode, setViewMode] = useState<"preview" | "pdf">("preview");
+  const [includeProducts, setIncludeProducts] = useState(true); // Por defecto incluir productos
   const invoiceDate = useMemo(() => new Date(), []);
   const invoiceNumber = useMemo(() => {
     if (!billingDetails) return "";
@@ -36,14 +37,73 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
   const invoiceStatus = useMemo(() => {
     if (!billingDetails) return "pending";
     const { reservation, pendingSales } = billingDetails;
+    
+    // Si la reserva está pagada y no hay ventas pendientes, está pagada
     if (reservation.isPaid && pendingSales.length === 0) return "paid";
-    if (reservation.checkOutTime && new Date(reservation.checkOutTime) < new Date()) return "overdue";
+    
+    // Si la reserva tiene estado checked_out y está pagada, está pagada
+    if (reservation.status === "checked_out" && reservation.isPaid && pendingSales.length === 0) return "paid";
+    
+    // Si tiene fecha de salida y ya pasó, está vencida (solo si no está pagada)
+    if (reservation.checkOutTime && new Date(reservation.checkOutTime) < new Date() && !reservation.isPaid) {
+      return "overdue";
+    }
+    
     return "pending";
   }, [billingDetails]);
 
+  // Calcular total según si se incluyen productos o no - debe estar antes del return condicional
+  const calculatedTotal = useMemo(() => {
+    if (!billingDetails) return 0;
+    const { reservation, totalToPay, allSalesTotal, pendingSalesTotal } = billingDetails;
+    
+    // Calcular noches
+    const calculateNights = (): number => {
+      if (!reservation.checkOutTime) return 0;
+      const checkIn = new Date(reservation.checkInTime);
+      const checkOut = new Date(reservation.checkOutTime);
+      const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+      const checkOutDate = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+      const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+      return Math.max(1, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+    };
+    
+    const nights = calculateNights();
+    const roomTotal = (reservation.roomPrice || 0) * nights;
+    
+    if (includeProducts) {
+      // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
+      // Si no, usar totalToPay (antes del checkout, incluye solo pendientes)
+      if (allSalesTotal !== undefined) {
+        return roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
+      } else {
+        return totalToPay; // Incluye habitación + productos pendientes
+      }
+    } else {
+      return roomTotal; // Solo habitación
+    }
+  }, [billingDetails, includeProducts]);
+
+  // Memorizar el documento PDF para evitar problemas con PDFDownloadLink - debe estar antes del return condicional
+  const pdfDocument = useMemo(() => {
+    if (!billingDetails) return null;
+    return (
+      <InvoicePDF
+        billingDetails={billingDetails}
+        invoiceNumber={invoiceNumber}
+        invoiceDate={invoiceDate}
+        status={invoiceStatus}
+        includeProducts={includeProducts}
+      />
+    );
+  }, [billingDetails, invoiceNumber, invoiceDate, invoiceStatus, includeProducts]);
+
   if (!isOpen || !billingDetails) return null;
 
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay } = billingDetails;
+  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal } = billingDetails;
+  
+  // Usar allSales si está disponible (incluye pendientes y pagadas), sino usar pendingSales
+  const salesToShow = allSales && allSales.length > 0 ? allSales : pendingSales;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
 
@@ -152,28 +212,49 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
           </Flex>
         </Flex>
 
-        {/* Controles de vista */}
-        <Flex gap={2} p={4} borderBottom="1px solid" borderColor={colors.border} bg={colors.bg}>
-          <Button
-            size="sm"
-            variant={viewMode === "preview" ? "solid" : "outline"}
-            bg={viewMode === "preview" ? colors.gold : "transparent"}
-            color={viewMode === "preview" ? colors.bg : colors.text}
-            borderColor={colors.border}
-            onClick={() => setViewMode("preview")}
-          >
-            Vista Previa
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === "pdf" ? "solid" : "outline"}
-            bg={viewMode === "pdf" ? colors.gold : "transparent"}
-            color={viewMode === "pdf" ? colors.bg : colors.text}
-            borderColor={colors.border}
-            onClick={() => setViewMode("pdf")}
-          >
-            Vista PDF
-          </Button>
+        {/* Controles de vista y personalización */}
+        <Flex gap={2} p={4} borderBottom="1px solid" borderColor={colors.border} bg={colors.bg} flexWrap="wrap" align="center">
+          <Flex gap={2} flex="1" minW="200px">
+            <Button
+              size="sm"
+              variant={viewMode === "preview" ? "solid" : "outline"}
+              bg={viewMode === "preview" ? colors.gold : "transparent"}
+              color={viewMode === "preview" ? colors.bg : colors.text}
+              borderColor={colors.border}
+              onClick={() => setViewMode("preview")}
+            >
+              Vista Previa
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === "pdf" ? "solid" : "outline"}
+              bg={viewMode === "pdf" ? colors.gold : "transparent"}
+              color={viewMode === "pdf" ? colors.bg : colors.text}
+              borderColor={colors.border}
+              onClick={() => setViewMode("pdf")}
+            >
+              Vista PDF
+            </Button>
+          </Flex>
+          {/* Mostrar checkbox si hay productos (pendientes o pagados) */}
+          {salesToShow.length > 0 && (
+            <Flex gap={2} align="center">
+              <input
+                type="checkbox"
+                checked={includeProducts}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIncludeProducts(e.target.checked)}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer',
+                  accentColor: colors.gold,
+                }}
+              />
+              <Text fontSize="sm" color={colors.text}>
+                Incluir productos fiados
+              </Text>
+            </Flex>
+          )}
         </Flex>
 
         {/* Contenido */}
@@ -353,8 +434,8 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
                         ${formatPrice(roomTotal)}
                       </Box>
                     </Box>
-                    {/* Productos fiados */}
-                    {pendingSales.map((sale) =>
+                    {/* Productos fiados - solo si includeProducts es true */}
+                    {includeProducts && salesToShow.map((sale) =>
                       sale.items.map((item, idx) => (
                         <Box
                           key={`${sale._id}-${idx}`}
@@ -400,7 +481,7 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
                         TOTAL A PAGAR
                       </td>
                       <Box as="td" p={3} textAlign="right" fontSize="lg" color={colors.gold} fontWeight="bold">
-                        ${formatPrice(totalToPay)}
+                        ${formatPrice(calculatedTotal)}
                       </Box>
                     </Box>
                   </Box>
@@ -422,14 +503,11 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
           </Stack>
         ) : (
           <Box p={4} h="calc(90vh - 200px)" minH="600px">
-            <PDFViewer width="100%" height="100%">
-              <InvoicePDF
-                billingDetails={billingDetails}
-                invoiceNumber={invoiceNumber}
-                invoiceDate={invoiceDate}
-                status={invoiceStatus}
-              />
-            </PDFViewer>
+            {pdfDocument && (
+              <PDFViewer width="100%" height="100%">
+                {pdfDocument}
+              </PDFViewer>
+            )}
           </Box>
         )}
 
@@ -443,17 +521,12 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
           >
             Cerrar
           </Button>
-          <PDFDownloadLink
-            document={
-              <InvoicePDF
-                billingDetails={billingDetails}
-                invoiceNumber={invoiceNumber}
-                invoiceDate={invoiceDate}
-                status={invoiceStatus}
-              />
-            }
-            fileName={`Factura-${invoiceNumber}.pdf`}
-          >
+          {billingDetails && pdfDocument && (
+            <PDFDownloadLink
+              key={`${invoiceNumber}-${includeProducts}`}
+              document={pdfDocument}
+              fileName={`Factura-${invoiceNumber}${includeProducts ? '' : '-SoloAlojamiento'}.pdf`}
+            >
             {({ loading }) => (
               <Button
                 bg={colors.gold}
@@ -466,6 +539,7 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               </Button>
             )}
           </PDFDownloadLink>
+          )}
         </Flex>
       </Box>
     </Box>
