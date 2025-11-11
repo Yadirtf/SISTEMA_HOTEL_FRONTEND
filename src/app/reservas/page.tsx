@@ -11,6 +11,7 @@ import { RoomDetailsModal } from "@/components/reservas/RoomDetailsModal";
 import { ReservationDetailsModal } from "@/components/reservas/ReservationDetailsModal";
 import { RoomsTab } from "@/app/reservas/components/RoomsTab";
 import { BillingTab } from "@/app/reservas/components/BillingTab";
+import { HistoryTab } from "@/app/reservas/components/HistoryTab";
 import { useReservationsData } from "@/app/reservas/hooks/useReservationsData";
 import { useReservationActions } from "@/app/reservas/hooks/useReservationActions";
 import type { Room } from "@/app/reservas/types";
@@ -123,6 +124,7 @@ export default function ReservasPage() {
             {[
               { id: 0, label: "Habitaciones" },
               { id: 1, label: "Facturación" },
+              { id: 2, label: "Historial de Alquileres" },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -169,6 +171,10 @@ export default function ReservasPage() {
                 await loadRooms();
               }}
             />
+          )}
+
+          {activeTab === 2 && (
+            <HistoryTab />
           )}
         </Box>
 

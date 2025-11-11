@@ -62,4 +62,17 @@ export type Reservation = {
   updatedAt?: Date | string;
 };
 
+export type HistoryReservation = {
+  _id: string;
+  guest: Guest | string;
+  roomNumber: string;
+  checkInTime: Date | string;
+  checkOutTime?: Date | string;
+  roomPrice: number; // Precio por noche de la habitación (sin productos fiados)
+  totalPrice: number; // Precio total que puede incluir productos fiados (no usar para historial)
+  status: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
+
 
