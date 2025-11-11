@@ -1,15 +1,38 @@
 "use client";
 
-import { Box, Flex, Text, Input, Spinner, Stack } from "@chakra-ui/react";
+import { Box, Flex, Text, Input, Spinner, Stack, Button } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useHistoryData } from "../hooks/useHistoryData";
 import { formatPrice } from "@/lib/format";
 import { getToken } from "@/lib/session";
+import { useState } from "react";
 
 export function HistoryTab() {
   const { colors } = useThemeMode();
   const token = getToken() || undefined;
-  const { reservations, loading, searchQuery, setSearchQuery } = useHistoryData(token);
+  const [showFilters, setShowFilters] = useState(false);
+  const {
+    reservations,
+    loading,
+    searchQuery,
+    setSearchQuery,
+    roomFilter,
+    setRoomFilter,
+    professionFilter,
+    setProfessionFilter,
+    dateFromFilter,
+    setDateFromFilter,
+    dateToFilter,
+    setDateToFilter,
+    minAmountFilter,
+    setMinAmountFilter,
+    maxAmountFilter,
+    setMaxAmountFilter,
+    uniqueRooms,
+    uniqueProfessions,
+    hasActiveFilters,
+    clearFilters,
+  } = useHistoryData(token);
 
   // Función para calcular el número de noches según la regla del hotel:
   // Si alguien llega el día X a cualquier hora, la salida es al mediodía del día siguiente (X+1)
@@ -58,20 +81,196 @@ export function HistoryTab() {
         Historial de Alquileres
       </Text>
 
-      {/* Barra de búsqueda */}
+      {/* Barra de búsqueda y filtros */}
       <Box mb={6}>
-        <Input
-          placeholder="Buscar por nombre, habitación o profesión..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          bg={colors.bg}
-          borderColor={colors.border}
-          color={colors.text}
-          _hover={{ borderColor: colors.gold }}
-          _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-          maxW={{ base: "100%", md: "400px" }}
-          w="100%"
-        />
+        <Flex gap={3} mb={3} flexWrap="wrap" align="center">
+          <Input
+            placeholder="Buscar por nombre, habitación o profesión..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            bg={colors.bg}
+            borderColor={colors.border}
+            color={colors.text}
+            _hover={{ borderColor: colors.gold }}
+            _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+            flex={{ base: "1 1 100%", md: "1 1 auto" }}
+            minW={{ base: "100%", md: "250px" }}
+          />
+          <Button
+            onClick={() => setShowFilters(!showFilters)}
+            bg={showFilters ? colors.gold : colors.surface}
+            color={showFilters ? colors.bg : colors.text}
+            borderWidth="2px"
+            borderColor={colors.border}
+            _hover={{
+              bg: showFilters ? "#b8941f" : colors.bg,
+              borderColor: colors.gold,
+            }}
+            fontSize="sm"
+            px={4}
+          >
+            {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+            {hasActiveFilters && (
+              <Box
+                as="span"
+                ml={2}
+                bg={colors.gold}
+                color={colors.bg}
+                borderRadius="full"
+                px={2}
+                py={0.5}
+                fontSize="xs"
+                fontWeight="bold"
+              >
+                {hasActiveFilters ? "•" : ""}
+              </Box>
+            )}
+          </Button>
+          {hasActiveFilters && (
+            <Button
+              onClick={clearFilters}
+              variant="ghost"
+              color={colors.subtext}
+              fontSize="sm"
+              _hover={{ color: colors.text }}
+            >
+              Limpiar Filtros
+            </Button>
+          )}
+        </Flex>
+
+        {/* Panel de filtros avanzados */}
+        {showFilters && (
+          <Box
+            bg={colors.surface}
+            p={4}
+            borderRadius="lg"
+            borderWidth="2px"
+            borderColor={colors.border}
+            mb={4}
+          >
+            <Text fontSize="sm" fontWeight="bold" color={colors.gold} mb={4}>
+              Filtros Avanzados
+            </Text>
+            <Stack gap={4}>
+              {/* Fila 1: Habitación y Profesión */}
+              <Flex gap={3} flexWrap="wrap">
+                <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "200px" }}>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Habitación
+                  </Text>
+                  <Input
+                    placeholder="Buscar habitación..."
+                    value={roomFilter}
+                    onChange={(e) => setRoomFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                    list="rooms-list"
+                  />
+                  <datalist id="rooms-list">
+                    {uniqueRooms.map((room) => (
+                      <option key={room} value={room} />
+                    ))}
+                  </datalist>
+                </Box>
+                <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "200px" }}>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Profesión
+                  </Text>
+                  <Input
+                    placeholder="Buscar profesión..."
+                    value={professionFilter}
+                    onChange={(e) => setProfessionFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                    list="professions-list"
+                  />
+                  <datalist id="professions-list">
+                    {uniqueProfessions.map((profession) => (
+                      <option key={profession} value={profession} />
+                    ))}
+                  </datalist>
+                </Box>
+              </Flex>
+
+              {/* Fila 2: Rango de Fechas */}
+              <Flex gap={3} flexWrap="wrap">
+                <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "200px" }}>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Fecha Desde
+                  </Text>
+                  <Input
+                    type="date"
+                    value={dateFromFilter}
+                    onChange={(e) => setDateFromFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  />
+                </Box>
+                <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "200px" }}>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Fecha Hasta
+                  </Text>
+                  <Input
+                    type="date"
+                    value={dateToFilter}
+                    onChange={(e) => setDateToFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  />
+                </Box>
+              </Flex>
+
+              {/* Fila 3: Rango de Monto */}
+              <Flex gap={3} flexWrap="wrap">
+                <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "200px" }}>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Monto Mínimo
+                  </Text>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={minAmountFilter}
+                    onChange={(e) => setMinAmountFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  />
+                </Box>
+                <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "200px" }}>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Monto Máximo
+                  </Text>
+                  <Input
+                    type="number"
+                    placeholder="Sin límite"
+                    value={maxAmountFilter}
+                    onChange={(e) => setMaxAmountFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                  />
+                </Box>
+              </Flex>
+            </Stack>
+          </Box>
+        )}
       </Box>
 
       {/* Tabla */}
@@ -89,7 +288,7 @@ export function HistoryTab() {
           textAlign="center"
         >
           <Text color={colors.subtext} fontSize="lg">
-            {searchQuery ? "No se encontraron resultados" : "No hay historial de alquileres"}
+            {hasActiveFilters ? "No se encontraron resultados con los filtros aplicados" : "No hay historial de alquileres"}
           </Text>
         </Box>
       ) : (
