@@ -8,6 +8,7 @@ import { getPendingSalesByReservation } from "@/services/sales";
 import { checkOutReservation, type CheckOutData } from "@/services/reservations";
 import { getToken } from "@/lib/session";
 import type { Sale } from "@/app/tienda/types";
+import { getPaymentMethods, type PaymentMethod } from "@/services/payment-methods";
 
 type Guest = {
   _id: string;
@@ -78,7 +79,8 @@ export function ReservationDetailsModal({
   const [loadingPendingSales, setLoadingPendingSales] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
+  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [additionalCharges, setAdditionalCharges] = useState<string>('0');
   const [checkoutNotes, setCheckoutNotes] = useState('');
 
@@ -91,6 +93,27 @@ export function ReservationDetailsModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, reservation?._id, reservation?.status]);
+
+  // Cargar métodos de pago
+  useEffect(() => {
+    const loadPaymentMethods = async () => {
+      const token = getToken();
+      if (!token) return;
+      
+      try {
+        const resp = await getPaymentMethods(false, token);
+        if (resp.success && resp.data) {
+          setPaymentMethods(resp.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar métodos de pago:', error);
+      }
+    };
+    
+    if (isOpen) {
+      loadPaymentMethods();
+    }
+  }, [isOpen]);
 
   const loadPendingSales = async () => {
     if (!reservation?._id) return;
@@ -118,7 +141,7 @@ export function ReservationDetailsModal({
     setIsCheckingOut(true);
     try {
       const checkoutData: CheckOutData = {
-        paymentMethod,
+        paymentMethodId: paymentMethodId || undefined,
         additionalCharges: parseFloat(additionalCharges) || 0,
         notes: checkoutNotes.trim() || undefined,
       };
@@ -552,8 +575,8 @@ export function ReservationDetailsModal({
                         Método de Pago <Text as="span" color="red.500">*</Text>
                       </Text>
                       <select
-                        value={paymentMethod}
-                        onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'transfer')}
+                        value={paymentMethodId}
+                        onChange={(e) => setPaymentMethodId(e.target.value)}
                         style={{
                           width: '100%',
                           backgroundColor: colors.surface,
@@ -579,9 +602,12 @@ export function ReservationDetailsModal({
                           e.currentTarget.style.boxShadow = 'none';
                         }}
                       >
-                        <option value="cash" style={{ backgroundColor: colors.surface, color: colors.text }}>Efectivo</option>
-                        <option value="card" style={{ backgroundColor: colors.surface, color: colors.text }}>Tarjeta</option>
-                        <option value="transfer" style={{ backgroundColor: colors.surface, color: colors.text }}>Transferencia</option>
+                        <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar método de pago</option>
+                        {paymentMethods.map((method) => (
+                          <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                            {method.icon ? `${method.icon} ` : ""}{method.name}
+                          </option>
+                        ))}
                       </select>
                     </Box>
 
@@ -637,7 +663,7 @@ export function ReservationDetailsModal({
                         color={colors.subtext}
                         onClick={() => {
                           setShowCheckoutForm(false);
-                          setPaymentMethod('cash');
+                          setPaymentMethodId('');
                           setAdditionalCharges('0');
                           setCheckoutNotes('');
                         }}

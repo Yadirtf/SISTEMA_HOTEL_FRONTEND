@@ -240,7 +240,7 @@ export function PaymentMethodModal({
                 color="white"
                 _hover={{ bg: "#b8941f" }}
                 onClick={handleSubmit}
-                isLoading={isSubmitting}
+                loading={isSubmitting}
               >
                 {paymentMethod ? "Actualizar" : "Crear"}
               </Button>

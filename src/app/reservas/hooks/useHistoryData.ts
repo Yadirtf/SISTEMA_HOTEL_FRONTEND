@@ -60,7 +60,7 @@ export function useHistoryData(token?: string) {
     if (searchQuery.trim()) {
       const query = searchQuery.trim().toUpperCase();
       filtered = filtered.filter(r => {
-        const guestName = r.guest 
+        const guestName = (typeof r.guest === 'object' && r.guest) 
           ? `${r.guest.firstName} ${r.guest.lastName}`.toUpperCase()
           : "";
         const roomNumber = r.roomNumber?.toUpperCase() || "";

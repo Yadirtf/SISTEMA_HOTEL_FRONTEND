@@ -498,7 +498,7 @@ export function HistoryTab() {
                           _hover={{ bg: "#b8941f" }}
                           onClick={() => handleViewInvoice(reservation._id)}
                           disabled={loadingInvoice}
-                          isLoading={loadingInvoice}
+                          loading={loadingInvoice}
                         >
                           Ver Factura
                         </Button>
@@ -577,7 +577,7 @@ export function HistoryTab() {
                       _hover={{ bg: "#b8941f" }}
                       onClick={() => handleViewInvoice(reservation._id)}
                       disabled={loadingInvoice}
-                      isLoading={loadingInvoice}
+                      loading={loadingInvoice}
                     >
                       Ver Factura
                     </Button>

@@ -189,7 +189,7 @@ interface InvoicePDFProps {
 type InvoiceStatus = "paid" | "pending" | "overdue";
 
 export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true }: InvoicePDFProps) {
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales } = billingDetails;
+  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal } = billingDetails;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
   

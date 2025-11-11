@@ -247,7 +247,7 @@ export function PaymentTypeModal({
                 color="white"
                 _hover={{ bg: "#b8941f" }}
                 onClick={handleSubmit}
-                isLoading={isSubmitting}
+                loading={isSubmitting}
               >
                 {paymentType ? "Actualizar" : "Crear"}
               </Button>
