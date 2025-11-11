@@ -272,73 +272,85 @@ export function BillingDetails({
           </Stack>
         </Box>
 
-        {/* Formulario de checkout */}
-        {(!reservation.isPaid || pendingSales.length > 0) && (
+        {/* Formulario de checkout - Mostrar siempre si la reserva está checked_in o confirmed */}
+        {(reservation.status === 'checked_in' || reservation.status === 'confirmed') && (
           <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.gold}>
             <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-              {reservation.isPaid && pendingSales.length > 0 
+              {reservation.isPaid && pendingSales.length === 0
+                ? "Check-out y Facturación"
+                : reservation.isPaid && pendingSales.length > 0 
                 ? "Pagar Productos Fiados" 
                 : "Proceso de Pago"}
             </Text>
+            {reservation.isPaid && pendingSales.length === 0 && (
+              <Text fontSize="sm" color={colors.subtext} mb={3} fontStyle="italic">
+                La habitación ya está pagada. Puedes generar la factura y realizar el check-out para liberar la habitación.
+              </Text>
+            )}
             {reservation.isPaid && pendingSales.length > 0 && (
               <Text fontSize="sm" color={colors.subtext} mb={3} fontStyle="italic">
                 La habitación ya está pagada. Estás pagando los productos fiados pendientes.
               </Text>
             )}
             <Stack gap={3}>
-              <Box>
-                <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                  Método de Pago <Text as="span" color="red.500">*</Text>
-                </Text>
-                <select
-                  value={paymentMethodId}
-                  onChange={(e) => setPaymentMethodId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: colors.surface,
-                    color: colors.text,
-                    borderRadius: '6px',
-                    padding: '8px 12px',
-                    border: `2px solid ${colors.border}`,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar método de pago</option>
-                  {paymentMethods.map((method) => (
-                    <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
-                      {method.icon ? `${method.icon} ` : ""}{method.name}
-                    </option>
-                  ))}
-                </select>
-              </Box>
+              {/* Mostrar campos de pago solo si hay algo pendiente de pagar */}
+              {(!reservation.isPaid || pendingSales.length > 0) && (
+                <>
+                  <Box>
+                    <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
+                      Método de Pago <Text as="span" color="red.500">*</Text>
+                    </Text>
+                    <select
+                      value={paymentMethodId}
+                      onChange={(e) => setPaymentMethodId(e.target.value)}
+                      style={{
+                        width: '100%',
+                        backgroundColor: colors.surface,
+                        color: colors.text,
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        border: `2px solid ${colors.border}`,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar método de pago</option>
+                      {paymentMethods.map((method) => (
+                        <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                          {method.icon ? `${method.icon} ` : ""}{method.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Box>
 
-              <Box>
-                <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                  Tipo de Pago
-                </Text>
-                <select
-                  value={paymentTypeId}
-                  onChange={(e) => setPaymentTypeId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: colors.surface,
-                    color: colors.text,
-                    borderRadius: '6px',
-                    padding: '8px 12px',
-                    border: `2px solid ${colors.border}`,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar tipo de pago</option>
-                  {paymentTypes.map((type) => (
-                    <option key={type._id} value={type._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-              </Box>
+                  <Box>
+                    <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
+                      Tipo de Pago
+                    </Text>
+                    <select
+                      value={paymentTypeId}
+                      onChange={(e) => setPaymentTypeId(e.target.value)}
+                      style={{
+                        width: '100%',
+                        backgroundColor: colors.surface,
+                        color: colors.text,
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        border: `2px solid ${colors.border}`,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar tipo de pago</option>
+                      {paymentTypes.map((type) => (
+                        <option key={type._id} value={type._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Box>
+                </>
+              )}
 
               <Box>
                 <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
@@ -404,7 +416,7 @@ export function BillingDetails({
                   fontWeight="bold"
                   _hover={{ bg: "#b8941f" }}
                   onClick={() => onCheckout(paymentMethodId || undefined, paymentTypeId || undefined, parseFloat(additionalCharges) || 0, notes.trim() || undefined)}
-                  disabled={isProcessingCheckout || (!paymentMethodId && (pendingSales.length > 0 || !reservation.isPaid))}
+                  disabled={isProcessingCheckout || ((!reservation.isPaid || pendingSales.length > 0) && !paymentMethodId)}
                 >
                   {isProcessingCheckout 
                     ? "Procesando..." 

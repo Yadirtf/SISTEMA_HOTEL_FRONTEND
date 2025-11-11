@@ -200,6 +200,27 @@ export function ReservationModal({
   // Calcular precio actual según número de huéspedes
   const currentPricePerNight = calculatePriceForGuests(parseInt(formData.numberOfGuests) || 1);
 
+  // Función para formatear fecha y hora al formato datetime-local
+  const formatDateTimeLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Autocompletar fecha de entrada con fecha y hora actual al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      setFormData((prev) => ({
+        ...prev,
+        checkInTime: prev.checkInTime || formatDateTimeLocal(now),
+      }));
+    }
+  }, [isOpen]);
+
   // Limpiar formulario al cerrar el modal
   useEffect(() => {
     if (!isOpen) {
@@ -235,6 +256,24 @@ export function ReservationModal({
 
   const handleChange = (field: keyof ReservationFormData, value: string | undefined) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handler especial para fecha de salida que siempre mantiene la hora en 12:00 PM
+  const handleCheckOutDateChange = (dateValue: string) => {
+    if (!dateValue) {
+      handleChange("checkOutTime", "");
+      return;
+    }
+    // Si el usuario selecciona solo la fecha (formato YYYY-MM-DD), agregar hora 12:00
+    if (dateValue.length === 10) {
+      const dateWithNoon = `${dateValue}T12:00`;
+      handleChange("checkOutTime", dateWithNoon);
+    } else {
+      // Si viene con hora, extraer solo la fecha y forzar hora 12:00
+      const datePart = dateValue.split('T')[0];
+      const dateWithNoon = `${datePart}T12:00`;
+      handleChange("checkOutTime", dateWithNoon);
+    }
   };
 
   // Establecer fecha mínima como hoy
@@ -605,16 +644,21 @@ export function ReservationModal({
                       Fecha de Salida
                     </Text>
                     <Input
-                      type="datetime-local"
-                      value={formData.checkOutTime}
-                      onChange={(e) => handleChange("checkOutTime", e.target.value)}
+                      type="date"
+                      value={formData.checkOutTime ? formData.checkOutTime.split('T')[0] : ""}
+                      onChange={(e) => handleCheckOutDateChange(e.target.value)}
                       bg={colors.bg}
                       borderColor={colors.border}
                       color={colors.text}
                       _hover={{ borderColor: colors.gold }}
                       _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                      min={formData.checkInTime || today}
+                      min={formData.checkInTime ? formData.checkInTime.split('T')[0] : today}
                     />
+                    {formData.checkOutTime && (
+                      <Text fontSize="xs" color={colors.subtext} mt={1} fontStyle="italic">
+                        Hora de salida: 12:00 PM
+                      </Text>
+                    )}
                   </Box>
                 </Flex>
 

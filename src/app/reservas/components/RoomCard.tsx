@@ -64,7 +64,8 @@ export function RoomCard({
           <Text fontSize={{ base: "xs", md: "sm" }} color={colors.subtext} fontWeight="medium">
             #{room.number}
           </Text>
-          {room.status !== "available" && (
+          {/* Mostrar botón de detalles solo cuando la habitación está ocupada (no en limpieza) */}
+          {room.status === "occupied" && (
             <Button
               variant="ghost"
               size="xs"
@@ -122,7 +123,8 @@ export function RoomCard({
 
       <Box mt={4} pt={3} borderTop="1px solid" borderColor={colors.border}>
         <Flex gap={2} justify="space-between">
-          {room.status !== "available" && (
+          {/* Mostrar botón de detalles solo cuando la habitación está ocupada (no en limpieza) */}
+          {room.status === "occupied" && (
             <Button
               size="sm"
               variant="outline"
@@ -140,29 +142,33 @@ export function RoomCard({
               Detalles
             </Button>
           )}
-          <Button
-            size="sm"
-            bg={primaryEnabled ? colors.gold : colors.subtext}
-            color={colors.bg}
-            fontWeight="bold"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrimaryAction(room);
-            }}
-            _hover={{
-              bg: primaryEnabled ? "#b8941f" : colors.subtext,
-              transform: primaryEnabled ? "translateY(-2px)" : undefined,
-              boxShadow: primaryEnabled ? `0 4px 12px ${colors.gold}40` : undefined,
-            }}
-            disabled={!primaryEnabled || isBusy}
-            transition="all 0.2s"
-            flex={1}
-            boxShadow={primaryEnabled ? `0 2px 8px ${colors.gold}50` : undefined}
-            opacity={primaryEnabled ? 1 : 0.5}
-            cursor={primaryEnabled ? "pointer" : "not-allowed"}
-          >
-            {room.status === "available" ? "Ocupar" : room.status === "cleaning" ? "F. limpieza" : "Liberar"}
-          </Button>
+          {/* Solo mostrar el botón de acción primaria si la habitación NO está ocupada */}
+          {/* Las habitaciones ocupadas se liberan desde el apartado de facturación */}
+          {room.status !== "occupied" && (
+            <Button
+              size="sm"
+              bg={primaryEnabled ? colors.gold : colors.subtext}
+              color={colors.bg}
+              fontWeight="bold"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrimaryAction(room);
+              }}
+              _hover={{
+                bg: primaryEnabled ? "#b8941f" : colors.subtext,
+                transform: primaryEnabled ? "translateY(-2px)" : undefined,
+                boxShadow: primaryEnabled ? `0 4px 12px ${colors.gold}40` : undefined,
+              }}
+              disabled={!primaryEnabled || isBusy}
+              transition="all 0.2s"
+              flex={1}
+              boxShadow={primaryEnabled ? `0 2px 8px ${colors.gold}50` : undefined}
+              opacity={primaryEnabled ? 1 : 0.5}
+              cursor={primaryEnabled ? "pointer" : "not-allowed"}
+            >
+              {room.status === "available" ? "Ocupar" : "F. limpieza"}
+            </Button>
+          )}
         </Flex>
       </Box>
     </Box>

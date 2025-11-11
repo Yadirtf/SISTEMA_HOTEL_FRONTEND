@@ -88,7 +88,11 @@ export function RoomsTab({
               onSeeDetails={onSeeDetails}
               onSeeReservationDetails={onSeeReservationDetails}
               onPrimaryAction={onPrimaryAction}
-              primaryEnabled={(room) => true}
+              primaryEnabled={(room) => {
+                // El botón solo está habilitado para habitaciones disponibles o en limpieza
+                // Las habitaciones ocupadas no deben mostrar el botón de acción (se liberan desde facturación)
+                return room.status === "available" || room.status === "cleaning";
+              }}
               isBusy={isSubmitting}
             />
           ))}

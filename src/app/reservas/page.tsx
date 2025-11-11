@@ -83,10 +83,11 @@ export default function ReservasPage() {
   const onPrimaryAction = useCallback((room: Room) => {
     if (room.status === "available") {
       handleOpenReservationModal(room);
-    } else {
-      const next = room.status === "cleaning" ? "available" : "cleaning";
-      handleChangeRoomStatus(room, next, loadRooms);
+    } else if (room.status === "cleaning") {
+      // Solo permitir finalizar limpieza (cambiar de cleaning a available)
+      handleChangeRoomStatus(room, "available", loadRooms);
     }
+    // No permitir liberar habitaciones ocupadas desde aquí (solo desde facturación)
   }, [handleOpenReservationModal, handleChangeRoomStatus, loadRooms]);
 
   const onSeeDetails = useCallback((room: Room) => {
