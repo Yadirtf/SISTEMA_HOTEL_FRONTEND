@@ -1,10 +1,9 @@
 "use client";
 
-import { Box, Stack, Text, Flex } from "@chakra-ui/react";
-import { useCallback } from "react";
+import { Box, Stack, Text, Flex, Input } from "@chakra-ui/react";
+import { useCallback, useState, useMemo } from "react";
 import { formatPrice } from "@/lib/format";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
-import { Header } from "./Header";
 import { FloorSection } from "./FloorSection";
 import { statusToEs, getStatusColor } from "../lib/status";
 import type { Room, Floor } from "../types";
@@ -36,6 +35,8 @@ export function RoomsTab({
   isSubmitting,
   loadRooms,
 }: RoomsTabProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
   const getRoomTypeName = useCallback((room: Room): string => {
     return typeof room.roomType === "object" && room.roomType ? (room.roomType as any).tipo : "Tipo desconocido";
   }, []);
@@ -47,6 +48,46 @@ export function RoomsTab({
     return f?.numero || 0;
   }, [floors]);
 
+  // Filtrar habitaciones según la búsqueda
+  const filteredRooms = useMemo(() => {
+    if (!searchQuery.trim()) return rooms;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return rooms.filter((room) => {
+      const roomNumber = room.number?.toLowerCase() || "";
+      const roomType = getRoomTypeName(room).toLowerCase();
+      const status = statusToEs[room.status]?.toLowerCase() || room.status?.toLowerCase() || "";
+      const price = formatPrice(room.pricePerNight || 0).toLowerCase();
+      
+      return (
+        roomNumber.includes(query) ||
+        roomType.includes(query) ||
+        status.includes(query) ||
+        price.includes(query)
+      );
+    });
+  }, [rooms, searchQuery, getRoomTypeName]);
+
+  // Agrupar habitaciones filtradas por piso
+  const filteredRoomsByFloor = useMemo(() => {
+    const grouped: Record<number, Room[]> = {};
+    filteredRooms.forEach((room) => {
+      const floorNum = getFloorNumber(room);
+      if (!grouped[floorNum]) {
+        grouped[floorNum] = [];
+      }
+      grouped[floorNum].push(room);
+    });
+    return grouped;
+  }, [filteredRooms, getFloorNumber]);
+
+  // Obtener pisos ordenados de las habitaciones filtradas
+  const filteredSortedFloors = useMemo(() => {
+    return Object.keys(filteredRoomsByFloor)
+      .map(Number)
+      .sort((a, b) => a - b);
+  }, [filteredRoomsByFloor]);
+
   if (loading) {
     return (
       <Flex justify="center" align="center" minH="400px">
@@ -57,11 +98,23 @@ export function RoomsTab({
 
   return (
     <Stack gap={6}>
-      {/* Encabezado */}
-      <Header title="Habitaciones del Hotel" subtitle="Selecciona una habitación para realizar una reserva" colors={colors} />
+      {/* Filtro de búsqueda rápida */}
+      <Box>
+        <Input
+          placeholder="Buscar habitación por número, tipo, estado o precio..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          bg={colors.bg}
+          borderColor={colors.border}
+          color={colors.text}
+          _hover={{ borderColor: colors.gold }}
+          _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+          size="md"
+        />
+      </Box>
 
       {/* Habitaciones agrupadas por piso */}
-      {sortedFloors.length === 0 ? (
+      {filteredSortedFloors.length === 0 ? (
         <Box
           bg={colors.surface}
           p={8}
@@ -71,16 +124,16 @@ export function RoomsTab({
           textAlign="center"
         >
           <Text color={colors.subtext} fontSize="lg">
-            No hay habitaciones disponibles
+            {searchQuery.trim() ? "No se encontraron habitaciones con ese criterio de búsqueda" : "No hay habitaciones disponibles"}
           </Text>
         </Box>
       ) : (
         <Stack gap={8}>
-          {sortedFloors.map((floorNum) => (
+          {filteredSortedFloors.map((floorNum) => (
             <FloorSection
               key={floorNum}
               floorNum={floorNum}
-              rooms={roomsByFloor[floorNum]}
+              rooms={filteredRoomsByFloor[floorNum]}
               colors={colors}
               statusToEs={statusToEs}
               getStatusColor={(s) => getStatusColor(s, colors.subtext)}
