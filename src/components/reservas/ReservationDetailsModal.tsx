@@ -5,10 +5,8 @@ import { formatPrice } from "@/lib/format";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useState, useEffect } from "react";
 import { getPendingSalesByReservation } from "@/services/sales";
-import { checkOutReservation, type CheckOutData } from "@/services/reservations";
 import { getToken } from "@/lib/session";
 import type { Sale } from "@/app/tienda/types";
-import { getPaymentMethods, type PaymentMethod } from "@/services/payment-methods";
 
 type Guest = {
   _id: string;
@@ -50,6 +48,7 @@ type ReservationDetailsModalProps = {
   reservation: Reservation | null;
   isLoading?: boolean;
   onCheckoutSuccess?: () => void;
+  onNavigateToBilling?: (reservationId: string) => void;
 };
 
 const statusToEs: Record<string, string> = {
@@ -73,16 +72,11 @@ export function ReservationDetailsModal({
   reservation,
   isLoading = false,
   onCheckoutSuccess,
+  onNavigateToBilling,
 }: ReservationDetailsModalProps) {
   const { colors } = useThemeMode();
   const [pendingSales, setPendingSales] = useState<Sale[]>([]);
   const [loadingPendingSales, setLoadingPendingSales] = useState(false);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
-  const [paymentMethodId, setPaymentMethodId] = useState<string>('');
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [additionalCharges, setAdditionalCharges] = useState<string>('0');
-  const [checkoutNotes, setCheckoutNotes] = useState('');
 
   // Cargar productos fiados cuando se abre el modal
   useEffect(() => {
@@ -94,26 +88,6 @@ export function ReservationDetailsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, reservation?._id, reservation?.status]);
 
-  // Cargar métodos de pago
-  useEffect(() => {
-    const loadPaymentMethods = async () => {
-      const token = getToken();
-      if (!token) return;
-      
-      try {
-        const resp = await getPaymentMethods(false, token);
-        if (resp.success && resp.data) {
-          setPaymentMethods(resp.data);
-        }
-      } catch (error) {
-        console.error('Error al cargar métodos de pago:', error);
-      }
-    };
-    
-    if (isOpen) {
-      loadPaymentMethods();
-    }
-  }, [isOpen]);
 
   const loadPendingSales = async () => {
     if (!reservation?._id) return;
@@ -133,32 +107,10 @@ export function ReservationDetailsModal({
     }
   };
 
-  const handleCheckout = async () => {
-    if (!reservation?._id) return;
-    const token = getToken();
-    if (!token) return;
-
-    setIsCheckingOut(true);
-    try {
-      const checkoutData: CheckOutData = {
-        paymentMethodId: paymentMethodId || undefined,
-        additionalCharges: parseFloat(additionalCharges) || 0,
-        notes: checkoutNotes.trim() || undefined,
-      };
-
-      const resp = await checkOutReservation(reservation._id, checkoutData, token);
-      if (resp.success) {
-        if (onCheckoutSuccess) {
-          onCheckoutSuccess();
-        }
-        onClose();
-      } else {
-        alert(resp.message || 'Error al realizar el checkout');
-      }
-    } catch (error: any) {
-      alert(error.message || 'Error inesperado al realizar el checkout');
-    } finally {
-      setIsCheckingOut(false);
+  const handleNavigateToBilling = () => {
+    if (reservation?._id && onNavigateToBilling) {
+      onNavigateToBilling(reservation._id);
+      onClose();
     }
   };
 
@@ -538,155 +490,19 @@ export function ReservationDetailsModal({
             </Stack>
           </Box>
 
-          {/* Formulario de checkout (solo si está checked_in) */}
+          {/* Botón de checkout (solo si está checked_in) */}
           {reservation.status === 'checked_in' && (
-            <Box>
-              {!showCheckoutForm ? (
-                <Button
-                  w="100%"
-                  bg={colors.gold}
-                  color={colors.bg}
-                  fontWeight="bold"
-                  _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
-                  onClick={() => setShowCheckoutForm(true)}
-                  boxShadow={`0 2px 8px ${colors.gold}50`}
-                >
-                  Realizar Check-out
-                </Button>
-              ) : (
-                <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
-                  <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-                    Proceso de Check-out
-                  </Text>
-                  <Stack gap={3}>
-                    {pendingSales.length > 0 && (
-                      <Box p={3} bg={colors.surface} borderRadius="md" borderWidth="1px" borderColor={colors.gold}>
-                        <Text fontSize="sm" color={colors.gold} fontWeight="semibold" mb={1}>
-                          Productos fiados incluidos:
-                        </Text>
-                        <Text fontSize="sm" color={colors.text}>
-                          {pendingSales.length} venta(s) por un total de ${formatPrice(pendingSalesTotal)}
-                        </Text>
-                      </Box>
-                    )}
-                    
-                    <Box>
-                      <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                        Método de Pago <Text as="span" color="red.500">*</Text>
-                      </Text>
-                      <select
-                        value={paymentMethodId}
-                        onChange={(e) => setPaymentMethodId(e.target.value)}
-                        style={{
-                          width: '100%',
-                          backgroundColor: colors.surface,
-                          color: colors.text,
-                          borderRadius: '6px',
-                          padding: '8px 12px',
-                          border: `2px solid ${colors.border}`,
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = colors.gold;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                        }}
-                        onFocus={(e) => {
-                          e.currentTarget.style.borderColor = colors.gold;
-                          e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
-                        }}
-                        onBlur={(e) => {
-                          e.currentTarget.style.borderColor = colors.border;
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                      >
-                        <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>Seleccionar método de pago</option>
-                        {paymentMethods.map((method) => (
-                          <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
-                            {method.icon ? `${method.icon} ` : ""}{method.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Box>
-
-                    <Box>
-                      <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                        Cargos Adicionales
-                      </Text>
-                      <input
-                        type="number"
-                        value={additionalCharges}
-                        onChange={(e) => setAdditionalCharges(e.target.value)}
-                        placeholder="0"
-                        min="0"
-                        step="0.01"
-                        style={{
-                          width: '100%',
-                          backgroundColor: colors.surface,
-                          color: colors.text,
-                          borderRadius: '6px',
-                          padding: '8px 12px',
-                          border: `2px solid ${colors.border}`,
-                          fontSize: '14px',
-                        }}
-                      />
-                    </Box>
-
-                    <Box>
-                      <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                        Notas
-                      </Text>
-                      <textarea
-                        value={checkoutNotes}
-                        onChange={(e) => setCheckoutNotes(e.target.value)}
-                        placeholder="Notas adicionales..."
-                        rows={3}
-                        style={{
-                          width: '100%',
-                          backgroundColor: colors.surface,
-                          color: colors.text,
-                          borderRadius: '6px',
-                          padding: '8px 12px',
-                          border: `2px solid ${colors.border}`,
-                          fontSize: '14px',
-                          resize: 'vertical',
-                        }}
-                      />
-                    </Box>
-
-                    <Flex gap={2} mt={2}>
-                      <Button
-                        flex={1}
-                        variant="ghost"
-                        color={colors.subtext}
-                        onClick={() => {
-                          setShowCheckoutForm(false);
-                          setPaymentMethodId('');
-                          setAdditionalCharges('0');
-                          setCheckoutNotes('');
-                        }}
-                        disabled={isCheckingOut}
-                      >
-                        Cancelar
-                      </Button>
-                      <Button
-                        flex={1}
-                        bg={colors.gold}
-                        color={colors.bg}
-                        fontWeight="bold"
-                        _hover={{ bg: "#b8941f" }}
-                        onClick={handleCheckout}
-                        disabled={isCheckingOut}
-                      >
-                        {isCheckingOut ? "Procesando..." : "Confirmar Check-out"}
-                      </Button>
-                    </Flex>
-                  </Stack>
-                </Box>
-              )}
-            </Box>
+            <Button
+              w="100%"
+              bg={colors.gold}
+              color={colors.bg}
+              fontWeight="bold"
+              _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
+              onClick={handleNavigateToBilling}
+              boxShadow={`0 2px 8px ${colors.gold}50`}
+            >
+              Realizar Check-out
+            </Button>
           )}
 
           {/* Solicitudes especiales y notas */}

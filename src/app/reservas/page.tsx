@@ -21,6 +21,7 @@ export default function ReservasPage() {
   const token = getToken() || undefined;
   const { colors } = useThemeMode();
   const [activeTab, setActiveTab] = useState(0);
+  const [billingInitialReservationId, setBillingInitialReservationId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
 
   const { rooms, floors, loading, loadRooms, roomsByFloor, sortedFloors } = useReservationsData(token);
@@ -99,6 +100,11 @@ export default function ReservasPage() {
     handleOpenReservationDetailsModal(room);
   }, [handleOpenReservationDetailsModal]);
 
+  const navigateToBilling = useCallback((reservationId: string) => {
+    setBillingInitialReservationId(reservationId);
+    setActiveTab(1);
+  }, []);
+
   return (
     <DashboardShell title="Reservas">
       <Box>
@@ -170,6 +176,8 @@ export default function ReservasPage() {
               onCheckoutSuccess={async () => {
                 await loadRooms();
               }}
+              initialReservationId={billingInitialReservationId}
+              onInitialReservationProcessed={() => setBillingInitialReservationId(null)}
             />
           )}
 
@@ -206,6 +214,7 @@ export default function ReservasPage() {
                 await loadRooms();
                 showNotification("success", "Check-out realizado", "La habitación ha sido liberada y los productos fiados han sido pagados");
               }}
+              onNavigateToBilling={navigateToBilling}
             />
           </>
         )}

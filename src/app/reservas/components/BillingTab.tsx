@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useBillingData } from "../hooks/useBillingData";
 import { useBillingActions } from "../hooks/useBillingActions";
@@ -14,9 +14,11 @@ import type { Reservation } from "../types";
 interface BillingTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
   onCheckoutSuccess?: () => Promise<void>;
+  initialReservationId?: string | null;
+  onInitialReservationProcessed?: () => void;
 }
 
-export function BillingTab({ showNotification, onCheckoutSuccess }: BillingTabProps) {
+export function BillingTab({ showNotification, onCheckoutSuccess, initialReservationId, onInitialReservationProcessed }: BillingTabProps) {
   const { colors } = useThemeMode();
   const token = getToken() || undefined;
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
@@ -73,6 +75,20 @@ export function BillingTab({ showNotification, onCheckoutSuccess }: BillingTabPr
     if (!selectedReservation?._id) return;
     await handleCheckout(selectedReservation._id, paymentMethodId, paymentTypeId, additionalCharges, notes);
   }, [selectedReservation, handleCheckout]);
+
+  // Seleccionar automáticamente una reserva cuando se proporciona initialReservationId
+  useEffect(() => {
+    if (initialReservationId && filteredReservations.length > 0) {
+      const reservation = filteredReservations.find(r => r._id === initialReservationId);
+      if (reservation && (!selectedReservation || selectedReservation._id !== initialReservationId)) {
+        handleSelectReservation(reservation);
+        // Notificar que se procesó la reserva inicial para limpiar el estado
+        if (onInitialReservationProcessed) {
+          onInitialReservationProcessed();
+        }
+      }
+    }
+  }, [initialReservationId, filteredReservations, selectedReservation, handleSelectReservation, onInitialReservationProcessed]);
 
   return (
     <Box>
