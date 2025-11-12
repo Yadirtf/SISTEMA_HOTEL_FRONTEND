@@ -184,12 +184,13 @@ interface InvoicePDFProps {
   invoiceDate: Date;
   status: "paid" | "pending" | "overdue";
   includeProducts?: boolean; // Por defecto true para mantener compatibilidad
+  includeAdditionalCharges?: boolean; // Por defecto true para mantener compatibilidad
 }
 
 type InvoiceStatus = "paid" | "pending" | "overdue";
 
-export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true }: InvoicePDFProps) {
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal } = billingDetails;
+export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true, includeAdditionalCharges = true }: InvoicePDFProps) {
+  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal, additionalCharges } = billingDetails;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
   
@@ -230,19 +231,26 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status,
   const nights = calculateNights();
   const roomTotal = (reservation.roomPrice || 0) * nights;
 
-  // Calcular total según si se incluyen productos o no
-  let calculatedTotal: number;
+  // Calcular total según si se incluyen productos y cargos adicionales
+  const additionalChargesValue = additionalCharges ?? 0;
+  let baseTotal: number;
+  
   if (includeProducts) {
     // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
-    // Si no, usar totalToPay (antes del checkout, incluye solo pendientes)
+    // Si no, calcular con productos pendientes
     if (allSalesTotal !== undefined) {
-      calculatedTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
+      baseTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
     } else {
-      calculatedTotal = totalToPay; // Incluye habitación + productos pendientes
+      // Antes del checkout: totalToPay incluye habitación + productos pendientes + cargos adicionales
+      // Necesitamos calcular sin los cargos adicionales
+      baseTotal = roomTotal + pendingSalesTotal;
     }
   } else {
-    calculatedTotal = roomTotal; // Solo habitación
+    baseTotal = roomTotal; // Solo habitación
   }
+  
+  // Agregar cargos adicionales si están incluidos
+  const calculatedTotal = includeAdditionalCharges ? baseTotal + additionalChargesValue : baseTotal;
 
   const statusText: Record<InvoiceStatus, string> = {
     paid: "PAGADA",
@@ -375,6 +383,16 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status,
                   <Text style={styles.tableCol4}>{formatCurrency(item.subtotal)}</Text>
                 </View>
               ))
+            )}
+
+            {/* Cargos adicionales - solo si includeAdditionalCharges es true */}
+            {includeAdditionalCharges && additionalChargesValue > 0 && (
+              <View style={styles.tableRow}>
+                <Text style={styles.tableCol1}>Cargos Adicionales</Text>
+                <Text style={styles.tableCol2}>1</Text>
+                <Text style={styles.tableCol3}>{formatCurrency(additionalChargesValue)}</Text>
+                <Text style={styles.tableCol4}>{formatCurrency(additionalChargesValue)}</Text>
+              </View>
             )}
 
             {/* Fila de Total */}

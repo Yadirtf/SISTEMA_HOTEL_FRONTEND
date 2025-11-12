@@ -27,6 +27,7 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
   const { colors } = useThemeMode();
   const [viewMode, setViewMode] = useState<"preview" | "pdf">("preview");
   const [includeProducts, setIncludeProducts] = useState(true); // Por defecto incluir productos
+  const [includeAdditionalCharges, setIncludeAdditionalCharges] = useState(true); // Por defecto incluir cargos adicionales
   const invoiceDate = useMemo(() => new Date(), []);
   const invoiceNumber = useMemo(() => {
     if (!billingDetails) return "";
@@ -52,10 +53,10 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
     return "pending";
   }, [billingDetails]);
 
-  // Calcular total según si se incluyen productos o no - debe estar antes del return condicional
+  // Calcular total según si se incluyen productos y cargos adicionales - debe estar antes del return condicional
   const calculatedTotal = useMemo(() => {
     if (!billingDetails) return 0;
-    const { reservation, totalToPay, allSalesTotal, pendingSalesTotal } = billingDetails;
+    const { reservation, totalToPay, allSalesTotal, pendingSalesTotal, additionalCharges } = billingDetails;
     
     // Calcular noches
     const calculateNights = (): number => {
@@ -70,19 +71,29 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
     
     const nights = calculateNights();
     const roomTotal = (reservation.roomPrice || 0) * nights;
+    const additionalChargesValue = additionalCharges ?? 0;
+    
+    let baseTotal = roomTotal;
     
     if (includeProducts) {
       // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
-      // Si no, usar totalToPay (antes del checkout, incluye solo pendientes)
+      // Si no, calcular con productos pendientes
       if (allSalesTotal !== undefined) {
-        return roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
+        baseTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
       } else {
-        return totalToPay; // Incluye habitación + productos pendientes
+        // Antes del checkout: totalToPay incluye habitación + productos pendientes + cargos adicionales
+        // Necesitamos restar los cargos adicionales si no se incluyen
+        baseTotal = roomTotal + pendingSalesTotal;
       }
-    } else {
-      return roomTotal; // Solo habitación
     }
-  }, [billingDetails, includeProducts]);
+    
+    // Agregar cargos adicionales si están incluidos
+    if (includeAdditionalCharges) {
+      return baseTotal + additionalChargesValue;
+    } else {
+      return baseTotal;
+    }
+  }, [billingDetails, includeProducts, includeAdditionalCharges]);
 
   // Memorizar el documento PDF para evitar problemas con PDFDownloadLink - debe estar antes del return condicional
   const pdfDocument = useMemo(() => {
@@ -94,13 +105,14 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
         invoiceDate={invoiceDate}
         status={invoiceStatus}
         includeProducts={includeProducts}
+        includeAdditionalCharges={includeAdditionalCharges}
       />
     );
-  }, [billingDetails, invoiceNumber, invoiceDate, invoiceStatus, includeProducts]);
+  }, [billingDetails, invoiceNumber, invoiceDate, invoiceStatus, includeProducts, includeAdditionalCharges]);
 
   if (!isOpen || !billingDetails) return null;
 
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal } = billingDetails;
+  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal, additionalCharges } = billingDetails;
   
   // Usar allSales si está disponible (incluye pendientes y pagadas), sino usar pendingSales
   const salesToShow = allSales && allSales.length > 0 ? allSales : pendingSales;
@@ -252,6 +264,25 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               />
               <Text fontSize="sm" color={colors.text}>
                 Incluir productos fiados
+              </Text>
+            </Flex>
+          )}
+          {/* Mostrar checkbox si hay cargos adicionales */}
+          {(additionalCharges ?? 0) > 0 && (
+            <Flex gap={2} align="center">
+              <input
+                type="checkbox"
+                checked={includeAdditionalCharges}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIncludeAdditionalCharges(e.target.checked)}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer',
+                  accentColor: colors.gold,
+                }}
+              />
+              <Text fontSize="sm" color={colors.text}>
+                Incluir cargos adicionales
               </Text>
             </Flex>
           )}
@@ -462,6 +493,27 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
                         </Box>
                       ))
                     )}
+                    {/* Cargos adicionales - solo si includeAdditionalCharges es true */}
+                    {includeAdditionalCharges && (additionalCharges ?? 0) > 0 && (
+                      <Box
+                        as="tr"
+                        borderBottom="1px solid"
+                        borderColor={colors.border}
+                      >
+                        <Box as="td" p={3} fontSize="sm" color={colors.text}>
+                          Cargos Adicionales
+                        </Box>
+                        <Box as="td" p={3} textAlign="center" fontSize="sm" color={colors.text}>
+                          1
+                        </Box>
+                        <Box as="td" p={3} textAlign="right" fontSize="sm" color={colors.text}>
+                          ${formatPrice(additionalCharges ?? 0)}
+                        </Box>
+                        <Box as="td" p={3} textAlign="right" fontSize="sm" color={colors.gold} fontWeight="bold">
+                          ${formatPrice(additionalCharges ?? 0)}
+                        </Box>
+                      </Box>
+                    )}
                     {/* Fila de Total */}
                     <Box
                       as="tr"
@@ -523,9 +575,9 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
           </Button>
           {billingDetails && pdfDocument && (
             <PDFDownloadLink
-              key={`${invoiceNumber}-${includeProducts}`}
+              key={`${invoiceNumber}-${includeProducts}-${includeAdditionalCharges}`}
               document={pdfDocument}
-              fileName={`Factura-${invoiceNumber}${includeProducts ? '' : '-SoloAlojamiento'}.pdf`}
+              fileName={`Factura-${invoiceNumber}${!includeProducts ? '-SoloAlojamiento' : ''}${!includeAdditionalCharges ? '-SinCargosAdicionales' : ''}.pdf`}
             >
             {({ loading }) => (
               <Button

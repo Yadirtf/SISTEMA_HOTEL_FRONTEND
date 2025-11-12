@@ -29,6 +29,7 @@ export interface BillingDetails {
     paymentStatus?: 'paid' | 'pending';
   }>;
   allSalesTotal?: number;
+  additionalCharges?: number; // Cargos adicionales registrados en el checkout
 }
 
 export async function getBillingActiveReservations(token?: string): Promise<Caja<Reservation[]>> {
