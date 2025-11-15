@@ -32,7 +32,7 @@ export function useCompaniesFilters({ companies, statusFilter }: UseCompaniesFil
 
   // Determinar si hay filtros activos
   const hasFilters = useMemo((): boolean => {
-    return statusFilter !== "all" || (searchQuery && searchQuery.trim() !== "");
+    return statusFilter !== "all" || !!(searchQuery && searchQuery.trim() !== "");
   }, [statusFilter, searchQuery]);
 
   // Items por página según si hay filtros

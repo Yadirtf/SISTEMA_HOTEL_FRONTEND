@@ -114,4 +114,43 @@ export function parsePriceWithDecimals(value: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * Formatea una fecha en formato legible en español
+ * @param dateString - Fecha en formato ISO string o Date
+ * @returns Fecha formateada o "-" si no hay fecha
+ */
+export function formatDate(dateString?: string | Date): string {
+  if (!dateString) return "-";
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Formatea un monto como moneda colombiana (COP)
+ * @param amount - Monto a formatear
+ * @param options - Opciones de formateo
+ * @returns Monto formateado como moneda
+ */
+export function formatCurrency(
+  amount: number,
+  options?: {
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  }
+): string {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: options?.minimumFractionDigits ?? 0,
+    maximumFractionDigits: options?.maximumFractionDigits ?? 0,
+  }).format(amount);
+}
+
 

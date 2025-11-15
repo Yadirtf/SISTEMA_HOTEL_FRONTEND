@@ -363,10 +363,9 @@ export function ClientModal({
                 color={colors.bg}
                 fontWeight="bold"
                 _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
-                isLoading={isLoading}
-                loadingText={isEditing ? "Actualizando..." : "Registrando..."}
+                disabled={isLoading}
               >
-                {isEditing ? "Actualizar" : "Registrar"}
+                {isLoading ? (isEditing ? "Actualizando..." : "Registrando...") : (isEditing ? "Actualizar" : "Registrar")}
               </Button>
             </Flex>
           </Stack>

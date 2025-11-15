@@ -42,7 +42,7 @@ export function useClientsFilters({ clients, statusFilter, clientTypeFilter }: U
 
   // Determinar si hay filtros activos
   const hasFilters = useMemo((): boolean => {
-    return statusFilter !== "active" || clientTypeFilter !== "all" || (searchQuery && searchQuery.trim() !== "");
+    return statusFilter !== "active" || clientTypeFilter !== "all" || (searchQuery ? searchQuery.trim() !== "" : false);
   }, [statusFilter, clientTypeFilter, searchQuery]);
 
   // Items por página según si hay filtros
