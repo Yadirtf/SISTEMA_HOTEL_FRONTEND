@@ -1,4 +1,20 @@
 export type ClientStatus = "active" | "inactive" | "blacklisted";
+export type CompanyStatus = "active" | "inactive";
+
+export type Company = {
+  _id: string;
+  name: string;
+  nit: string;
+  address?: string;
+  contact?: string;
+  phone?: string;
+  email?: string;
+  contractNumber?: string;
+  notes?: string;
+  status: CompanyStatus;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 export type Client = {
   _id: string;
@@ -15,12 +31,7 @@ export type Client = {
   status: ClientStatus;
   notes?: string;
   isCompanyClient: boolean;
-  companyName?: string;
-  companyContact?: string;
-  companyPhone?: string;
-  companyEmail?: string;
-  contractNumber?: string;
-  companyNotes?: string;
+  company?: Company | null;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -35,12 +46,7 @@ export type ClientFormData = {
   profession?: string;
   notes?: string;
   isCompanyClient?: boolean;
-  companyName?: string;
-  companyContact?: string;
-  companyPhone?: string;
-  companyEmail?: string;
-  contractNumber?: string;
-  companyNotes?: string;
+  companyId?: string;
 };
 
 export type ClientStats = {
@@ -51,5 +57,24 @@ export type ClientStats = {
   companyClients: number;
   regularClients: number;
   newClientsThisMonth: number;
+};
+
+export type CompanyFormData = {
+  name: string;
+  nit: string;
+  address?: string;
+  contact?: string;
+  phone?: string;
+  email?: string;
+  contractNumber?: string;
+  notes?: string;
+};
+
+export type CompanyStats = {
+  totalCompanies: number;
+  activeCompanies: number;
+  inactiveCompanies: number;
+  companiesWithClients: number;
+  totalClientsInCompanies: number;
 };
 

@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createClient, updateClient, deactivateClient, activateClient, deleteClientPermanent } from "@/services/clients";
-import { Client, ClientFormData } from "../types";
+import { getCompanies } from "@/services/companies";
+import { Client, ClientFormData, Company } from "../types";
 
 type NotificationType = "success" | "error" | "info";
 
@@ -12,6 +13,8 @@ export function useClientsActions(
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [formData, setFormData] = useState<ClientFormData>({
     documentNumber: "",
     firstName: "",
@@ -22,13 +25,28 @@ export function useClientsActions(
     profession: "",
     notes: "",
     isCompanyClient: false,
-    companyName: "",
-    companyContact: "",
-    companyPhone: "",
-    companyEmail: "",
-    contractNumber: "",
-    companyNotes: "",
+    companyId: undefined,
   });
+
+  // Cargar empresas cuando se abre el modal
+  useEffect(() => {
+    const loadCompanies = async () => {
+      if (isModalOpen) {
+        setLoadingCompanies(true);
+        try {
+          const resp = await getCompanies({ status: 'active' }, token);
+          if (resp.success && resp.data) {
+            setCompanies(resp.data);
+          }
+        } catch (error) {
+          console.error("Error al cargar empresas:", error);
+        } finally {
+          setLoadingCompanies(false);
+        }
+      }
+    };
+    loadCompanies();
+  }, [isModalOpen, token]);
 
   const resetForm = useCallback(() => {
     setEditingId(null);
@@ -42,26 +60,16 @@ export function useClientsActions(
       profession: "",
       notes: "",
       isCompanyClient: false,
-      companyName: "",
-      companyContact: "",
-      companyPhone: "",
-      companyEmail: "",
-      contractNumber: "",
-      companyNotes: "",
+      companyId: undefined,
     });
   }, []);
 
   const handleFormChange = useCallback((field: keyof ClientFormData, value: any) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
-      // Si se desactiva isCompanyClient, limpiar campos de empresa
+      // Si se desactiva isCompanyClient, limpiar companyId
       if (field === "isCompanyClient" && !value) {
-        updated.companyName = "";
-        updated.companyContact = "";
-        updated.companyPhone = "";
-        updated.companyEmail = "";
-        updated.contractNumber = "";
-        updated.companyNotes = "";
+        updated.companyId = undefined;
       }
       return updated;
     });
@@ -91,12 +99,7 @@ export function useClientsActions(
       profession: client.profession || "",
       notes: client.notes || "",
       isCompanyClient: client.isCompanyClient || false,
-      companyName: client.companyName || "",
-      companyContact: client.companyContact || "",
-      companyPhone: client.companyPhone || "",
-      companyEmail: client.companyEmail || "",
-      contractNumber: client.contractNumber || "",
-      companyNotes: client.companyNotes || "",
+      companyId: client.company?._id || undefined,
     });
     setIsModalOpen(true);
   }, []);
@@ -134,12 +137,12 @@ export function useClientsActions(
       return;
     }
 
-    // Validar que si es cliente de empresa, tenga nombre de empresa
-    if (formData.isCompanyClient && (!formData.companyName || formData.companyName.trim() === "")) {
-      showNotification("error", "Error", "El nombre de la empresa es requerido para clientes de empresa");
-      setIsSubmitting(false);
-      return;
-    }
+          // Validar que si es cliente de empresa, tenga companyId
+          if (formData.isCompanyClient && !formData.companyId) {
+            showNotification("error", "Error", "Debe seleccionar una empresa para clientes de empresa");
+            setIsSubmitting(false);
+            return;
+          }
 
     try {
       if (editingId) {
@@ -235,6 +238,8 @@ export function useClientsActions(
     handleDeactivate,
     handleActivate,
     handleDeletePermanent,
+    companies,
+    loadingCompanies,
   };
 }
 

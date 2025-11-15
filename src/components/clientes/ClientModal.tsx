@@ -10,7 +10,7 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
-import type { ClientFormData } from "@/app/huespedes/types";
+import type { ClientFormData, Company } from "@/app/huespedes/types";
 
 export type { ClientFormData };
 
@@ -22,6 +22,8 @@ interface ClientModalProps {
   formData: ClientFormData;
   onFormChange: (field: keyof ClientFormData, value: any) => void;
   isLoading?: boolean;
+  companies?: Company[];
+  loadingCompanies?: boolean;
 }
 
 export function ClientModal({
@@ -32,6 +34,8 @@ export function ClientModal({
   formData,
   onFormChange,
   isLoading = false,
+  companies = [],
+  loadingCompanies = false,
 }: ClientModalProps) {
   const { colors } = useThemeMode();
   
@@ -279,108 +283,64 @@ export function ClientModal({
 
                 <Box>
                   <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                    Nombre de la Empresa *
+                    Seleccionar Empresa *
                   </Text>
-                  <Input
-                    value={formData.companyName || ""}
-                    onChange={(e) => onFormChange("companyName", e.target.value)}
-                    bg={colors.bg}
-                    color={colors.text}
-                    borderColor={colors.border}
-                    placeholder="Nombre de la empresa"
-                    _hover={{ borderColor: colors.gold }}
-                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    _placeholder={{ color: colors.subtext }}
-                  />
-                </Box>
-
-                <Flex gap={4} flexWrap="wrap">
-                  <Box flex="1" minW={{ base: "100%", md: "200px" }}>
-                    <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                      Contacto en la Empresa
+                  <select
+                    value={formData.companyId || ""}
+                    onChange={(e) => onFormChange("companyId", e.target.value || undefined)}
+                    style={{
+                      width: '100%',
+                      backgroundColor: colors.bg,
+                      color: colors.text,
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      border: `1px solid ${colors.border}`,
+                      fontSize: '14px',
+                      cursor: loadingCompanies ? 'wait' : 'pointer',
+                      opacity: loadingCompanies ? 0.6 : 1,
+                    }}
+                    disabled={loadingCompanies}
+                    onMouseEnter={(e) => {
+                      if (!loadingCompanies) {
+                        e.currentTarget.style.borderColor = colors.gold;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loadingCompanies) {
+                        e.currentTarget.style.borderColor = colors.border;
+                      }
+                    }}
+                    onFocus={(e) => {
+                      if (!loadingCompanies) {
+                        e.currentTarget.style.borderColor = colors.gold;
+                        e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
+                      }
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.border;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="" style={{ backgroundColor: colors.bg, color: colors.text }}>
+                      {loadingCompanies ? "Cargando empresas..." : "Seleccionar empresa..."}
+                    </option>
+                    {companies
+                      .filter(c => c.status === 'active')
+                      .map((company) => (
+                        <option
+                          key={company._id}
+                          value={company._id}
+                          style={{ backgroundColor: colors.bg, color: colors.text }}
+                        >
+                          {company.name} - NIT: {company.nit}
+                        </option>
+                      ))}
+                  </select>
+                  {companies.length === 0 && !loadingCompanies && (
+                    <Text fontSize="xs" color={colors.subtext} mt={1}>
+                      No hay empresas disponibles. Crea una empresa primero.
                     </Text>
-                    <Input
-                      value={formData.companyContact || ""}
-                      onChange={(e) => onFormChange("companyContact", e.target.value)}
-                      bg={colors.bg}
-                      color={colors.text}
-                      borderColor={colors.border}
-                      placeholder="Nombre del contacto"
-                      _hover={{ borderColor: colors.gold }}
-                      _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                      _placeholder={{ color: colors.subtext }}
-                    />
-                  </Box>
-
-                  <Box flex="1" minW={{ base: "100%", md: "200px" }}>
-                    <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                      Teléfono de la Empresa
-                    </Text>
-                    <Input
-                      value={formData.companyPhone || ""}
-                      onChange={(e) => onFormChange("companyPhone", e.target.value)}
-                      bg={colors.bg}
-                      color={colors.text}
-                      borderColor={colors.border}
-                      placeholder="Ej: 3001234567"
-                      _hover={{ borderColor: colors.gold }}
-                      _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                      _placeholder={{ color: colors.subtext }}
-                    />
-                  </Box>
-                </Flex>
-
-                <Box>
-                  <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                    Email de la Empresa
-                  </Text>
-                  <Input
-                    type="email"
-                    value={formData.companyEmail || ""}
-                    onChange={(e) => onFormChange("companyEmail", e.target.value)}
-                    bg={colors.bg}
-                    color={colors.text}
-                    borderColor={colors.border}
-                    placeholder="empresa@ejemplo.com"
-                    _hover={{ borderColor: colors.gold }}
-                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    _placeholder={{ color: colors.subtext }}
-                  />
-                </Box>
-
-                <Box>
-                  <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                    Número de Contrato
-                  </Text>
-                  <Input
-                    value={formData.contractNumber || ""}
-                    onChange={(e) => onFormChange("contractNumber", e.target.value)}
-                    bg={colors.bg}
-                    color={colors.text}
-                    borderColor={colors.border}
-                    placeholder="Número de contrato"
-                    _hover={{ borderColor: colors.gold }}
-                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    _placeholder={{ color: colors.subtext }}
-                  />
-                </Box>
-
-                <Box>
-                  <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-                    Notas de la Empresa
-                  </Text>
-                  <Textarea
-                    value={formData.companyNotes || ""}
-                    onChange={(e) => onFormChange("companyNotes", e.target.value)}
-                    bg={colors.bg}
-                    color={colors.text}
-                    borderColor={colors.border}
-                    placeholder="Notas adicionales sobre la empresa..."
-                    _hover={{ borderColor: colors.gold }}
-                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-                    _placeholder={{ color: colors.subtext }}
-                    rows={3}
-                  />
+                  )}
                 </Box>
               </Stack>
             )}

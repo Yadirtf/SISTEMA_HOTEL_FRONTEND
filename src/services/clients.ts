@@ -56,12 +56,7 @@ export async function createClient(data: ClientFormData, token?: string): Promis
     profession: data.profession,
     notes: data.notes,
     isCompanyClient: data.isCompanyClient || false,
-    companyName: data.companyName,
-    companyContact: data.companyContact,
-    companyPhone: data.companyPhone,
-    companyEmail: data.companyEmail,
-    contractNumber: data.contractNumber,
-    companyNotes: data.companyNotes,
+    companyId: data.companyId,
   };
   return apiPost<Client, typeof body>("/clients", body, token);
 }
@@ -84,12 +79,7 @@ export async function updateClient(id: string, data: Partial<ClientFormData>, to
   if (updateData.profession !== undefined && updateData.profession !== '') body.profession = updateData.profession;
   if (updateData.notes !== undefined && updateData.notes !== '') body.notes = updateData.notes;
   if (updateData.isCompanyClient !== undefined) body.isCompanyClient = updateData.isCompanyClient;
-  if (updateData.companyName !== undefined && updateData.companyName !== '') body.companyName = updateData.companyName;
-  if (updateData.companyContact !== undefined && updateData.companyContact !== '') body.companyContact = updateData.companyContact;
-  if (updateData.companyPhone !== undefined && updateData.companyPhone !== '') body.companyPhone = updateData.companyPhone;
-  if (updateData.companyEmail !== undefined && updateData.companyEmail !== '') body.companyEmail = updateData.companyEmail;
-  if (updateData.contractNumber !== undefined && updateData.contractNumber !== '') body.contractNumber = updateData.contractNumber;
-  if (updateData.companyNotes !== undefined && updateData.companyNotes !== '') body.companyNotes = updateData.companyNotes;
+  if (updateData.companyId !== undefined) body.companyId = updateData.companyId;
   
   console.log("updateClient - Body final:", body);
   console.log("updateClient - URL:", `/clients/${id}`);

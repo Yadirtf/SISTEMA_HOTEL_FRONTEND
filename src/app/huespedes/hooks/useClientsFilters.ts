@@ -34,7 +34,7 @@ export function useClientsFilters({ clients, statusFilter, clientTypeFilter }: U
         client.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         client.phoneNumber.includes(searchQuery) ||
         (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (client.companyName && client.companyName.toLowerCase().includes(searchQuery.toLowerCase()));
+        (client.company && client.company.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return matchesStatus && matchesClientType && matchesSearch;
     });
