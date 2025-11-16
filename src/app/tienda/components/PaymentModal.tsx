@@ -4,11 +4,13 @@ import { Box, Button, Input, Text, Stack, Flex } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import { useState, useEffect } from "react";
+import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
+import { getToken } from "@/lib/session";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (amountReceived: number) => void;
+  onConfirm: (amountReceived: number, paymentMethodId?: string, paymentTypeId?: string) => void;
   total: number;
   isLoading?: boolean;
 }
@@ -21,9 +23,15 @@ export function PaymentModal({
   isLoading = false,
 }: PaymentModalProps) {
   const { colors } = useThemeMode();
+  const token = getToken() || undefined;
   const [amountReceived, setAmountReceived] = useState<string>("");
   const [change, setChange] = useState<number>(0);
   const [error, setError] = useState<string>("");
+  const [paymentMethodId, setPaymentMethodId] = useState<string>("");
+  const [paymentTypeId, setPaymentTypeId] = useState<string>("");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
+  const [loadingPaymentData, setLoadingPaymentData] = useState(false);
 
   // Calcular el cambio cuando cambia el monto recibido
   useEffect(() => {
@@ -57,12 +65,41 @@ export function PaymentModal({
     setChange(amount - total);
   }, [amountReceived, total]);
 
+  // Cargar métodos y tipos de pago cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      loadPaymentData();
+    }
+  }, [isOpen, token]);
+
+  const loadPaymentData = async () => {
+    setLoadingPaymentData(true);
+    try {
+      const [methodsResp, typesResp] = await Promise.all([
+        getPaymentMethods(false, token),
+        getPaymentTypes(false, token),
+      ]);
+      if (methodsResp.success && methodsResp.data) {
+        setPaymentMethods(methodsResp.data);
+      }
+      if (typesResp.success && typesResp.data) {
+        setPaymentTypes(typesResp.data);
+      }
+    } catch (error) {
+      console.error("Error loading payment data:", error);
+    } finally {
+      setLoadingPaymentData(false);
+    }
+  };
+
   // Resetear el formulario cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       setAmountReceived("");
       setChange(0);
       setError("");
+      setPaymentMethodId("");
+      setPaymentTypeId("");
     }
   }, [isOpen]);
 
@@ -74,7 +111,12 @@ export function PaymentModal({
       return;
     }
 
-    onConfirm(amount);
+    if (!paymentMethodId) {
+      setError("Debes seleccionar un método de pago");
+      return;
+    }
+
+    onConfirm(amount, paymentMethodId || undefined, paymentTypeId || undefined);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -150,6 +192,68 @@ export function PaymentModal({
               </Text>
             </Box>
 
+            {/* Método de Pago */}
+            <Box>
+              <Text mb={2} fontWeight="semibold" color={colors.text}>
+                Método de Pago <Text as="span" color="red.500">*</Text>
+              </Text>
+              <select
+                value={paymentMethodId}
+                onChange={(e) => setPaymentMethodId(e.target.value)}
+                style={{
+                  width: '100%',
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  border: `2px solid ${error && !paymentMethodId ? 'red' : colors.border}`,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+                disabled={isLoading || loadingPaymentData}
+              >
+                <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
+                  {loadingPaymentData ? "Cargando..." : "Seleccionar método de pago"}
+                </option>
+                {!loadingPaymentData && paymentMethods.map((method) => (
+                  <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                    {method.icon ? `${method.icon} ` : ""}{method.name}
+                  </option>
+                ))}
+              </select>
+            </Box>
+
+            {/* Tipo de Pago */}
+            <Box>
+              <Text mb={2} fontWeight="semibold" color={colors.text}>
+                Tipo de Pago
+              </Text>
+              <select
+                value={paymentTypeId}
+                onChange={(e) => setPaymentTypeId(e.target.value)}
+                style={{
+                  width: '100%',
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  border: `2px solid ${colors.border}`,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+                disabled={isLoading || loadingPaymentData}
+              >
+                <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
+                  {loadingPaymentData ? "Cargando..." : "Seleccionar tipo de pago (opcional)"}
+                </option>
+                {!loadingPaymentData && paymentTypes.map((type) => (
+                  <option key={type._id} value={type._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+            </Box>
+
             {/* Input para monto recibido */}
             <Box>
               <Text mb={2} fontWeight="semibold" color={colors.text}>
@@ -218,11 +322,13 @@ export function PaymentModal({
                 _hover={{ bg: "#b8941f" }}
                 disabled={
                   isLoading || 
+                  loadingPaymentData ||
                   !!error || 
                   change < 0 || 
                   amountReceived === "" || 
                   isNaN(parseFloat(amountReceived)) ||
-                  parseFloat(amountReceived) < total
+                  parseFloat(amountReceived) < total ||
+                  !paymentMethodId
                 }
               >
                 {isLoading ? "Registrando..." : "Confirmar y Registrar Venta"}

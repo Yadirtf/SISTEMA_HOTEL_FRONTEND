@@ -60,4 +60,55 @@ export async function resumeCashRegister(id: string, token?: string): Promise<Ca
   return apiPut<CashRegister, {}>(`/cash-registers/${id}/resume`, {}, token);
 }
 
+// Funciones para autogestión de caja por recepcionista
+export async function getMyCashRegister(token?: string): Promise<Caja<CashRegister | null>> {
+  return apiGet<CashRegister | null>("/cash-registers/my-cash-register", token);
+}
+
+export async function openMyCashRegister(
+  data: { initialAmount: number; notes?: string },
+  token?: string
+): Promise<Caja<CashRegister>> {
+  return apiPost<CashRegister, { initialAmount: number; notes?: string }>(
+    "/cash-registers/my-cash-register/open",
+    data,
+    token
+  );
+}
+
+export async function getMyCashRegisterOperationsReport(token?: string): Promise<Caja<{
+  totalSales: number;
+  totalReservations: number;
+  totalCashIncome: number;
+  totalCardIncome: number;
+  totalTransferIncome: number;
+}>> {
+  return apiGet<{
+    totalSales: number;
+    totalReservations: number;
+    totalCashIncome: number;
+    totalCardIncome: number;
+    totalTransferIncome: number;
+  }>("/cash-registers/my-cash-register/operations-report", token);
+}
+
+export async function closeMyCashRegister(
+  data: CloseCashRegisterFormData & {
+    operationsReport?: {
+      totalSales?: number;
+      totalReservations?: number;
+      totalCashIncome?: number;
+      totalCardIncome?: number;
+      totalTransferIncome?: number;
+    };
+  },
+  token?: string
+): Promise<Caja<CashRegister>> {
+  return apiPost<CashRegister, typeof data>(
+    "/cash-registers/my-cash-register/close",
+    data,
+    token
+  );
+}
+
 

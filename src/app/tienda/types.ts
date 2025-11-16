@@ -101,6 +101,8 @@ export interface SaleFormData {
   reservationId?: string;
   paymentStatus?: 'paid' | 'pending';
   amountReceived?: number;
+  paymentMethodId?: string;
+  paymentTypeId?: string;
 }
 
 export type ReportPeriod = 'weekly' | 'biweekly' | 'monthly' | 'custom';

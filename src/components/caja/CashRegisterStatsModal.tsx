@@ -113,6 +113,77 @@ export function CashRegisterStatsModal({
             </Text>
           </Box>
 
+          {/* Reporte de Operaciones */}
+          {stats.operationsReport && (
+            <>
+              <Box borderTop="1px solid" borderColor={colors.border} pt={4} />
+              <Text color={colors.gold} fontSize="md" fontWeight="bold" mb={2}>
+                Reporte de Operaciones
+              </Text>
+              
+              {stats.operationsReport.totalSales > 0 && (
+                <Box>
+                  <Text color={colors.subtext} fontSize="sm" mb={1}>
+                    Ventas Registradas
+                  </Text>
+                  <Text color={colors.text} fontSize="md" fontWeight="semibold">
+                    {stats.operationsReport.totalSales} venta(s)
+                  </Text>
+                </Box>
+              )}
+
+              {stats.operationsReport.totalReservations > 0 && (
+                <Box>
+                  <Text color={colors.subtext} fontSize="sm" mb={1}>
+                    Alquileres Registrados
+                  </Text>
+                  <Text color={colors.text} fontSize="md" fontWeight="semibold">
+                    {stats.operationsReport.totalReservations} alquiler(es)
+                  </Text>
+                </Box>
+              )}
+
+              {stats.operationsReport.totalCashIncome > 0 && (
+                <Box>
+                  <Text color={colors.subtext} fontSize="sm" mb={1}>
+                    Ingresos en Efectivo
+                  </Text>
+                  <Text color="green.400" fontSize="md" fontWeight="semibold">
+                    {formatCurrency(stats.operationsReport.totalCashIncome)}
+                  </Text>
+                </Box>
+              )}
+
+              {stats.operationsReport.totalCardIncome > 0 && (
+                <Box>
+                  <Text color={colors.subtext} fontSize="sm" mb={1}>
+                    Ingresos por Tarjeta
+                  </Text>
+                  <Text color="blue.400" fontSize="md" fontWeight="semibold">
+                    {formatCurrency(stats.operationsReport.totalCardIncome)}
+                  </Text>
+                </Box>
+              )}
+
+              {stats.operationsReport.totalTransferIncome > 0 && (
+                <Box>
+                  <Text color={colors.subtext} fontSize="sm" mb={1}>
+                    Ingresos por Transferencia
+                  </Text>
+                  <Text color="purple.400" fontSize="md" fontWeight="semibold">
+                    {formatCurrency(stats.operationsReport.totalTransferIncome)}
+                  </Text>
+                </Box>
+              )}
+
+              {(!stats.operationsReport.totalSales && !stats.operationsReport.totalReservations) && (
+                <Text color={colors.subtext} fontSize="sm" fontStyle="italic">
+                  No hay operaciones registradas
+                </Text>
+              )}
+            </>
+          )}
+
         </Stack>
 
         <Flex gap={3} justify="flex-end" pt={6} borderTop="2px" borderColor={colors.border} mt={6}>

@@ -36,6 +36,33 @@ export function BillingDetails({
   const [additionalCharges, setAdditionalCharges] = useState<string>('0');
   const [notes, setNotes] = useState('');
 
+  // Inicializar paymentMethodId y paymentTypeId desde la reserva si ya están pagados
+  useEffect(() => {
+    if (billingDetails?.reservation) {
+      const reservation = billingDetails.reservation;
+      // Si la reserva ya tiene método de pago guardado, usarlo
+      const paymentMethod = (reservation as any).paymentMethodId || (reservation as any).paymentMethod;
+      if (paymentMethod) {
+        const methodId = typeof paymentMethod === 'string' 
+          ? paymentMethod 
+          : (paymentMethod as any)?._id || paymentMethod;
+        if (methodId && !paymentMethodId) {
+          setPaymentMethodId(methodId);
+        }
+      }
+      // Si la reserva ya tiene tipo de pago guardado, usarlo
+      const paymentType = (reservation as any).paymentTypeId || (reservation as any).paymentType;
+      if (paymentType) {
+        const typeId = typeof paymentType === 'string' 
+          ? paymentType 
+          : (paymentType as any)?._id || paymentType;
+        if (typeId && !paymentTypeId) {
+          setPaymentTypeId(typeId);
+        }
+      }
+    }
+  }, [billingDetails?.reservation, paymentMethodId, paymentTypeId]);
+
   useEffect(() => {
     const loadPaymentData = async () => {
       try {
@@ -415,8 +442,27 @@ export function BillingDetails({
                   color={colors.bg}
                   fontWeight="bold"
                   _hover={{ bg: "#b8941f" }}
-                  onClick={() => onCheckout(paymentMethodId || undefined, paymentTypeId || undefined, parseFloat(additionalCharges) || 0, notes.trim() || undefined)}
-                  disabled={isProcessingCheckout || ((!reservation.isPaid || pendingSales.length > 0) && !paymentMethodId)}
+                  onClick={() => {
+                    // Si la reserva ya está pagada y tiene paymentMethodId guardado, usarlo
+                    const reservationPaymentMethod = (reservation as any).paymentMethodId || (reservation as any).paymentMethod;
+                    const finalPaymentMethodId = paymentMethodId || 
+                      (reservationPaymentMethod 
+                        ? (typeof reservationPaymentMethod === 'string' 
+                            ? reservationPaymentMethod 
+                            : (reservationPaymentMethod as any)?._id || reservationPaymentMethod)
+                        : undefined);
+                    
+                    const reservationPaymentType = (reservation as any).paymentTypeId || (reservation as any).paymentType;
+                    const finalPaymentTypeId = paymentTypeId || 
+                      (reservationPaymentType 
+                        ? (typeof reservationPaymentType === 'string' 
+                            ? reservationPaymentType 
+                            : (reservationPaymentType as any)?._id || reservationPaymentType)
+                        : undefined);
+                    
+                    onCheckout(finalPaymentMethodId, finalPaymentTypeId, parseFloat(additionalCharges) || 0, notes.trim() || undefined);
+                  }}
+                  disabled={isProcessingCheckout || ((!reservation.isPaid || pendingSales.length > 0) && !paymentMethodId && !(reservation as any).paymentMethodId && !(reservation as any).paymentMethod)}
                 >
                   {isProcessingCheckout 
                     ? "Procesando..." 

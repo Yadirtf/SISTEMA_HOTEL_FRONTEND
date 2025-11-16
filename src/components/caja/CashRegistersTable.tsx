@@ -2,6 +2,15 @@ import { Box, Heading, Text, Badge, Button, Flex } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { CashRegister } from "../../app/caja/types";
 import { formatDate, formatCurrency } from "@/lib/format";
+import { useState, useEffect } from "react";
+import { apiGet } from "@/lib/api";
+import { getToken } from "@/lib/session";
+
+type UsuarioListItem = {
+  idUsuario: number;
+  correo: string;
+  persona: null | { nombre: string; apellido: string; telefono: string };
+};
 
 type CashRegistersTableProps = {
   cashRegisters: CashRegister[];
@@ -37,6 +46,28 @@ export function CashRegistersTable({
   isAdmin = false,
 }: CashRegistersTableProps) {
   const { colors } = useThemeMode();
+  const [userNames, setUserNames] = useState<Record<number, string>>({});
+  const token = getToken();
+
+  useEffect(() => {
+    const loadUserNames = async () => {
+      try {
+        const resp = await apiGet<UsuarioListItem[]>(`/auth/usuarios`, token || undefined);
+        if (resp.success && resp.data) {
+          const namesMap: Record<number, string> = {};
+          resp.data.forEach((user) => {
+            namesMap[user.idUsuario] = user.persona
+              ? `${user.persona.nombre} ${user.persona.apellido}`
+              : user.correo;
+          });
+          setUserNames(namesMap);
+        }
+      } catch (error) {
+        console.error("Error al cargar usuarios:", error);
+      }
+    };
+    loadUserNames();
+  }, [token]);
 
   if (loading) {
     return (
@@ -130,7 +161,7 @@ export function CashRegistersTable({
                   {cashRegister.registerNumber}
                 </Box>
                 <Box as="td" p={3} color={colors.text} fontSize="sm">
-                  Usuario #{cashRegister.userId}
+                  {userNames[cashRegister.userId] || `Usuario #${cashRegister.userId}`}
                 </Box>
                 <Box as="td" p={3} color={colors.text} fontSize="sm">
                   {formatCurrency(cashRegister.initialAmount)}
@@ -267,7 +298,7 @@ export function CashRegistersTable({
                     {cashRegister.registerNumber}
                   </Text>
                   <Text color={colors.subtext} fontSize="sm">
-                    Usuario #{cashRegister.userId}
+                    {userNames[cashRegister.userId] || `Usuario #${cashRegister.userId}`}
                   </Text>
                 </Box>
                 <Badge

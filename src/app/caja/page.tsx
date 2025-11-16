@@ -11,7 +11,7 @@ import { CashRegistersHeader } from "@/components/caja/CashRegistersHeader";
 import { CashRegistersTable } from "@/components/caja/CashRegistersTable";
 import { CashRegisterModal } from "@/components/caja/CashRegisterModal";
 import { CloseCashRegisterModal } from "@/components/caja/CloseCashRegisterModal";
-import { CashRegisterStatsModal } from "@/components/caja/CashRegisterStatsModal";
+import { CashRegisterDetailsModal } from "@/components/caja/CashRegisterDetailsModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -23,6 +23,9 @@ export default function CajaPage() {
   const token = getToken() || undefined;
   const { colors } = useThemeMode();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [userIdFilter, setUserIdFilter] = useState<string>("all");
+  const [startDateFilter, setStartDateFilter] = useState<string>("");
+  const [endDateFilter, setEndDateFilter] = useState<string>("");
   
   // Hooks de utilidades
   const { hydrated, user, isAdmin } = useAuth();
@@ -36,7 +39,9 @@ export default function CajaPage() {
     loadCashRegisters,
   } = useCashRegistersData(token, {
     status: statusFilter === "all" ? undefined : statusFilter,
-    userId: hydrated && isAdmin ? undefined : (hydrated ? user?.idUsuario : undefined), // Recepcionista solo ve su caja, después de hidratación
+    userId: hydrated && isAdmin 
+      ? (userIdFilter === "all" ? undefined : parseInt(userIdFilter, 10))
+      : (hydrated ? user?.idUsuario : undefined), // Recepcionista solo ve su caja, después de hidratación
   });
 
   // Hook de filtros
@@ -50,7 +55,13 @@ export default function CajaPage() {
     totalPages,
     itemsPerPage,
     hasFilters,
-  } = useCashRegistersFilters({ cashRegisters, statusFilter });
+  } = useCashRegistersFilters({ 
+    cashRegisters, 
+    statusFilter,
+    userIdFilter,
+    startDateFilter,
+    endDateFilter,
+  });
 
   // Hook de acciones
   const {
@@ -100,8 +111,14 @@ export default function CajaPage() {
           <CashRegistersHeader
             statusFilter={statusFilter}
             searchQuery={searchQuery}
+            userIdFilter={userIdFilter}
+            startDateFilter={startDateFilter}
+            endDateFilter={endDateFilter}
             onStatusChange={setStatusFilter}
             onSearchChange={setSearchQuery}
+            onUserIdChange={setUserIdFilter}
+            onStartDateChange={setStartDateFilter}
+            onEndDateChange={setEndDateFilter}
             onRefresh={loadCashRegisters}
             onCreate={hydrated && isAdmin ? openCreateModal : undefined} // Solo admin puede abrir cajas, después de hidratación
             loading={loading}
@@ -155,16 +172,12 @@ export default function CajaPage() {
             expectedBalance={expectedBalance}
           />
 
-          {/* Modal de estadísticas */}
-          {selectedCashRegister && (
-            <CashRegisterStatsModal
-              isOpen={statsModalOpen}
-              onClose={closeStatsModal}
-              stats={stats}
-              registerNumber={selectedCashRegister.registerNumber}
-              initialAmount={selectedCashRegister.initialAmount}
-            />
-          )}
+          {/* Modal de detalles */}
+          <CashRegisterDetailsModal
+            isOpen={statsModalOpen}
+            onClose={closeStatsModal}
+            cashRegister={selectedCashRegister}
+          />
 
           {/* Diálogo de confirmación */}
           <ConfirmDialog

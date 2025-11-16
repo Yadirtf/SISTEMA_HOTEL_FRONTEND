@@ -241,19 +241,19 @@ export function useCashRegistersActions(
 
   const handleViewStats = useCallback(async (cashRegister: CashRegister) => {
     try {
+      // El nuevo modal carga las estadísticas internamente
+      setSelectedCashRegister(cashRegister);
+      setStatsModalOpen(true);
+      // También cargamos las estadísticas para mantener compatibilidad
       const resp = await getCashRegisterStats(cashRegister._id, token);
       if (resp.success && resp.data) {
         setStats(resp.data);
-        setSelectedCashRegister(cashRegister);
-        setStatsModalOpen(true);
-      } else {
-        showNotification("error", "Error", "Error al obtener estadísticas");
       }
     } catch (e: any) {
       console.error("Error al obtener estadísticas:", e);
-      showNotification("error", "Error", "Error al obtener estadísticas");
+      // No mostramos error porque el modal puede cargar los datos internamente
     }
-  }, [token, showNotification]);
+  }, [token]);
 
   return {
     isModalOpen,

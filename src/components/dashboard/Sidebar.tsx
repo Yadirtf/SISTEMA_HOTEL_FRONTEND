@@ -75,6 +75,28 @@ export function Sidebar() {
           const active = pathname === item.href || (item.subItems && item.subItems.some(sub => pathname === sub.href));
           const hasSubItems = item.subItems && item.subItems.length > 0;
           
+          // Para recepcionistas, mostrar "Mi Caja" en lugar de "Caja"
+          if (item.label === "Caja" && hydrated && !isAdmin) {
+            return (
+              <Button
+                key="mi-caja"
+                onClick={() => router.push("/caja/mi-caja")}
+                justifyContent="flex-start"
+                variant="ghost"
+                bg={pathname === "/caja/mi-caja" ? "rgba(212,175,55,0.16)" : "transparent"}
+                _hover={{ bg: "rgba(212,175,55,0.22)" }}
+                color={colors.text}
+              >
+                Mi Caja
+              </Button>
+            );
+          }
+          
+          // Para admin, mostrar "Caja" normalmente
+          if (item.label === "Caja" && hydrated && isAdmin) {
+            // Continuar con el render normal
+          }
+          
           if (hasSubItems) {
             const isOpen = item.label === "Gestionar habitaciones" ? habitacionesOpen : false;
             const isSection = item.label === "Gestionar habitaciones" ? isHabitacionesSection : false;

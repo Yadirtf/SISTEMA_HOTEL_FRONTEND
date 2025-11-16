@@ -14,6 +14,7 @@ export type CashRegister = {
   closedAt?: string;
   openedBy: number;
   closedBy?: number;
+  assignedBy: number; // Admin que asignó la caja
   notes?: string;
   closingNotes?: string;
   createdAt?: string;
@@ -83,6 +84,15 @@ export type CashRegisterStats = {
   incomeByCategory: Record<string, number>;
   expenseByCategory: Record<string, number>;
   incomeByPaymentMethod: Record<string, number>;
+  operationsReport?: {
+    totalSales: number;
+    totalSalesAmount: number;
+    totalReservations: number;
+    totalReservationsAmount: number;
+    totalCashIncome: number;
+    totalCardIncome: number;
+    totalTransferIncome: number;
+  };
 };
 
 export type TransactionStats = {
