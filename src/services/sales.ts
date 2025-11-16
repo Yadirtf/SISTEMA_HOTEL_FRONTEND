@@ -22,6 +22,8 @@ export async function getSalesStats(token?: string): Promise<Caja<{
   todaySales: number;
   todayProfit: number;
   todayCount: number;
+  totalReturns?: number;
+  todayReturns?: number;
 }>> {
   return apiGet("/store/sales/stats", token);
 }

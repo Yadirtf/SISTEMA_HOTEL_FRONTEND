@@ -84,20 +84,32 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
         <Box>
           <SimpleGrid columns={{ base: 2, md: 4 }} gap={4} mb={6}>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
-              <Text fontSize="sm" color={colors.subtext}>Total Ventas</Text>
+              <Text fontSize="sm" color={colors.subtext}>Total Ventas (Netas)</Text>
               <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(report.totalSales)}</Text>
+              <Text fontSize="xs" color={colors.subtext} mt={1} fontStyle="italic">
+                Después de devoluciones
+              </Text>
             </Box>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
-              <Text fontSize="sm" color={colors.subtext}>Total Ganancia</Text>
+              <Text fontSize="sm" color={colors.subtext}>Total Ganancia (Neta)</Text>
               <Text fontSize="2xl" fontWeight="bold" color="green.500">${formatPrice(report.totalProfit)}</Text>
+              <Text fontSize="xs" color={colors.subtext} mt={1} fontStyle="italic">
+                Después de devoluciones
+              </Text>
             </Box>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
-              <Text fontSize="sm" color={colors.subtext}>Cantidad Ventas</Text>
+              <Text fontSize="sm" color={colors.subtext}>Cantidad Ventas (Netas)</Text>
               <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>{report.salesCount}</Text>
+              <Text fontSize="xs" color={colors.subtext} mt={1} fontStyle="italic">
+                Ventas con items no devueltos
+              </Text>
             </Box>
             <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
-              <Text fontSize="sm" color={colors.subtext}>Items Vendidos</Text>
+              <Text fontSize="sm" color={colors.subtext}>Items Vendidos (Netos)</Text>
               <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>{report.itemsSold}</Text>
+              <Text fontSize="xs" color={colors.subtext} mt={1} fontStyle="italic">
+                Items vendidos - items devueltos
+              </Text>
             </Box>
           </SimpleGrid>
 

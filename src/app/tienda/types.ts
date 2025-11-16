@@ -108,3 +108,38 @@ export interface SaleFormData {
 
 export type ReportPeriod = 'weekly' | 'biweekly' | 'monthly' | 'custom';
 
+export interface ReturnItem {
+  productId: string;
+  quantity: number;
+}
+
+export interface Return {
+  _id?: string;
+  saleId: string;
+  items: Array<{
+    product: string;
+    productName: string;
+    barcode: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+  }>;
+  total: number;
+  userId: number;
+  returnDate: Date;
+  reason?: string;
+  notes?: string;
+  refundMethodId?: string;
+  stockRestored: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ReturnFormData {
+  saleId: string;
+  items: ReturnItem[];
+  reason?: string;
+  notes?: string;
+  refundMethodId?: string;
+}
+

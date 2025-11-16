@@ -9,6 +9,7 @@ import { ProductsTab } from "./components/ProductsTab";
 import { CategoriesTab } from "./components/CategoriesTab";
 import { SalesTab } from "./components/SalesTab";
 import { ReportsTab } from "./components/ReportsTab";
+import { ReturnsTab } from "./components/ReturnsTab";
 
 export default function TiendaPage() {
   const { colors } = useThemeMode();
@@ -43,9 +44,10 @@ export default function TiendaPage() {
           >
             {[
               { id: 0, label: "Ventas" },
-              { id: 1, label: "Reportes" },
-              { id: 2, label: "Productos" },
-              { id: 3, label: "Categorías" },
+              { id: 1, label: "Devoluciones" },
+              { id: 2, label: "Reportes" },
+              { id: 3, label: "Productos" },
+              { id: 4, label: "Categorías" },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -69,9 +71,10 @@ export default function TiendaPage() {
           </Flex>
 
           {activeTab === 0 && <SalesTab showNotification={showNotification} />}
-          {activeTab === 1 && <ReportsTab showNotification={showNotification} />}
-          {activeTab === 2 && <ProductsTab showNotification={showNotification} />}
-          {activeTab === 3 && <CategoriesTab showNotification={showNotification} />}
+          {activeTab === 1 && <ReturnsTab showNotification={showNotification} />}
+          {activeTab === 2 && <ReportsTab showNotification={showNotification} />}
+          {activeTab === 3 && <ProductsTab showNotification={showNotification} />}
+          {activeTab === 4 && <CategoriesTab showNotification={showNotification} />}
         </Box>
       </Box>
     </DashboardShell>

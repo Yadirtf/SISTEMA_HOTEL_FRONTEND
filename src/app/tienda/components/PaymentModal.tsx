@@ -180,9 +180,10 @@ export function PaymentModal({
         bg={colors.surface}
         color={colors.text}
         borderRadius="lg"
-        w={{ base: "95%", md: "500px" }}
-        maxW="500px"
-        maxH="90vh"
+        w={{ base: "95%", md: "700px", lg: "800px" }}
+        maxW={{ base: "95%", md: "700px", lg: "800px" }}
+        maxH={{ base: "95vh", md: "90vh" }}
+        h={{ base: "90vh", md: "85vh" }}
         display="flex"
         flexDirection="column"
         boxShadow={`0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 2px ${colors.border}`}
@@ -192,7 +193,7 @@ export function PaymentModal({
       >
         {/* Header fijo */}
         <Box
-          p={{ base: 4, md: 6 }}
+          p={{ base: 3, md: 5 }}
           borderBottom="2px"
           borderColor={colors.border}
           display="flex"
@@ -200,7 +201,7 @@ export function PaymentModal({
           alignItems="center"
           flexShrink={0}
         >
-          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={colors.gold}>
+          <Text fontSize={{ base: "lg", md: "xl", lg: "2xl" }} fontWeight="bold" color={colors.gold}>
             Procesar Pago
           </Text>
           <Button
@@ -222,7 +223,7 @@ export function PaymentModal({
 
         {/* Contenido con scroll */}
         <Box 
-          p={{ base: 4, md: 6 }}
+          p={{ base: 3, md: 6 }}
           overflowY="auto"
           overflowX="hidden"
           flex="1 1 0"
@@ -244,20 +245,20 @@ export function PaymentModal({
             },
           }}
         >
-          <Stack gap={4}>
+          <Stack gap={{ base: 3, md: 5 }}>
             {/* Total a pagar */}
-            <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
-              <Text fontSize="sm" color={colors.subtext} mb={1}>
+            <Box p={{ base: 3, md: 5 }} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.gold}>
+              <Text fontSize={{ base: "sm", md: "md" }} color={colors.subtext} mb={{ base: 1, md: 2 }}>
                 Total a pagar:
               </Text>
-              <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>
+              <Text fontSize={{ base: "xl", md: "2xl", lg: "3xl" }} fontWeight="bold" color={colors.gold}>
                 ${formatPrice(total)}
               </Text>
             </Box>
 
             {/* Método de Pago */}
             <Box>
-              <Text mb={2} fontWeight="semibold" color={colors.text}>
+              <Text mb={{ base: 2, md: 3 }} fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" color={colors.text}>
                 Método de Pago <Text as="span" color="red.500">*</Text>
               </Text>
               <select
@@ -265,13 +266,38 @@ export function PaymentModal({
                 onChange={(e) => setPaymentMethodId(e.target.value)}
                 style={{
                   width: '100%',
-                  backgroundColor: colors.surface,
+                  backgroundColor: colors.bg,
                   color: colors.text,
-                  borderRadius: '6px',
-                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
                   border: `2px solid ${error && !paymentMethodId ? 'red' : colors.border}`,
-                  fontSize: '14px',
+                  fontSize: '15px',
                   cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                css={{
+                  '@media (min-width: 768px)': {
+                    padding: '12px 16px',
+                    fontSize: '16px',
+                  },
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading && !loadingPaymentData) {
+                    e.currentTarget.style.borderColor = colors.gold;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading && !loadingPaymentData) {
+                    e.currentTarget.style.borderColor = error && !paymentMethodId ? 'red' : colors.border;
+                  }
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.gold;
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${colors.gold}40`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = error && !paymentMethodId ? 'red' : colors.border;
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
                 disabled={isLoading || loadingPaymentData}
               >
@@ -288,7 +314,7 @@ export function PaymentModal({
 
             {/* Tipo de Pago */}
             <Box>
-              <Text mb={2} fontWeight="semibold" color={colors.text}>
+              <Text mb={{ base: 2, md: 3 }} fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" color={colors.text}>
                 Tipo de Pago
               </Text>
               <select
@@ -296,13 +322,38 @@ export function PaymentModal({
                 onChange={(e) => setPaymentTypeId(e.target.value)}
                 style={{
                   width: '100%',
-                  backgroundColor: colors.surface,
+                  backgroundColor: colors.bg,
                   color: colors.text,
-                  borderRadius: '6px',
-                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
                   border: `2px solid ${colors.border}`,
-                  fontSize: '14px',
+                  fontSize: '15px',
                   cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                css={{
+                  '@media (min-width: 768px)': {
+                    padding: '12px 16px',
+                    fontSize: '16px',
+                  },
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading && !loadingPaymentData) {
+                    e.currentTarget.style.borderColor = colors.gold;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading && !loadingPaymentData) {
+                    e.currentTarget.style.borderColor = colors.border;
+                  }
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = colors.gold;
+                  e.currentTarget.style.boxShadow = `0 0 0 2px ${colors.gold}40`;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = colors.border;
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
                 disabled={isLoading || loadingPaymentData}
               >
@@ -319,7 +370,7 @@ export function PaymentModal({
 
             {/* Input para monto recibido */}
             <Box>
-              <Text mb={2} fontWeight="semibold" color={colors.text}>
+              <Text mb={{ base: 2, md: 3 }} fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" color={colors.text}>
                 Monto recibido:
               </Text>
               <Input
@@ -330,14 +381,24 @@ export function PaymentModal({
                 onKeyPress={handleKeyPress}
                 bg={colors.bg}
                 borderColor={error ? "red.500" : colors.border}
+                borderWidth="2px"
                 color={colors.text}
-                fontSize="xl"
+                fontSize={{ base: "lg", md: "xl" }}
                 fontWeight="bold"
                 textAlign="right"
+                p={{ base: 3, md: 4 }}
+                h="auto"
                 disabled={isLoading}
                 autoFocus
                 min={0}
                 step="0.01"
+                _hover={{
+                  borderColor: error ? "red.500" : colors.gold,
+                }}
+                _focus={{
+                  borderColor: error ? "red.500" : colors.gold,
+                  boxShadow: `0 0 0 2px ${error ? 'red' : colors.gold}40`,
+                }}
               />
               {error && (
                 <Text fontSize="sm" color="red.500" mt={1}>
@@ -349,18 +410,18 @@ export function PaymentModal({
             {/* Cambio a devolver */}
             {change >= 0 && amountReceived !== "" && !error && (
               <Box
-                p={3}
+                p={{ base: 3, md: 4 }}
                 bg={change > 0 ? "green.50" : colors.bg}
                 borderRadius="md"
                 borderWidth="2px"
                 borderColor={change > 0 ? "green.300" : colors.border}
                 flexShrink={0}
               >
-                <Text fontSize="sm" color={colors.subtext} mb={1}>
+                <Text fontSize={{ base: "sm", md: "md" }} color={colors.subtext} mb={{ base: 1, md: 2 }}>
                   Cambio a devolver:
                 </Text>
                 <Text
-                  fontSize="xl"
+                  fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
                   fontWeight="bold"
                   color={change > 0 ? "green.600" : colors.gold}
                 >
@@ -372,10 +433,10 @@ export function PaymentModal({
             {/* Campo para cambio en efectivo (solo cuando método NO es efectivo y hay cambio) */}
             {!isCashPayment && change > 0 && amountReceived !== "" && !error && (
               <Box>
-                <Text mb={2} fontWeight="semibold" color={colors.text}>
+                <Text mb={{ base: 2, md: 3 }} fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" color={colors.text}>
                   Cambio en Efectivo a Dar <Text as="span" color="red.500">*</Text>
                 </Text>
-                <Text fontSize="xs" color={colors.subtext} mb={2} fontStyle="italic">
+                <Text fontSize={{ base: "xs", md: "sm" }} color={colors.subtext} mb={{ base: 2, md: 3 }} fontStyle="italic">
                   Ingrese el monto en efectivo que dará al cliente como cambio. 
                   Este monto se descontará de la caja física.
                 </Text>
@@ -386,14 +447,24 @@ export function PaymentModal({
                   onChange={(e) => setCashChange(e.target.value)}
                   bg={colors.bg}
                   borderColor={error && !cashChange ? "red.500" : colors.border}
+                  borderWidth="2px"
                   color={colors.text}
-                  fontSize="lg"
+                  fontSize={{ base: "lg", md: "xl" }}
                   fontWeight="bold"
                   textAlign="right"
+                  p={{ base: 3, md: 4 }}
+                  h="auto"
                   disabled={isLoading}
                   min={0}
                   step="0.01"
                   max={change}
+                  _hover={{
+                    borderColor: error && !cashChange ? "red.500" : colors.gold,
+                  }}
+                  _focus={{
+                    borderColor: error && !cashChange ? "red.500" : colors.gold,
+                    boxShadow: `0 0 0 2px ${error && !cashChange ? 'red' : colors.gold}40`,
+                  }}
                 />
                 {cashChange && !isNaN(parseFloat(cashChange)) && (
                   <Text fontSize="xs" color={colors.subtext} mt={1}>
@@ -408,19 +479,22 @@ export function PaymentModal({
 
         {/* Botones fijos en la parte inferior */}
         <Box
-          p={{ base: 4, md: 6 }}
+          p={{ base: 3, md: 5 }}
           borderTop="2px"
           borderColor={colors.border}
           bg={colors.surface}
           flexShrink={0}
         >
-          <Flex gap={3} justify="flex-end">
+          <Flex gap={{ base: 2, md: 4 }} justify="flex-end" flexWrap="wrap">
             <Button
               onClick={onClose}
               variant="ghost"
               color={colors.subtext}
               disabled={isLoading}
-              minW="120px"
+              minW={{ base: "90px", md: "140px" }}
+              h={{ base: "38px", md: "44px" }}
+              fontSize={{ base: "sm", md: "md" }}
+              _hover={{ bg: colors.bg, color: colors.gold }}
             >
               Cancelar
             </Button>
@@ -440,7 +514,10 @@ export function PaymentModal({
                 !paymentMethodId ||
                 (!isCashPayment && change > 0 && (!cashChange || isNaN(parseFloat(cashChange)) || parseFloat(cashChange) < 0))
               }
-              minW="180px"
+              minW={{ base: "140px", md: "200px" }}
+              h={{ base: "38px", md: "44px" }}
+              fontSize={{ base: "xs", md: "md" }}
+              fontWeight="bold"
             >
               {isLoading ? "Registrando..." : "Confirmar y Registrar Venta"}
             </Button>

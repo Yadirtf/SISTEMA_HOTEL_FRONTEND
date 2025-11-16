@@ -50,19 +50,29 @@ export function SalesTab({ showNotification }: SalesTabProps) {
       {stats && (
         <Flex gap={4} mb={6} flexWrap="wrap">
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
-            <Text fontSize="sm" color={colors.subtext}>Ventas de Hoy</Text>
+            <Text fontSize="sm" color={colors.subtext}>Ventas de Hoy (Netas)</Text>
             <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.todaySales || 0)}</Text>
+            {stats.todayReturns !== undefined && stats.todayReturns > 0 && (
+              <Text fontSize="xs" color="red.500" mt={1}>
+                -${formatPrice(stats.todayReturns)} en devoluciones
+              </Text>
+            )}
           </Box>
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
-            <Text fontSize="sm" color={colors.subtext}>Ganancia de Hoy</Text>
+            <Text fontSize="sm" color={colors.subtext}>Ganancia de Hoy (Neta)</Text>
             <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.todayProfit || 0)}</Text>
           </Box>
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
-            <Text fontSize="sm" color={colors.subtext}>Total Ventas</Text>
+            <Text fontSize="sm" color={colors.subtext}>Total Ventas (Netas)</Text>
             <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.totalSales || 0)}</Text>
+            {stats.totalReturns !== undefined && stats.totalReturns > 0 && (
+              <Text fontSize="xs" color="red.500" mt={1}>
+                -${formatPrice(stats.totalReturns)} en devoluciones
+              </Text>
+            )}
           </Box>
           <Box p={4} bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} flex={1} minW="200px">
-            <Text fontSize="sm" color={colors.subtext}>Total Ganancia</Text>
+            <Text fontSize="sm" color={colors.subtext}>Total Ganancia (Neta)</Text>
             <Text fontSize="2xl" fontWeight="bold" color={colors.gold}>${formatPrice(stats.totalProfit || 0)}</Text>
           </Box>
         </Flex>

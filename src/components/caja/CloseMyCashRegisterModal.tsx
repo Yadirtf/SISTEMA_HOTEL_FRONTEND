@@ -208,6 +208,11 @@ export function CloseMyCashRegisterModal({
                         </Text>
                       </Flex>
                     )}
+                    {operationsReport.totalCashExpense !== undefined && operationsReport.totalCashExpense > 0 && (
+                      <Text color={colors.subtext} fontSize="xs" fontStyle="italic" pl={2}>
+                        (Incluye cambios dados, devoluciones en efectivo y otros egresos)
+                      </Text>
+                    )}
                     <Box borderTop="1px solid" borderColor={colors.border} pt={1} mt={1} />
                   </>
                 )}
@@ -316,20 +321,23 @@ export function CloseMyCashRegisterModal({
                         </Flex>
                       )}
                       
-                      {/* Egresos en Efectivo (cambios dados) */}
+                      {/* Egresos en Efectivo (cambios dados, devoluciones, etc.) */}
                       {operationsReport.totalCashExpense !== undefined && operationsReport.totalCashExpense > 0 && (
                         <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2}>
                           <Text color={colors.subtext} fontSize="xs" mb={2} fontWeight="semibold">
                             Egresos en Efectivo:
                           </Text>
-                          <Flex justify="space-between" pl={4}>
+                          <Flex justify="space-between" pl={4} mb={1}>
                             <Text color={colors.text} fontSize="sm" fontWeight="bold">
-                              Cambios Dados / Retiros:
+                              Total Egresos:
                             </Text>
                             <Text color="red.500" fontSize="md" fontWeight="bold">
                               {formatCurrency(operationsReport.totalCashExpense)}
                             </Text>
                           </Flex>
+                          <Text color={colors.subtext} fontSize="xs" pl={4} fontStyle="italic">
+                            (Incluye: cambios dados, devoluciones en efectivo, retiros y otros egresos)
+                          </Text>
                         </Box>
                       )}
                       
