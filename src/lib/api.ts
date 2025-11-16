@@ -164,6 +164,11 @@ export async function apiDelete<TResponse>(path: string, token?: string): Promis
     }
   }
 
+  // Si la respuesta es 204 (No Content), devolver éxito sin cuerpo
+  if (res.status === 204) {
+    return { success: true, data: undefined as unknown as TResponse } as Caja<TResponse>;
+  }
+
   try {
     const json = await res.json();
     const maybe = json as any;

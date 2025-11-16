@@ -4,9 +4,10 @@ import { Box, Button, Input, Text, Stack, Flex, IconButton, Badge } from "@chakr
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import { useProductsData } from "../hooks/useProductsData";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getActiveReservations, type ActiveReservation } from "@/services/reservations";
 import { getToken } from "@/lib/session";
+import { getProductByBarcode } from "@/services/products";
 import type { SaleItem, Product } from "../types";
 
 interface SaleModalProps {
@@ -42,14 +43,40 @@ export function SaleModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeReservations, setActiveReservations] = useState<ActiveReservation[]>([]);
   const [loadingReservations, setLoadingReservations] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [barcodeError, setBarcodeError] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const barcodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { products } = useProductsData(undefined, searchQuery);
 
   // Cargar reservas activas cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       loadActiveReservations();
+      // Enfocar el input de búsqueda cuando se abre el modal
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    } else {
+      // Limpiar estados cuando se cierra el modal
+      setSearchQuery("");
+      setBarcodeError(null);
+      setIsScanning(false);
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+        barcodeTimeoutRef.current = null;
+      }
     }
   }, [isOpen]);
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const loadActiveReservations = async () => {
     const token = getToken();
@@ -96,6 +123,123 @@ export function SaleModal({
       quantity: 1,
     });
     setSearchQuery("");
+    setBarcodeError(null);
+    // Re-enfocar el input para el siguiente escaneo
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
+  };
+
+  // Función para detectar si el valor parece un código de barras
+  const isBarcodeLike = (value: string): boolean => {
+    // Los códigos de barras típicamente son:
+    // - Solo números (EAN-13, UPC, etc.)
+    // - O números con algunos caracteres especiales
+    // - Longitud entre 8 y 20 caracteres
+    // - Sin espacios (a menos que sea un código compuesto)
+    const trimmed = value.trim();
+    if (trimmed.length < 4 || trimmed.length > 30) {
+      return false;
+    }
+    // Si es principalmente numérico o tiene formato de código de barras
+    const numericRatio = (trimmed.match(/\d/g) || []).length / trimmed.length;
+    return numericRatio > 0.7; // Al menos 70% numérico
+  };
+
+  // Función para buscar y añadir producto por código de barras
+  const handleBarcodeScan = async (barcode: string) => {
+    const trimmedBarcode = barcode.trim();
+    if (!trimmedBarcode) return;
+
+    setIsScanning(true);
+    setBarcodeError(null);
+
+    const token = getToken();
+    if (!token) {
+      setBarcodeError("No hay sesión activa");
+      setIsScanning(false);
+      return;
+    }
+
+    try {
+      const resp = await getProductByBarcode(trimmedBarcode, token);
+      
+      if (resp.success && resp.data) {
+        const product = resp.data;
+        
+        // Verificar que el producto esté activo y tenga stock
+        if (!product.isActive) {
+          setBarcodeError(`El producto "${product.name}" está inactivo`);
+          setIsScanning(false);
+          return;
+        }
+        
+        if (product.stock <= 0) {
+          setBarcodeError(`El producto "${product.name}" no tiene stock disponible`);
+          setIsScanning(false);
+          return;
+        }
+
+        // Añadir el producto al carrito (addItem ya maneja incrementar cantidad si existe)
+        handleAddProduct(product);
+        setIsScanning(false);
+      } else {
+        setBarcodeError(resp.message || "Producto no encontrado");
+        setIsScanning(false);
+      }
+    } catch (error: any) {
+      console.error("[SaleModal] Error al buscar producto por código de barras:", error);
+      setBarcodeError(error.message || "Error al buscar el producto");
+      setIsScanning(false);
+    }
+  };
+
+  // Manejar cambios en el input de búsqueda
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setBarcodeError(null);
+
+    // Limpiar timeout anterior si existe
+    if (barcodeTimeoutRef.current) {
+      clearTimeout(barcodeTimeoutRef.current);
+      barcodeTimeoutRef.current = null;
+    }
+
+    // Si el valor parece un código de barras, esperar un momento para ver si se completa
+    // (los escáneres envían los caracteres rápidamente y luego un Enter)
+    if (isBarcodeLike(value)) {
+      const currentValue = value; // Capturar el valor actual
+      barcodeTimeoutRef.current = setTimeout(() => {
+        // Verificar que el valor actual del input siga siendo el mismo (no se haya modificado)
+        // Esto evita buscar códigos de barras parciales mientras el usuario está escribiendo
+        if (searchInputRef.current?.value === currentValue && isBarcodeLike(currentValue) && currentValue.trim().length >= 4) {
+          handleBarcodeScan(currentValue);
+        }
+      }, 200); // Reducido a 200ms para respuesta más rápida
+    }
+  };
+
+  // Manejar tecla Enter en el input de búsqueda
+  const handleSearchKeyPress = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const trimmed = searchQuery.trim();
+      
+      if (!trimmed) return;
+
+      // Si parece un código de barras, buscar por código de barras
+      if (isBarcodeLike(trimmed)) {
+        await handleBarcodeScan(trimmed);
+      } else {
+        // Si no parece código de barras, mantener el comportamiento de búsqueda normal
+        // (ya se muestra la lista de productos filtrados)
+        // Si hay un solo producto en los resultados y está activo con stock, añadirlo automáticamente
+        const activeProducts = products.filter(p => p.isActive && p.stock > 0);
+        if (activeProducts.length === 1) {
+          handleAddProduct(activeProducts[0]);
+        }
+      }
+    }
   };
 
   const total = items.reduce((sum, item) => {
@@ -272,14 +416,30 @@ export function SaleModal({
               )}
             </Box>
 
-            <Input
-              placeholder="Buscar producto por código o nombre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              bg={colors.bg}
-              borderColor={colors.border}
-              color={colors.text}
-            />
+            <Box>
+              <Input
+                ref={searchInputRef}
+                placeholder="Escanear código de barras o buscar producto por código o nombre..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                bg={colors.bg}
+                borderColor={barcodeError ? "red.500" : isScanning ? colors.gold : colors.border}
+                color={colors.text}
+                disabled={isScanning}
+                autoFocus
+              />
+              {isScanning && (
+                <Text fontSize="xs" color={colors.gold} mt={1}>
+                  Buscando producto...
+                </Text>
+              )}
+              {barcodeError && (
+                <Text fontSize="xs" color="red.500" mt={1}>
+                  {barcodeError}
+                </Text>
+              )}
+            </Box>
 
             {searchQuery && products.length > 0 && (
               <Box maxH="200px" overflowY="auto" borderWidth="1px" borderColor={colors.border} borderRadius="md" p={2}>
