@@ -10,7 +10,7 @@ import { getToken } from "@/lib/session";
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (amountReceived: number, paymentMethodId?: string, paymentTypeId?: string) => void;
+  onConfirm: (amountReceived: number, paymentMethodId?: string, paymentTypeId?: string, cashChange?: number) => void;
   total: number;
   isLoading?: boolean;
 }
@@ -26,44 +26,18 @@ export function PaymentModal({
   const token = getToken() || undefined;
   const [amountReceived, setAmountReceived] = useState<string>("");
   const [change, setChange] = useState<number>(0);
+  const [cashChange, setCashChange] = useState<string>(""); // Cambio en efectivo a dar
   const [error, setError] = useState<string>("");
   const [paymentMethodId, setPaymentMethodId] = useState<string>("");
   const [paymentTypeId, setPaymentTypeId] = useState<string>("");
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
   const [loadingPaymentData, setLoadingPaymentData] = useState(false);
-
-  // Calcular el cambio cuando cambia el monto recibido
-  useEffect(() => {
-    if (amountReceived === "") {
-      setChange(0);
-      setError("");
-      return;
-    }
-
-    const amount = parseFloat(amountReceived);
-    
-    if (isNaN(amount)) {
-      setChange(0);
-      setError("");
-      return;
-    }
-
-    if (amount < 0) {
-      setError("El monto no puede ser negativo");
-      setChange(0);
-      return;
-    }
-
-    if (amount < total) {
-      setError(`El monto recibido ($${formatPrice(amount)}) es menor que el total ($${formatPrice(total)})`);
-      setChange(0);
-      return;
-    }
-
-    setError("");
-    setChange(amount - total);
-  }, [amountReceived, total]);
+  
+  // Detectar si el método de pago seleccionado es efectivo
+  const selectedPaymentMethod = paymentMethods.find(m => m._id === paymentMethodId);
+  const isCashPayment = selectedPaymentMethod?.name?.toLowerCase().includes('efectivo') || 
+                        selectedPaymentMethod?.name?.toLowerCase().includes('cash');
 
   // Cargar métodos y tipos de pago cuando se abre el modal
   useEffect(() => {
@@ -92,11 +66,56 @@ export function PaymentModal({
     }
   };
 
+  // Calcular el cambio en efectivo cuando cambia el monto recibido o el método de pago
+  useEffect(() => {
+    if (amountReceived === "" || !paymentMethodId) {
+      setChange(0);
+      setCashChange("");
+      setError("");
+      return;
+    }
+
+    const amount = parseFloat(amountReceived);
+    
+    if (isNaN(amount)) {
+      setChange(0);
+      setCashChange("");
+      setError("");
+      return;
+    }
+
+    if (amount < 0) {
+      setError("El monto no puede ser negativo");
+      setChange(0);
+      setCashChange("");
+      return;
+    }
+
+    if (amount < total) {
+      setError(`El monto recibido ($${formatPrice(amount)}) es menor que el total ($${formatPrice(total)})`);
+      setChange(0);
+      setCashChange("");
+      return;
+    }
+
+    setError("");
+    const calculatedChange = amount - total;
+    setChange(calculatedChange);
+    
+    // Si el método de pago NO es efectivo y hay cambio, establecer cashChange por defecto
+    if (!isCashPayment && calculatedChange > 0) {
+      setCashChange(calculatedChange.toFixed(2));
+    } else {
+      setCashChange("");
+    }
+  }, [amountReceived, total, paymentMethodId, isCashPayment]);
+  
   // Resetear el formulario cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       setAmountReceived("");
       setChange(0);
+      setCashChange("");
       setError("");
       setPaymentMethodId("");
       setPaymentTypeId("");
@@ -116,7 +135,22 @@ export function PaymentModal({
       return;
     }
 
-    onConfirm(amount, paymentMethodId || undefined, paymentTypeId || undefined);
+    // Si el método NO es efectivo y hay cambio, validar cashChange
+    let cashChangeValue: number | undefined = undefined;
+    if (!isCashPayment && change > 0) {
+      const cashChangeNum = parseFloat(cashChange);
+      if (isNaN(cashChangeNum) || cashChangeNum < 0) {
+        setError("El cambio en efectivo debe ser un número válido mayor o igual a 0");
+        return;
+      }
+      if (cashChangeNum > change) {
+        setError(`El cambio en efectivo ($${formatPrice(cashChangeNum)}) no puede ser mayor que el cambio total ($${formatPrice(change)})`);
+        return;
+      }
+      cashChangeValue = cashChangeNum;
+    }
+
+    onConfirm(amount, paymentMethodId || undefined, paymentTypeId || undefined, cashChangeValue);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -305,6 +339,40 @@ export function PaymentModal({
               </Box>
             )}
 
+            {/* Campo para cambio en efectivo (solo cuando método NO es efectivo y hay cambio) */}
+            {!isCashPayment && change > 0 && amountReceived !== "" && !error && (
+              <Box>
+                <Text mb={2} fontWeight="semibold" color={colors.text}>
+                  Cambio en Efectivo a Dar <Text as="span" color="red.500">*</Text>
+                </Text>
+                <Text fontSize="xs" color={colors.subtext} mb={2} fontStyle="italic">
+                  Ingrese el monto en efectivo que dará al cliente como cambio. 
+                  Este monto se descontará de la caja física.
+                </Text>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={cashChange}
+                  onChange={(e) => setCashChange(e.target.value)}
+                  bg={colors.bg}
+                  borderColor={error && !cashChange ? "red.500" : colors.border}
+                  color={colors.text}
+                  fontSize="lg"
+                  fontWeight="bold"
+                  textAlign="right"
+                  disabled={isLoading}
+                  min={0}
+                  step="0.01"
+                  max={change}
+                />
+                {cashChange && !isNaN(parseFloat(cashChange)) && (
+                  <Text fontSize="xs" color={colors.subtext} mt={1}>
+                    Máximo: ${formatPrice(change)}
+                  </Text>
+                )}
+              </Box>
+            )}
+
             {/* Botones */}
             <Flex gap={3} justify="flex-end" mt={2}>
               <Button
@@ -328,7 +396,8 @@ export function PaymentModal({
                   amountReceived === "" || 
                   isNaN(parseFloat(amountReceived)) ||
                   parseFloat(amountReceived) < total ||
-                  !paymentMethodId
+                  !paymentMethodId ||
+                  (!isCashPayment && change > 0 && (!cashChange || isNaN(parseFloat(cashChange)) || parseFloat(cashChange) < 0))
                 }
               >
                 {isLoading ? "Registrando..." : "Confirmar y Registrar Venta"}

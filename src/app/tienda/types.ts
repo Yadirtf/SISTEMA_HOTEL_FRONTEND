@@ -103,6 +103,7 @@ export interface SaleFormData {
   amountReceived?: number;
   paymentMethodId?: string;
   paymentTypeId?: string;
+  cashChange?: number; // Cambio en efectivo a dar cuando el método de pago NO es efectivo
 }
 
 export type ReportPeriod = 'weekly' | 'biweekly' | 'monthly' | 'custom';

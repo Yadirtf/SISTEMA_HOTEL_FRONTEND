@@ -92,6 +92,7 @@ export type CashRegisterStats = {
     totalCashIncome: number;
     totalCardIncome: number;
     totalTransferIncome: number;
+    totalCashExpense?: number; // Egresos en efectivo (cambios dados, retiros, etc.)
   };
 };
 

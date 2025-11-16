@@ -120,7 +120,12 @@ export function useSalesActions(
   }, [items, selectedReservationId, isCreditSale, showNotification, reloadSales, closeModal, calculateTotal]);
 
   // Función que se llama cuando se confirma el pago en el modal
-  const handleConfirmPayment = useCallback(async (amountReceived: number, paymentMethodId?: string, paymentTypeId?: string) => {
+  const handleConfirmPayment = useCallback(async (
+    amountReceived: number, 
+    paymentMethodId?: string, 
+    paymentTypeId?: string,
+    cashChange?: number
+  ) => {
     const token = getToken();
     if (!token) {
       showNotification("error", "Error", "No hay sesión activa");
@@ -138,12 +143,14 @@ export function useSalesActions(
         amountReceived: amountReceived,
         paymentMethodId: paymentMethodId,
         paymentTypeId: paymentTypeId,
+        cashChange: cashChange,
       };
       console.log('[useSalesActions] Registrando venta con datos:', {
         items: items.length,
         paymentMethodId,
         paymentTypeId,
         amountReceived,
+        cashChange,
         paymentStatus: 'paid'
       });
       const resp = await createSale(formData, token);

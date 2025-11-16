@@ -78,17 +78,23 @@ export async function openMyCashRegister(
 
 export async function getMyCashRegisterOperationsReport(token?: string): Promise<Caja<{
   totalSales: number;
+  totalSalesAmount: number;
   totalReservations: number;
+  totalReservationsAmount: number;
   totalCashIncome: number;
   totalCardIncome: number;
   totalTransferIncome: number;
+  totalCashExpense: number; // Egresos en efectivo (cambios dados, retiros, etc.)
 }>> {
   return apiGet<{
     totalSales: number;
+    totalSalesAmount: number;
     totalReservations: number;
+    totalReservationsAmount: number;
     totalCashIncome: number;
     totalCardIncome: number;
     totalTransferIncome: number;
+    totalCashExpense: number;
   }>("/cash-registers/my-cash-register/operations-report", token);
 }
 
@@ -96,10 +102,13 @@ export async function closeMyCashRegister(
   data: CloseCashRegisterFormData & {
     operationsReport?: {
       totalSales?: number;
+      totalSalesAmount?: number;
       totalReservations?: number;
+      totalReservationsAmount?: number;
       totalCashIncome?: number;
       totalCardIncome?: number;
       totalTransferIncome?: number;
+      totalCashExpense?: number; // Egresos en efectivo (cambios dados, retiros, etc.)
     };
   },
   token?: string

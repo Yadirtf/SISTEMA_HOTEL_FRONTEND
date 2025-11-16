@@ -31,6 +31,7 @@ interface CloseMyCashRegisterModalProps {
       totalCashIncome?: number;
       totalCardIncome?: number;
       totalTransferIncome?: number;
+      totalCashExpense?: number; // Egresos en efectivo (cambios dados, retiros, etc.)
     };
   }) => void;
   cashRegister: CashRegister;
@@ -57,6 +58,7 @@ export function CloseMyCashRegisterModal({
     totalCashIncome?: number;
     totalCardIncome?: number;
     totalTransferIncome?: number;
+    totalCashExpense?: number; // Egresos en efectivo (cambios dados, retiros, etc.)
   } | null>(null);
 
   useEffect(() => {
@@ -180,15 +182,40 @@ export function CloseMyCashRegisterModal({
                   <Text color={colors.subtext} fontSize="sm">
                     Monto Inicial:
                   </Text>
-                  <Text color={colors.text} fontSize="sm">
+                  <Text color={colors.text} fontSize="sm" fontWeight="semibold">
                     {formatCurrency(cashRegister.initialAmount)}
                   </Text>
                 </Flex>
+                {operationsReport && (
+                  <>
+                    {operationsReport.totalCashIncome !== undefined && operationsReport.totalCashIncome > 0 && (
+                      <Flex justify="space-between">
+                        <Text color={colors.subtext} fontSize="sm">
+                          + Ingresos Efectivo:
+                        </Text>
+                        <Text color="green.500" fontSize="sm" fontWeight="semibold">
+                          {formatCurrency(operationsReport.totalCashIncome)}
+                        </Text>
+                      </Flex>
+                    )}
+                    {operationsReport.totalCashExpense !== undefined && operationsReport.totalCashExpense > 0 && (
+                      <Flex justify="space-between">
+                        <Text color={colors.subtext} fontSize="sm">
+                          - Egresos Efectivo:
+                        </Text>
+                        <Text color="red.500" fontSize="sm" fontWeight="semibold">
+                          {formatCurrency(operationsReport.totalCashExpense)}
+                        </Text>
+                      </Flex>
+                    )}
+                    <Box borderTop="1px solid" borderColor={colors.border} pt={1} mt={1} />
+                  </>
+                )}
                 <Flex justify="space-between">
-                  <Text color={colors.subtext} fontSize="sm">
-                    Saldo Esperado:
+                  <Text color={colors.subtext} fontSize="sm" fontWeight="bold">
+                    Saldo Esperado (Efectivo):
                   </Text>
-                  <Text color={colors.gold} fontWeight="bold">
+                  <Text color={colors.gold} fontWeight="bold" fontSize="md">
                     {formatCurrency(expectedBalance)}
                   </Text>
                 </Flex>
@@ -289,14 +316,31 @@ export function CloseMyCashRegisterModal({
                         </Flex>
                       )}
                       
-                      {/* Total General (suma de todos los métodos) */}
+                      {/* Egresos en Efectivo (cambios dados) */}
+                      {operationsReport.totalCashExpense !== undefined && operationsReport.totalCashExpense > 0 && (
+                        <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2}>
+                          <Text color={colors.subtext} fontSize="xs" mb={2} fontWeight="semibold">
+                            Egresos en Efectivo:
+                          </Text>
+                          <Flex justify="space-between" pl={4}>
+                            <Text color={colors.text} fontSize="sm" fontWeight="bold">
+                              Cambios Dados / Retiros:
+                            </Text>
+                            <Text color="red.500" fontSize="md" fontWeight="bold">
+                              {formatCurrency(operationsReport.totalCashExpense)}
+                            </Text>
+                          </Flex>
+                        </Box>
+                      )}
+                      
+                      {/* Total General (suma de todos los métodos de ingreso) */}
                       {((operationsReport.totalCashIncome !== undefined && operationsReport.totalCashIncome > 0) ||
                         (operationsReport.totalCardIncome !== undefined && operationsReport.totalCardIncome > 0) ||
                         (operationsReport.totalTransferIncome !== undefined && operationsReport.totalTransferIncome > 0)) && (
                         <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2}>
                           <Flex justify="space-between">
                             <Text color={colors.text} fontSize="sm" fontWeight="bold">
-                              Total General:
+                              Total General (Ingresos):
                             </Text>
                             <Text color={colors.gold} fontSize="lg" fontWeight="bold">
                               {formatCurrency(
