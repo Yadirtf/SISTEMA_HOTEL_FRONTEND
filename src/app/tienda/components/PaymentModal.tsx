@@ -182,10 +182,15 @@ export function PaymentModal({
         borderRadius="lg"
         w={{ base: "95%", md: "500px" }}
         maxW="500px"
+        maxH="90vh"
+        display="flex"
+        flexDirection="column"
         boxShadow={`0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 2px ${colors.border}`}
         onClick={(e) => e.stopPropagation()}
         m={{ base: 2, md: 0 }}
+        position="relative"
       >
+        {/* Header fijo */}
         <Box
           p={{ base: 4, md: 6 }}
           borderBottom="2px"
@@ -193,6 +198,7 @@ export function PaymentModal({
           display="flex"
           justifyContent="space-between"
           alignItems="center"
+          flexShrink={0}
         >
           <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={colors.gold}>
             Procesar Pago
@@ -214,7 +220,30 @@ export function PaymentModal({
           </Button>
         </Box>
 
-        <Box p={{ base: 4, md: 6 }}>
+        {/* Contenido con scroll */}
+        <Box 
+          p={{ base: 4, md: 6 }}
+          overflowY="auto"
+          overflowX="hidden"
+          flex="1 1 0"
+          minH={0}
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: colors.bg,
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: colors.border,
+              borderRadius: '4px',
+              '&:hover': {
+                background: colors.gold,
+              },
+            },
+          }}
+        >
           <Stack gap={4}>
             {/* Total a pagar */}
             <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
@@ -320,17 +349,18 @@ export function PaymentModal({
             {/* Cambio a devolver */}
             {change >= 0 && amountReceived !== "" && !error && (
               <Box
-                p={4}
+                p={3}
                 bg={change > 0 ? "green.50" : colors.bg}
                 borderRadius="md"
                 borderWidth="2px"
                 borderColor={change > 0 ? "green.300" : colors.border}
+                flexShrink={0}
               >
                 <Text fontSize="sm" color={colors.subtext} mb={1}>
                   Cambio a devolver:
                 </Text>
                 <Text
-                  fontSize="2xl"
+                  fontSize="xl"
                   fontWeight="bold"
                   color={change > 0 ? "green.600" : colors.gold}
                 >
@@ -373,37 +403,48 @@ export function PaymentModal({
               </Box>
             )}
 
-            {/* Botones */}
-            <Flex gap={3} justify="flex-end" mt={2}>
-              <Button
-                onClick={onClose}
-                variant="ghost"
-                color={colors.subtext}
-                disabled={isLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleConfirm}
-                bg={colors.gold}
-                color="white"
-                _hover={{ bg: "#b8941f" }}
-                disabled={
-                  isLoading || 
-                  loadingPaymentData ||
-                  !!error || 
-                  change < 0 || 
-                  amountReceived === "" || 
-                  isNaN(parseFloat(amountReceived)) ||
-                  parseFloat(amountReceived) < total ||
-                  !paymentMethodId ||
-                  (!isCashPayment && change > 0 && (!cashChange || isNaN(parseFloat(cashChange)) || parseFloat(cashChange) < 0))
-                }
-              >
-                {isLoading ? "Registrando..." : "Confirmar y Registrar Venta"}
-              </Button>
-            </Flex>
           </Stack>
+        </Box>
+
+        {/* Botones fijos en la parte inferior */}
+        <Box
+          p={{ base: 4, md: 6 }}
+          borderTop="2px"
+          borderColor={colors.border}
+          bg={colors.surface}
+          flexShrink={0}
+        >
+          <Flex gap={3} justify="flex-end">
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              color={colors.subtext}
+              disabled={isLoading}
+              minW="120px"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              bg={colors.gold}
+              color="white"
+              _hover={{ bg: "#b8941f" }}
+              disabled={
+                isLoading || 
+                loadingPaymentData ||
+                !!error || 
+                change < 0 || 
+                amountReceived === "" || 
+                isNaN(parseFloat(amountReceived)) ||
+                parseFloat(amountReceived) < total ||
+                !paymentMethodId ||
+                (!isCashPayment && change > 0 && (!cashChange || isNaN(parseFloat(cashChange)) || parseFloat(cashChange) < 0))
+              }
+              minW="180px"
+            >
+              {isLoading ? "Registrando..." : "Confirmar y Registrar Venta"}
+            </Button>
+          </Flex>
         </Box>
       </Box>
     </Box>
