@@ -5,9 +5,10 @@ import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice, formatDate } from "@/lib/format";
 import { useReturnsData } from "../hooks/useReturnsData";
 import { useReturnsActions } from "../hooks/useReturnsActions";
-import { useSalesData } from "../hooks/useSalesData";
 import { ReturnModal } from "./ReturnModal";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { getSalesStats } from "@/services/sales";
+import { getToken } from "@/lib/session";
 
 interface ReturnsTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
@@ -16,9 +17,18 @@ interface ReturnsTabProps {
 export function ReturnsTab({ showNotification }: ReturnsTabProps) {
   const { colors } = useThemeMode();
   const { returns, loading, loadReturns } = useReturnsData();
-  const { loadStats: reloadSalesStats } = useSalesData();
   const [productNameFilter, setProductNameFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+
+  const reloadSalesStats = useCallback(async () => {
+    const token = getToken() || undefined;
+    if (!token) return;
+    try {
+      await getSalesStats(token);
+    } catch (error) {
+      console.error('[ReturnsTab] Error al recargar estadísticas:', error);
+    }
+  }, []);
 
   const {
     isModalOpen,

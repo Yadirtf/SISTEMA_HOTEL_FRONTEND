@@ -3,7 +3,7 @@
 import { Box, Button, Input, Text, Stack, Flex, IconButton } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice, formatDate } from "@/lib/format";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getPaymentMethods, PaymentMethod } from "@/services/payment-methods";
 import { getToken } from "@/lib/session";
 import type { Sale, ReturnItem } from "../types";
@@ -54,6 +54,9 @@ export function ReturnModal({
   const { colors } = useThemeMode();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+  const [productNameFilter, setProductNameFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [amountFilter, setAmountFilter] = useState("");
 
   // Cargar métodos de pago cuando se abre el modal
   useEffect(() => {
@@ -86,7 +89,53 @@ export function ReturnModal({
     }
   }, [selectedSale, refundMethodId]);
 
-  if (!isOpen) return null;
+  // Limpiar filtros cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setProductNameFilter("");
+      setDateFilter("");
+      setAmountFilter("");
+    }
+  }, [isOpen]);
+
+  // Filtrar ventas según los criterios de búsqueda
+  const filteredSales = useMemo(() => {
+    let filtered = availableSales;
+
+    // Filtrar por nombre de producto
+    if (productNameFilter.trim()) {
+      const productNameLower = productNameFilter.toLowerCase();
+      filtered = filtered.filter(sale =>
+        sale.items.some(item =>
+          item.productName.toLowerCase().includes(productNameLower)
+        )
+      );
+    }
+
+    // Filtrar por fecha
+    if (dateFilter) {
+      const filterDate = new Date(dateFilter);
+      filterDate.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(sale => {
+        const saleDate = new Date(sale.saleDate);
+        saleDate.setHours(0, 0, 0, 0);
+        return saleDate.getTime() === filterDate.getTime();
+      });
+    }
+
+    // Filtrar por monto
+    if (amountFilter.trim()) {
+      const amount = parseFloat(amountFilter);
+      if (!isNaN(amount)) {
+        filtered = filtered.filter(sale => {
+          const saleAmount = sale.amountReceived || sale.total;
+          return Math.abs(saleAmount - amount) < 0.01; // Permitir pequeñas diferencias por redondeo
+        });
+      }
+    }
+
+    return filtered;
+  }, [availableSales, productNameFilter, dateFilter, amountFilter]);
 
   const total = items.reduce((sum, item) => {
     if (!selectedSale) return sum;
@@ -94,6 +143,8 @@ export function ReturnModal({
     if (!saleItem) return sum;
     return sum + saleItem.unitPrice * item.quantity;
   }, 0);
+
+  if (!isOpen) return null;
 
   return (
     <Box
@@ -151,41 +202,167 @@ export function ReturnModal({
 
         <Box p={{ base: 4, md: 6 }}>
           <Stack gap={4}>
-            {/* Seleccionar venta */}
+            {/* Búsqueda de venta */}
             <Box>
-              <Text mb={2} fontWeight="semibold" color={colors.text}>
-                Seleccionar Venta <Text as="span" color="red.500">*</Text>
+              <Text mb={3} fontWeight="semibold" color={colors.text} fontSize="lg">
+                Buscar Venta para Devolución <Text as="span" color="red.500">*</Text>
               </Text>
-              <select
-                value={selectedSaleId}
-                onChange={(e) => setSelectedSaleId(e.target.value)}
-                style={{
-                  width: '100%',
-                  backgroundColor: colors.surface,
-                  color: colors.text,
-                  borderRadius: '6px',
-                  padding: '8px 12px',
-                  border: `2px solid ${colors.border}`,
-                  fontSize: '14px',
-                  cursor: loadingSales ? 'wait' : 'pointer',
-                  opacity: loadingSales ? 0.6 : 1,
-                }}
-                disabled={loadingSales || isLoading}
-              >
-                <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
-                  {loadingSales ? "Cargando ventas..." : "Seleccionar venta..."}
-                </option>
-                {!loadingSales && availableSales.map((sale) => (
-                  <option key={sale._id} value={sale._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
-                    Venta #{sale._id?.substring(0, 8)} - {formatDate(sale.saleDate)} - ${formatPrice(sale.total)}
-                  </option>
-                ))}
-              </select>
+              
+              {/* Filtros de búsqueda */}
+              <Stack gap={3} mb={4}>
+                <Box>
+                  <Text fontSize="sm" color={colors.subtext} mb={1}>
+                    Buscar por Nombre de Producto
+                  </Text>
+                  <Input
+                    placeholder="Ej: Botella de agua, Café..."
+                    value={productNameFilter}
+                    onChange={(e) => setProductNameFilter(e.target.value)}
+                    bg={colors.bg}
+                    borderColor={colors.border}
+                    color={colors.text}
+                    _hover={{ borderColor: colors.gold }}
+                    _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                    disabled={loadingSales || isLoading}
+                  />
+                </Box>
+
+                <Flex gap={3}>
+                  <Box flex={1}>
+                    <Text fontSize="sm" color={colors.subtext} mb={1}>
+                      Buscar por Fecha
+                    </Text>
+                    <Input
+                      type="date"
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      bg={colors.bg}
+                      borderColor={colors.border}
+                      color={colors.text}
+                      _hover={{ borderColor: colors.gold }}
+                      _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                      disabled={loadingSales || isLoading}
+                    />
+                  </Box>
+
+                  <Box flex={1}>
+                    <Text fontSize="sm" color={colors.subtext} mb={1}>
+                      Buscar por Monto Pagado
+                    </Text>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ej: 50000"
+                      value={amountFilter}
+                      onChange={(e) => setAmountFilter(e.target.value)}
+                      bg={colors.bg}
+                      borderColor={colors.border}
+                      color={colors.text}
+                      _hover={{ borderColor: colors.gold }}
+                      _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+                      disabled={loadingSales || isLoading}
+                    />
+                  </Box>
+                </Flex>
+
+                {(productNameFilter || dateFilter || amountFilter) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setProductNameFilter("");
+                      setDateFilter("");
+                      setAmountFilter("");
+                    }}
+                    color={colors.subtext}
+                    _hover={{ color: colors.gold }}
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+              </Stack>
+
+              {/* Lista de ventas filtradas */}
+              <Box>
+                <Text fontSize="sm" color={colors.subtext} mb={2}>
+                  {loadingSales 
+                    ? "Cargando ventas..." 
+                    : filteredSales.length === 0 
+                      ? "No se encontraron ventas con los criterios de búsqueda"
+                      : `${filteredSales.length} venta(s) encontrada(s)`}
+                </Text>
+                
+                {!loadingSales && filteredSales.length > 0 && (
+                  <Box
+                    maxH="300px"
+                    overflowY="auto"
+                    borderWidth="1px"
+                    borderColor={colors.border}
+                    borderRadius="md"
+                    p={2}
+                  >
+                    <Stack gap={2}>
+                      {filteredSales.map((sale) => {
+                        const isSelected = selectedSaleId === sale._id;
+                        const saleAmount = sale.amountReceived || sale.total;
+                        const productNames = sale.items.map(item => item.productName).join(", ");
+
+                        return (
+                          <Box
+                            key={sale._id}
+                            p={3}
+                            bg={isSelected ? colors.gold : colors.bg}
+                            color={isSelected ? "white" : colors.text}
+                            borderRadius="md"
+                            borderWidth="2px"
+                            borderColor={isSelected ? colors.gold : colors.border}
+                            cursor="pointer"
+                            onClick={() => setSelectedSaleId(sale._id)}
+                            _hover={{
+                              bg: isSelected ? colors.gold : colors.surface,
+                              borderColor: colors.gold,
+                            }}
+                          >
+                            <Flex justify="space-between" align="start" mb={2}>
+                              <Box flex={1}>
+                                <Text fontWeight="bold" fontSize="sm" mb={1}>
+                                  Venta #{sale._id?.substring(0, 8)}
+                                </Text>
+                                <Text fontSize="xs" opacity={0.9}>
+                                  <strong>Fecha:</strong> {formatDate(sale.saleDate)}
+                                </Text>
+                                <Text fontSize="xs" opacity={0.9}>
+                                  <strong>Monto Pagado:</strong> ${formatPrice(saleAmount)}
+                                </Text>
+                                <Text fontSize="xs" opacity={0.9} mt={1}>
+                                  <strong>Productos:</strong> {productNames.length > 50 ? `${productNames.substring(0, 50)}...` : productNames}
+                                </Text>
+                                <Text fontSize="xs" opacity={0.9}>
+                                  <strong>Cantidad de Items:</strong> {sale.items.length}
+                                </Text>
+                              </Box>
+                              {isSelected && (
+                                <Text fontSize="lg">✓</Text>
+                              )}
+                            </Flex>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
+
               {selectedSale && (
-                <Box mt={2} p={3} bg={colors.bg} borderRadius="md" borderWidth="1px" borderColor={colors.border}>
-                  <Text fontSize="sm" color={colors.subtext}>
-                    <strong>Fecha:</strong> {formatDate(selectedSale.saleDate)} | 
+                <Box mt={3} p={3} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.gold}>
+                  <Text fontSize="sm" fontWeight="bold" color={colors.gold} mb={2}>
+                    Venta Seleccionada:
+                  </Text>
+                  <Text fontSize="sm" color={colors.text}>
+                    <strong>ID:</strong> {selectedSale._id?.substring(0, 8)} | 
+                    <strong> Fecha:</strong> {formatDate(selectedSale.saleDate)} | 
                     <strong> Total:</strong> ${formatPrice(selectedSale.total)} | 
+                    <strong> Monto Pagado:</strong> ${formatPrice(selectedSale.amountReceived || selectedSale.total)} | 
                     <strong> Productos:</strong> {selectedSale.items.length}
                   </Text>
                 </Box>
