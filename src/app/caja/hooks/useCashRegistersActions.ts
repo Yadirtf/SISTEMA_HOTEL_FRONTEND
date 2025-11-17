@@ -5,7 +5,8 @@ import {
   closeCashRegister, 
   suspendCashRegister, 
   resumeCashRegister,
-  getCashRegisterStats
+  getCashRegisterStats,
+  openCashRegister
 } from "@/services/cash-registers";
 import { CashRegister, CashRegisterFormData, CloseCashRegisterFormData, CashRegisterStats } from "../types";
 import type { NotificationType } from "@/hooks/useNotifications";
@@ -17,6 +18,8 @@ export function useCashRegistersActions(
 ) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+  const [isOpenModalOpen, setIsOpenModalOpen] = useState(false);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,13 +100,20 @@ export function useCashRegistersActions(
       // Obtener estadísticas para calcular saldo esperado
       const statsResp = await getCashRegisterStats(cashRegister._id, token);
       if (statsResp.success && statsResp.data) {
-        const expected = cashRegister.initialAmount + statsResp.data.totalIncome - statsResp.data.totalExpense;
+        // El currentBalance ya está calculado correctamente solo con transacciones desde la apertura
+        // porque se actualiza incrementalmente solo cuando hay transacciones en efectivo desde la apertura
+        // Usar el currentBalance directamente, que ya refleja: initialAmount + ingresos efectivo - egresos efectivo (desde apertura)
+        const updatedCashRegister = statsResp.data.cashRegister;
+        const expected = updatedCashRegister?.currentBalance ?? cashRegister.currentBalance;
         setExpectedBalance(expected);
         setStats(statsResp.data);
+      } else {
+        // Fallback: usar el currentBalance de la caja
+        setExpectedBalance(cashRegister.currentBalance);
       }
     } catch (error) {
       console.error("Error al obtener estadísticas:", error);
-      // Calcular saldo esperado básico
+      // Calcular saldo esperado básico usando el currentBalance
       setExpectedBalance(cashRegister.currentBalance);
     }
     setIsCloseModalOpen(true);
@@ -128,7 +138,7 @@ export function useCashRegistersActions(
       return;
     }
     if (!formData.userId || formData.userId <= 0) {
-      showNotification("error", "Error", "Debe seleccionar un recepcionista");
+      showNotification("error", "Error", "Debe seleccionar un usuario");
       setIsSubmitting(false);
       return;
     }
@@ -146,7 +156,7 @@ export function useCashRegistersActions(
       if (resp.success) {
         showNotification(
           "success",
-          editingId ? "Caja actualizada" : "Caja abierta",
+          editingId ? "Caja actualizada" : "Caja creada",
           resp.message || "Operación exitosa"
         );
         closeModal();
@@ -255,9 +265,41 @@ export function useCashRegistersActions(
     }
   }, [token]);
 
+  const openOpenModal = useCallback((cashRegister: CashRegister) => {
+    setOpeningId(cashRegister._id);
+    setIsOpenModalOpen(true);
+  }, []);
+
+  const closeOpenModal = useCallback(() => {
+    setIsOpenModalOpen(false);
+    setOpeningId(null);
+  }, []);
+
+  const handleOpen = useCallback(async (initialAmount: number, notes?: string) => {
+    if (!openingId) return;
+
+    setIsSubmitting(true);
+    try {
+      const resp = await openCashRegister(openingId, { initialAmount, notes }, token);
+      if (resp.success) {
+        showNotification("success", "Caja abierta", resp.message || "Caja abierta exitosamente");
+        closeOpenModal();
+        await reloadCashRegisters();
+      } else {
+        showNotification("error", "Error", resp.message || "Error al abrir caja");
+      }
+    } catch (e: any) {
+      console.error("Error al abrir caja:", e);
+      showNotification("error", "Error", e?.message || "Error desconocido al abrir caja");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [openingId, token, showNotification, closeOpenModal, reloadCashRegisters]);
+
   return {
     isModalOpen,
     isCloseModalOpen,
+    isOpenModalOpen,
     editingId,
     closingId,
     isSubmitting,
@@ -273,10 +315,13 @@ export function useCashRegistersActions(
     openCreateModal,
     openEditModal,
     openCloseModal,
+    openOpenModal,
     closeModal,
     closeCloseModal,
+    closeOpenModal,
     submit,
     submitClose,
+    handleOpen,
     handleSuspend,
     handleResume,
     handleViewStats,

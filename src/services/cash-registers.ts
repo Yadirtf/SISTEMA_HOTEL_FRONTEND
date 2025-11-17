@@ -120,4 +120,16 @@ export async function closeMyCashRegister(
   );
 }
 
+export async function openCashRegister(
+  id: string,
+  data: { initialAmount: number; notes?: string },
+  token?: string
+): Promise<Caja<CashRegister>> {
+  return apiPut<CashRegister, { initialAmount: number; notes?: string }>(
+    `/cash-registers/${id}/open`,
+    data,
+    token
+  );
+}
+
 

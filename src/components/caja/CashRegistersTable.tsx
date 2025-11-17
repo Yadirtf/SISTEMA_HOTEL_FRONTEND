@@ -19,6 +19,7 @@ type CashRegistersTableProps = {
   filteredCount: number;
   totalCount: number;
   onClose: (cashRegister: CashRegister) => void;
+  onOpen?: (cashRegister: CashRegister) => void; // Opcional: solo admin
   onSuspend?: (cashRegister: CashRegister) => void; // Opcional: solo admin
   onResume?: (cashRegister: CashRegister) => void; // Opcional: solo admin
   onViewStats: (cashRegister: CashRegister) => void;
@@ -39,6 +40,7 @@ export function CashRegistersTable({
   filteredCount,
   totalCount,
   onClose,
+  onOpen,
   onSuspend,
   onResume,
   onViewStats,
@@ -257,20 +259,38 @@ export function CashRegistersTable({
                       </Button>
                     )}
                     {cashRegister.status === "closed" && (
-                      <Button
-                        size="xs"
-                        bg={colors.gold}
-                        color={colors.bg}
-                        onClick={() => onViewStats(cashRegister)}
-                        _hover={{ 
-                          bg: "#b8941f",
-                          transform: "scale(1.05)"
-                        }}
-                        transition="all 0.2s"
-                        fontWeight="semibold"
-                      >
-                        Ver Detalles
-                      </Button>
+                      <>
+                        {isAdmin && onOpen && (
+                          <Button
+                            size="xs"
+                            bg="green.500"
+                            color="white"
+                            onClick={() => onOpen(cashRegister)}
+                            _hover={{ 
+                              bg: "green.600",
+                              transform: "scale(1.05)"
+                            }}
+                            transition="all 0.2s"
+                            fontWeight="semibold"
+                          >
+                            Abrir Caja
+                          </Button>
+                        )}
+                        <Button
+                          size="xs"
+                          bg={colors.gold}
+                          color={colors.bg}
+                          onClick={() => onViewStats(cashRegister)}
+                          _hover={{ 
+                            bg: "#b8941f",
+                            transform: "scale(1.05)"
+                          }}
+                          transition="all 0.2s"
+                          fontWeight="semibold"
+                        >
+                          Ver Detalles
+                        </Button>
+                      </>
                     )}
                   </Flex>
                 </Box>
@@ -374,15 +394,29 @@ export function CashRegistersTable({
                   </Button>
                 )}
                 {cashRegister.status === "closed" && (
-                  <Button
-                    size="xs"
-                    bg={colors.gold}
-                    color={colors.bg}
-                    onClick={() => onViewStats(cashRegister)}
-                    flex="1"
-                  >
-                    Ver Detalles
-                  </Button>
+                  <>
+                    {isAdmin && onOpen && (
+                      <Button
+                        size="xs"
+                        bg="green.500"
+                        color="white"
+                        onClick={() => onOpen(cashRegister)}
+                        flex="1"
+                        minW="100px"
+                      >
+                        Abrir Caja
+                      </Button>
+                    )}
+                    <Button
+                      size="xs"
+                      bg={colors.gold}
+                      color={colors.bg}
+                      onClick={() => onViewStats(cashRegister)}
+                      flex="1"
+                    >
+                      Ver Detalles
+                    </Button>
+                  </>
                 )}
               </Flex>
             </Box>

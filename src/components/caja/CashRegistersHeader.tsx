@@ -217,7 +217,7 @@ export function CashRegistersHeader({
               boxShadow={`0 2px 8px ${colors.gold}50`}
               w={{ base: "100%", md: "auto" }}
             >
-              Abrir Caja
+              Crear Caja
             </Button>
           )}
         </Flex>

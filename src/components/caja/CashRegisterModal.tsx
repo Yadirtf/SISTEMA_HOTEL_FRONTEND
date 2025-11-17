@@ -45,32 +45,32 @@ export function CashRegisterModal({
   isLoading = false,
 }: CashRegisterModalProps) {
   const { colors } = useThemeMode();
-  const [receptionists, setReceptionists] = useState<UsuarioListItem[]>([]);
-  const [loadingReceptionists, setLoadingReceptionists] = useState(false);
+  const [users, setUsers] = useState<UsuarioListItem[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const token = getToken();
 
-  // Cargar recepcionistas cuando se abre el modal
+  // Cargar usuarios (recepcionistas y administradores) cuando se abre el modal
   useEffect(() => {
-    const loadReceptionists = async () => {
+    const loadUsers = async () => {
       if (isOpen && !isEditing) {
-        setLoadingReceptionists(true);
+        setLoadingUsers(true);
         try {
           const resp = await apiGet<UsuarioListItem[]>(`/auth/usuarios`, token || undefined);
           if (resp.success && resp.data) {
-            // Filtrar solo recepcionistas activos
-            const activeReceptionists = resp.data.filter(
-              (user) => user.rol === "Recepcionista" && user.estado === "Activo"
+            // Filtrar recepcionistas y administradores activos
+            const activeUsers = resp.data.filter(
+              (user) => (user.rol === "Recepcionista" || user.rol === "Administrador") && user.estado === "Activo"
             );
-            setReceptionists(activeReceptionists);
+            setUsers(activeUsers);
           }
         } catch (error) {
-          console.error("Error al cargar recepcionistas:", error);
+          console.error("Error al cargar usuarios:", error);
         } finally {
-          setLoadingReceptionists(false);
+          setLoadingUsers(false);
         }
       }
     };
-    loadReceptionists();
+    loadUsers();
   }, [isOpen, isEditing, token]);
   
   if (!isOpen) return null;
@@ -102,7 +102,7 @@ export function CashRegisterModal({
         boxShadow="0 8px 16px rgba(0, 0, 0, 0.5)"
       >
         <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={colors.gold} mb={4}>
-          {isEditing ? "Editar Caja" : "Abrir Caja"}
+          {isEditing ? "Editar Caja" : "Crear Caja"}
         </Text>
 
         <Stack gap={4}>
@@ -125,7 +125,7 @@ export function CashRegisterModal({
 
           <Box>
             <Text color={colors.gold} mb={2} fontSize="sm" fontWeight="semibold">
-              Recepcionista *
+              Usuario *
             </Text>
             <select
               value={formData.userId || ""}
@@ -138,25 +138,25 @@ export function CashRegisterModal({
                 padding: '8px 12px',
                 border: `1px solid ${colors.border}`,
                 fontSize: '14px',
-                cursor: (isLoading || isEditing || loadingReceptionists) ? 'not-allowed' : 'pointer',
-                opacity: (isLoading || isEditing || loadingReceptionists) ? 0.6 : 1,
+                cursor: (isLoading || isEditing || loadingUsers) ? 'not-allowed' : 'pointer',
+                opacity: (isLoading || isEditing || loadingUsers) ? 0.6 : 1,
               }}
-              disabled={isLoading || isEditing || loadingReceptionists}
+              disabled={isLoading || isEditing || loadingUsers}
             >
               <option value="">
-                {loadingReceptionists ? "Cargando recepcionistas..." : "Seleccione un recepcionista"}
+                {loadingUsers ? "Cargando usuarios..." : "Seleccione un usuario"}
               </option>
-              {receptionists.map((receptionist) => (
-                <option key={receptionist.idUsuario} value={receptionist.idUsuario}>
-                  {receptionist.persona
-                    ? `${receptionist.persona.nombre} ${receptionist.persona.apellido} (${receptionist.correo})`
-                    : receptionist.correo}
+              {users.map((user) => (
+                <option key={user.idUsuario} value={user.idUsuario}>
+                  {user.persona
+                    ? `${user.persona.nombre} ${user.persona.apellido} (${user.correo}) - ${user.rol}`
+                    : `${user.correo} - ${user.rol}`}
                 </option>
               ))}
             </select>
-            {receptionists.length === 0 && !loadingReceptionists && (
+            {users.length === 0 && !loadingUsers && (
               <Text color={colors.subtext} fontSize="xs" mt={1}>
-                No hay recepcionistas activos disponibles
+                No hay usuarios activos disponibles (Recepcionistas o Administradores)
               </Text>
             )}
           </Box>
@@ -219,7 +219,7 @@ export function CashRegisterModal({
               _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
               disabled={isLoading}
             >
-              {isLoading ? "Guardando..." : (isEditing ? "Actualizar" : "Abrir Caja")}
+              {isLoading ? "Guardando..." : (isEditing ? "Actualizar" : "Crear Caja")}
             </Button>
           </Flex>
         </Stack>

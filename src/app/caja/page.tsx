@@ -12,6 +12,7 @@ import { CashRegistersTable } from "@/components/caja/CashRegistersTable";
 import { CashRegisterModal } from "@/components/caja/CashRegisterModal";
 import { CloseCashRegisterModal } from "@/components/caja/CloseCashRegisterModal";
 import { CashRegisterDetailsModal } from "@/components/caja/CashRegisterDetailsModal";
+import { OpenCashRegisterModal } from "@/components/caja/OpenCashRegisterModal";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -67,6 +68,7 @@ export default function CajaPage() {
   const {
     isModalOpen,
     isCloseModalOpen,
+    isOpenModalOpen,
     editingId,
     isSubmitting,
     formData,
@@ -81,10 +83,13 @@ export default function CajaPage() {
     openCreateModal,
     openEditModal,
     openCloseModal,
+    openOpenModal,
     closeModal,
     closeCloseModal,
+    closeOpenModal,
     submit,
     submitClose,
+    handleOpen,
     handleSuspend,
     handleResume,
     handleViewStats,
@@ -132,6 +137,7 @@ export default function CajaPage() {
             filteredCount={filteredCashRegisters.length}
             totalCount={cashRegisters.length}
             onClose={openCloseModal}
+            onOpen={hydrated && isAdmin ? openOpenModal : undefined} // Solo admin puede abrir cajas, después de hidratación
             onSuspend={hydrated && isAdmin ? handleSuspend : undefined} // Solo admin puede suspender, después de hidratación
             onResume={hydrated && isAdmin ? handleResume : undefined} // Solo admin puede reanudar, después de hidratación
             onViewStats={handleViewStats}
@@ -170,6 +176,13 @@ export default function CajaPage() {
             onFormChange={handleCloseFormChange as (field: keyof typeof closeFormData, value: any) => void}
             isLoading={isSubmitting}
             expectedBalance={expectedBalance}
+          />
+
+          {/* Modal de apertura de caja */}
+          <OpenCashRegisterModal
+            isOpen={isOpenModalOpen}
+            onClose={closeOpenModal}
+            onSubmit={handleOpen}
           />
 
           {/* Modal de detalles */}
