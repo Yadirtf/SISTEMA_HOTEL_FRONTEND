@@ -54,6 +54,9 @@ export interface Sale {
   paymentStatus: 'paid' | 'pending';
   amountReceived?: number;
   change?: number;
+  paymentMethodId?: string;
+  paymentTypeId?: string;
+  cashChange?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

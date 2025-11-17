@@ -7,6 +7,23 @@ import { useState, useEffect } from "react";
 import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
 import { getToken } from "@/lib/session";
 
+// Hook para detectar tamaño de pantalla
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  return isMobile;
+}
+
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -24,6 +41,7 @@ export function PaymentModal({
 }: PaymentModalProps) {
   const { colors } = useThemeMode();
   const token = getToken() || undefined;
+  const isMobile = useIsMobile();
   const [amountReceived, setAmountReceived] = useState<string>("");
   const [change, setChange] = useState<number>(0);
   const [cashChange, setCashChange] = useState<string>(""); // Cambio en efectivo a dar
@@ -264,22 +282,26 @@ export function PaymentModal({
               <select
                 value={paymentMethodId}
                 onChange={(e) => setPaymentMethodId(e.target.value)}
+                disabled={isLoading || loadingPaymentData}
                 style={{
                   width: '100%',
                   backgroundColor: colors.bg,
                   color: colors.text,
                   borderRadius: '8px',
-                  padding: '10px 14px',
+                  padding: isMobile ? '10px 14px' : '12px 16px',
+                  paddingRight: '2.5rem',
                   border: `2px solid ${error && !paymentMethodId ? 'red' : colors.border}`,
-                  fontSize: '15px',
-                  cursor: 'pointer',
+                  fontSize: isMobile ? '15px' : '16px',
+                  cursor: isLoading || loadingPaymentData ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s',
-                }}
-                css={{
-                  '@media (min-width: 768px)': {
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                  },
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  opacity: isLoading || loadingPaymentData ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading && !loadingPaymentData) {
@@ -299,7 +321,6 @@ export function PaymentModal({
                   e.currentTarget.style.borderColor = error && !paymentMethodId ? 'red' : colors.border;
                   e.currentTarget.style.boxShadow = 'none';
                 }}
-                disabled={isLoading || loadingPaymentData}
               >
                 <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
                   {loadingPaymentData ? "Cargando..." : "Seleccionar método de pago"}
@@ -320,22 +341,26 @@ export function PaymentModal({
               <select
                 value={paymentTypeId}
                 onChange={(e) => setPaymentTypeId(e.target.value)}
+                disabled={isLoading || loadingPaymentData}
                 style={{
                   width: '100%',
                   backgroundColor: colors.bg,
                   color: colors.text,
                   borderRadius: '8px',
-                  padding: '10px 14px',
+                  padding: isMobile ? '10px 14px' : '12px 16px',
+                  paddingRight: '2.5rem',
                   border: `2px solid ${colors.border}`,
-                  fontSize: '15px',
-                  cursor: 'pointer',
+                  fontSize: isMobile ? '15px' : '16px',
+                  cursor: isLoading || loadingPaymentData ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s',
-                }}
-                css={{
-                  '@media (min-width: 768px)': {
-                    padding: '12px 16px',
-                    fontSize: '16px',
-                  },
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  opacity: isLoading || loadingPaymentData ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading && !loadingPaymentData) {
@@ -355,7 +380,6 @@ export function PaymentModal({
                   e.currentTarget.style.borderColor = colors.border;
                   e.currentTarget.style.boxShadow = 'none';
                 }}
-                disabled={isLoading || loadingPaymentData}
               >
                 <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
                   {loadingPaymentData ? "Cargando..." : "Seleccionar tipo de pago (opcional)"}
