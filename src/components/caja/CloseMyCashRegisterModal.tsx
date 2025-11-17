@@ -81,8 +81,9 @@ export function CloseMyCashRegisterModal({
       if (statsResp.success && statsResp.data) {
         // El saldo esperado debe ser solo el efectivo físico
         // El currentBalance solo se actualiza con transacciones en efectivo
-        // Por lo tanto, usamos el currentBalance directamente
-        const expected = cashRegister.currentBalance;
+        // Usar el currentBalance del backend (actualizado) en lugar del prop
+        const updatedCashRegister = statsResp.data.cashRegister;
+        const expected = updatedCashRegister?.currentBalance ?? cashRegister.currentBalance;
         setExpectedBalance(expected);
       }
       
@@ -210,7 +211,7 @@ export function CloseMyCashRegisterModal({
                     )}
                     {operationsReport.totalCashExpense !== undefined && operationsReport.totalCashExpense > 0 && (
                       <Text color={colors.subtext} fontSize="xs" fontStyle="italic" pl={2}>
-                        (Incluye cambios dados, devoluciones en efectivo y otros egresos)
+                        (Incluye cambios dados, devoluciones en efectivo, gastos operativos y otros egresos)
                       </Text>
                     )}
                     <Box borderTop="1px solid" borderColor={colors.border} pt={1} mt={1} />
@@ -336,7 +337,7 @@ export function CloseMyCashRegisterModal({
                             </Text>
                           </Flex>
                           <Text color={colors.subtext} fontSize="xs" pl={4} fontStyle="italic">
-                            (Incluye: cambios dados, devoluciones en efectivo, retiros y otros egresos)
+                            (Incluye: cambios dados, devoluciones en efectivo, gastos operativos, retiros y otros egresos)
                           </Text>
                         </Box>
                       )}

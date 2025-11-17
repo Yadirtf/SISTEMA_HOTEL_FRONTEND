@@ -1,6 +1,6 @@
 export type CashRegisterStatus = "open" | "closed" | "suspended";
 export type TransactionType = "income" | "expense";
-export type TransactionCategory = "sale" | "reservation_payment" | "refund" | "adjustment" | "withdrawal" | "deposit" | "other";
+export type TransactionCategory = "sale" | "reservation_payment" | "refund" | "adjustment" | "withdrawal" | "deposit" | "expense" | "other";
 export type ReferenceType = "sale" | "reservation" | "refund" | "adjustment";
 
 export type CashRegister = {

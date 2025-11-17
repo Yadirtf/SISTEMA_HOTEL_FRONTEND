@@ -19,6 +19,7 @@ import { formatDate, formatCurrency } from "@/lib/format";
 import { OpenCashRegisterModal } from "./OpenCashRegisterModal";
 import { CloseMyCashRegisterModal } from "./CloseMyCashRegisterModal";
 import { InlineNotice } from "@/components/common/InlineNotice";
+import { ExpensesTab } from "./ExpensesTab";
 
 const statusColors: Record<string, { bg: string; color: string }> = {
   open: { bg: "green.500", color: "white" },
@@ -33,6 +34,7 @@ export function MyCashRegisterCard() {
   const [cashRegister, setCashRegister] = useState<CashRegister | null>(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
   
   const {
     open: isOpenModalOpen,
@@ -156,138 +158,213 @@ export function MyCashRegisterCard() {
   const statusColor = statusColors[cashRegister.status] || statusColors.closed;
 
   return (
-    <Box
-      bg={colors.surface}
-      borderColor={colors.border}
-      borderWidth="2px"
-      borderRadius="lg"
-      p={6}
-      boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
-    >
+    <Box>
       {/* Notificaciones */}
       {notification && (
-          <Box mb={4}>
-            <InlineNotice
-              type={notification.type}
-              title={notification.title}
-              description={notification.description}
-              onClose={() => setNotification(null)}
-              colors={colors}
-            />
-          </Box>
+        <Box mb={4}>
+          <InlineNotice
+            type={notification.type}
+            title={notification.title}
+            description={notification.description}
+            onClose={() => setNotification(null)}
+            colors={colors}
+          />
+        </Box>
       )}
 
-      <Stack gap={4}>
-        {/* Header */}
-        <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
-          <Box>
-            <Heading fontSize="xl" color={colors.gold} mb={2}>
-              Mi Caja: {cashRegister.registerNumber}
-            </Heading>
-            <Badge
-              bg={statusColor.bg}
-              color={statusColor.color}
-              px={3}
-              py={1}
-              borderRadius="md"
-              fontSize="sm"
-              fontWeight="bold"
-            >
-              {cashRegister.status === "open" ? "Abierta" : 
-               cashRegister.status === "closed" ? "Cerrada" : "Suspendida"}
-            </Badge>
-          </Box>
-        </Flex>
-
-        {/* Información de la caja */}
-        <Stack gap={3}>
-          <Flex justify="space-between" align="center">
-            <Text color={colors.subtext} fontSize="sm">
-              Monto Inicial:
-            </Text>
-            <Text color={colors.text} fontWeight="semibold">
-              {formatCurrency(cashRegister.initialAmount)}
-            </Text>
+      <Box
+        bg={colors.surface}
+        borderColor={colors.border}
+        borderWidth="2px"
+        borderRadius="lg"
+        p={6}
+        boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
+        mb={6}
+      >
+        <Stack gap={4}>
+          {/* Header */}
+          <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+            <Box>
+              <Heading fontSize="xl" color={colors.gold} mb={2}>
+                Mi Caja: {cashRegister.registerNumber}
+              </Heading>
+              <Badge
+                bg={statusColor.bg}
+                color={statusColor.color}
+                px={3}
+                py={1}
+                borderRadius="md"
+                fontSize="sm"
+                fontWeight="bold"
+              >
+                {cashRegister.status === "open" ? "Abierta" : 
+                 cashRegister.status === "closed" ? "Cerrada" : "Suspendida"}
+              </Badge>
+            </Box>
           </Flex>
 
-          <Flex justify="space-between" align="center">
-            <Text color={colors.subtext} fontSize="sm">
-              Saldo Actual:
-            </Text>
-            <Text color={colors.gold} fontWeight="bold" fontSize="lg">
-              {formatCurrency(cashRegister.currentBalance)}
-            </Text>
-          </Flex>
-
-          <Flex justify="space-between" align="center">
-            <Text color={colors.subtext} fontSize="sm">
-              Apertura:
-            </Text>
-            <Text color={colors.text} fontSize="sm">
-              {formatDate(cashRegister.openedAt)}
-            </Text>
-          </Flex>
-
-          {cashRegister.closedAt && (
+          {/* Información de la caja */}
+          <Stack gap={3}>
             <Flex justify="space-between" align="center">
               <Text color={colors.subtext} fontSize="sm">
-                Cierre:
+                Monto Inicial:
               </Text>
-              <Text color={colors.text} fontSize="sm">
-                {formatDate(cashRegister.closedAt)}
+              <Text color={colors.text} fontWeight="semibold">
+                {formatCurrency(cashRegister.initialAmount)}
               </Text>
             </Flex>
-          )}
 
-          {cashRegister.notes && (
-            <Box>
-              <Text color={colors.subtext} fontSize="sm" mb={1}>
-                Notas:
+            <Flex justify="space-between" align="center">
+              <Text color={colors.subtext} fontSize="sm">
+                Saldo Actual:
+              </Text>
+              <Text color={colors.gold} fontWeight="bold" fontSize="lg">
+                {formatCurrency(cashRegister.currentBalance)}
+              </Text>
+            </Flex>
+
+            <Flex justify="space-between" align="center">
+              <Text color={colors.subtext} fontSize="sm">
+                Apertura:
               </Text>
               <Text color={colors.text} fontSize="sm">
-                {cashRegister.notes}
+                {formatDate(cashRegister.openedAt)}
               </Text>
-            </Box>
-          )}
+            </Flex>
+
+            {cashRegister.closedAt && (
+              <Flex justify="space-between" align="center">
+                <Text color={colors.subtext} fontSize="sm">
+                  Cierre:
+                </Text>
+                <Text color={colors.text} fontSize="sm">
+                  {formatDate(cashRegister.closedAt)}
+                </Text>
+              </Flex>
+            )}
+
+            {cashRegister.notes && (
+              <Box>
+                <Text color={colors.subtext} fontSize="sm" mb={1}>
+                  Notas:
+                </Text>
+                <Text color={colors.text} fontSize="sm">
+                  {cashRegister.notes}
+                </Text>
+              </Box>
+            )}
+          </Stack>
+
+          {/* Acciones según estado */}
+          <Flex gap={3} mt={4} wrap="wrap">
+            {cashRegister.status === "closed" && (
+              <Button
+                onClick={onOpenModalOpen}
+                bg={colors.gold}
+                color={colors.bg}
+                fontWeight="bold"
+                flex="1"
+                minW="150px"
+                _hover={{ bg: "#b8941f" }}
+              >
+                Abrir Caja
+              </Button>
+            )}
+
+            {cashRegister.status === "open" && (
+              <Button
+                onClick={onCloseModalOpen}
+                bg="blue.500"
+                color="white"
+                fontWeight="bold"
+                flex="1"
+                minW="150px"
+                _hover={{ bg: "blue.600" }}
+              >
+                Cerrar Caja
+              </Button>
+            )}
+
+            {cashRegister.status === "suspended" && (
+              <Text color={colors.subtext} fontSize="sm" fontStyle="italic">
+                Su caja está suspendida. Contacte al administrador.
+              </Text>
+            )}
+          </Flex>
         </Stack>
+      </Box>
 
-        {/* Acciones según estado */}
-        <Flex gap={3} mt={4} wrap="wrap">
-          {cashRegister.status === "closed" && (
+      {/* Tabs */}
+      <Box>
+        <Flex
+          gap={0}
+          borderBottom="2px solid"
+          borderColor={colors.border}
+          mb={6}
+          flexWrap="wrap"
+        >
+          {[
+            { id: 0, label: "Información" },
+            { id: 1, label: "Egresos" },
+          ].map((tab) => (
             <Button
-              onClick={onOpenModalOpen}
-              bg={colors.gold}
-              color={colors.bg}
-              fontWeight="bold"
-              flex="1"
-              minW="150px"
-              _hover={{ bg: "#b8941f" }}
+              key={tab.id}
+              variant="ghost"
+              borderRadius={0}
+              borderBottom={activeTab === tab.id ? "3px solid" : "none"}
+              borderBottomColor={activeTab === tab.id ? colors.gold : "transparent"}
+              color={activeTab === tab.id ? colors.gold : colors.subtext}
+              fontWeight={activeTab === tab.id ? "bold" : "normal"}
+              onClick={() => setActiveTab(tab.id)}
+              _hover={{
+                bg: colors.surface,
+                color: colors.gold,
+              }}
+              px={6}
+              py={4}
             >
-              Abrir Caja
+              {tab.label}
             </Button>
-          )}
-
-          {cashRegister.status === "open" && (
-            <Button
-              onClick={onCloseModalOpen}
-              bg="blue.500"
-              color="white"
-              fontWeight="bold"
-              flex="1"
-              minW="150px"
-              _hover={{ bg: "blue.600" }}
-            >
-              Cerrar Caja
-            </Button>
-          )}
-
-          {cashRegister.status === "suspended" && (
-            <Text color={colors.subtext} fontSize="sm" fontStyle="italic">
-              Su caja está suspendida. Contacte al administrador.
-            </Text>
-          )}
+          ))}
         </Flex>
-      </Stack>
+
+        {activeTab === 0 && (
+          <Box
+            bg={colors.surface}
+            borderColor={colors.border}
+            borderWidth="2px"
+            borderRadius="lg"
+            p={6}
+          >
+            <Text color={colors.subtext} fontSize="sm" mb={4}>
+              Información de la caja mostrada arriba
+            </Text>
+          </Box>
+        )}
+
+        {activeTab === 1 && cashRegister.status === "open" && (
+          <ExpensesTab
+            cashRegisterId={cashRegister._id}
+            showNotification={showNotification}
+            onExpenseRegistered={loadMyCashRegister}
+          />
+        )}
+
+        {activeTab === 1 && cashRegister.status !== "open" && (
+          <Box
+            bg={colors.surface}
+            borderColor={colors.border}
+            borderWidth="2px"
+            borderRadius="lg"
+            p={6}
+            textAlign="center"
+          >
+            <Text color={colors.subtext}>
+              La caja debe estar abierta para gestionar egresos
+            </Text>
+          </Box>
+        )}
+      </Box>
 
       {/* Modales */}
       <OpenCashRegisterModal
