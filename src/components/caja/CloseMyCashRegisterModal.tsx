@@ -13,7 +13,7 @@ import {
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useState, useEffect } from "react";
 import { CashRegister } from "@/app/caja/types";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import { getCashRegisterStats, getMyCashRegisterOperationsReport } from "@/services/cash-registers";
 import { getToken } from "@/lib/session";
 
@@ -111,7 +111,7 @@ export function CloseMyCashRegisterModal({
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    const actual = parseFloat(actualBalance);
+    const actual = parseFormattedNumber(actualBalance);
     if (isNaN(actual) || actual < 0) {
       alert("El saldo físico contado debe ser un número válido mayor o igual a 0");
       return;
@@ -131,7 +131,7 @@ export function CloseMyCashRegisterModal({
     }
   };
 
-  const difference = actualBalance ? parseFloat(actualBalance) - expectedBalance : 0;
+  const difference = actualBalance ? parseFormattedNumber(actualBalance) - expectedBalance : 0;
 
   return (
     <Box
@@ -387,12 +387,13 @@ export function CloseMyCashRegisterModal({
               No incluya pagos con tarjeta o transferencia.
             </Text>
             <Input
-              type="number"
-              step="0.01"
-              min="0"
+              type="text"
               value={actualBalance}
-              onChange={(e) => setActualBalance(e.target.value)}
-              placeholder="0.00"
+              onChange={(e) => {
+                const formatted = formatNumberInput(e.target.value);
+                setActualBalance(formatted);
+              }}
+              placeholder="0"
               bg={colors.bg}
               color={colors.text}
               borderColor={colors.border}
@@ -400,7 +401,7 @@ export function CloseMyCashRegisterModal({
               _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
               disabled={isSubmitting}
             />
-            {actualBalance && !isNaN(parseFloat(actualBalance)) && (
+            {actualBalance && !isNaN(parseFormattedNumber(actualBalance)) && (
               <Text
                 color={difference === 0 ? "green.400" : difference > 0 ? "orange.400" : "red.400"}
                 fontSize="xs"

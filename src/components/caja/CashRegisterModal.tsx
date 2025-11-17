@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import type { CashRegisterFormData } from "@/app/caja/types";
+import { formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
 import { getToken } from "@/lib/session";
@@ -165,12 +166,14 @@ export function CashRegisterModal({
               Monto Inicial *
             </Text>
             <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.initialAmount || ""}
-              onChange={(e) => onFormChange("initialAmount", parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
+              type="text"
+              value={formData.initialAmount ? formatNumberInput(formData.initialAmount.toString()) : ""}
+              onChange={(e) => {
+                const formatted = formatNumberInput(e.target.value);
+                const parsed = parseFormattedNumber(formatted);
+                onFormChange("initialAmount", parsed);
+              }}
+              placeholder="0"
               bg={colors.bg}
               color={colors.text}
               borderColor={colors.border}

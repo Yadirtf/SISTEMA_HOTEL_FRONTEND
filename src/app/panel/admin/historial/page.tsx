@@ -69,7 +69,14 @@ export default function AdminHistorialPage() {
                 <tr key={a.idAccion}>
                   <td style={{ padding: '8px', color: '#E2E8F0' }}>{nombreDe(a.idUsuario)}</td>
                   <td style={{ padding: '8px', color: '#E2E8F0' }}>{a.descripcionAccion}</td>
-                  <td style={{ padding: '8px', color: '#E2E8F0' }}>{new Date(a.fechaAccion).toLocaleString()}</td>
+                  <td style={{ padding: '8px', color: '#E2E8F0' }}>{new Date(a.fechaAccion).toLocaleString("es-CO", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true, // Formato de 12 horas con AM/PM
+                  })}</td>
                 </tr>
               ))}
               {acciones.length === 0 && (

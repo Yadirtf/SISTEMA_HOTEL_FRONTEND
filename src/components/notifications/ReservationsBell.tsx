@@ -150,7 +150,14 @@ export function ReservationsBell() {
                             {r.documentNumber}
                           </Text>
                           <Text fontSize="xs" color={colors.subtext} mt={1}>
-                            Salida: {r.checkOutTime ? new Date(r.checkOutTime).toLocaleString() : "-"}
+                            Salida: {r.checkOutTime ? new Date(r.checkOutTime).toLocaleString("es-CO", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true, // Formato de 12 horas con AM/PM
+                            }) : "-"}
                           </Text>
                         </Box>
                         <Badge colorScheme="red" fontSize="xs">Vencida</Badge>
@@ -196,7 +203,14 @@ export function ReservationsBell() {
                             {r.documentNumber}
                           </Text>
                           <Text fontSize="xs" color={colors.subtext} mt={1}>
-                            Salida: {r.checkOutTime ? new Date(r.checkOutTime).toLocaleString() : "-"}
+                            Salida: {r.checkOutTime ? new Date(r.checkOutTime).toLocaleString("es-CO", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true, // Formato de 12 horas con AM/PM
+                            }) : "-"}
                           </Text>
                         </Box>
                         <Badge colorScheme="yellow" fontSize="xs">Por vencer</Badge>

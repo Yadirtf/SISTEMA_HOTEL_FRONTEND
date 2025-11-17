@@ -10,8 +10,9 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import type { CashTransactionFormData } from "@/app/caja/types";
+import { useState, useEffect } from "react";
 
 interface ExpenseModalProps {
   isOpen: boolean;
@@ -31,6 +32,23 @@ export function ExpenseModal({
   isLoading,
 }: ExpenseModalProps) {
   const { colors } = useThemeMode();
+  const [amountInput, setAmountInput] = useState("");
+
+  // Sincronizar el input formateado con el valor del formData
+  useEffect(() => {
+    if (formData.amount && formData.amount > 0) {
+      setAmountInput(formatNumberInput(formData.amount.toString()));
+    } else {
+      setAmountInput("");
+    }
+  }, [formData.amount]);
+
+  // Limpiar cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      setAmountInput("");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -117,12 +135,15 @@ export function ExpenseModal({
                   Monto <Text as="span" color="red.400">*</Text>
                 </Text>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={formData.amount || ""}
-                  onChange={(e) => onFormChange("amount", parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
+                  type="text"
+                  value={amountInput}
+                  onChange={(e) => {
+                    const formatted = formatNumberInput(e.target.value);
+                    setAmountInput(formatted);
+                    const parsed = parseFormattedNumber(formatted);
+                    onFormChange("amount", parsed);
+                  }}
+                  placeholder="0"
                   bg={colors.bg}
                   borderColor={colors.border}
                   color={colors.text}

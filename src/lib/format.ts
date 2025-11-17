@@ -115,42 +115,82 @@ export function parsePriceWithDecimals(value: string): number {
 }
 
 /**
- * Formatea una fecha en formato legible en español
+ * Formatea una fecha en formato legible en español con hora en formato de 12 horas (AM/PM)
  * @param dateString - Fecha en formato ISO string o Date
  * @returns Fecha formateada o "-" si no hay fecha
+ * @example "15 ene 2024, 2:30 PM"
  */
 export function formatDate(dateString?: string | Date): string {
   if (!dateString) return "-";
   const date = typeof dateString === "string" ? new Date(dateString) : dateString;
   if (isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("es-ES", {
+  return date.toLocaleDateString("es-CO", {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
+    hour12: true, // Formato de 12 horas con AM/PM
+  });
+}
+
+/**
+ * Formatea solo la hora en formato de 12 horas (AM/PM)
+ * @param dateString - Fecha en formato ISO string o Date
+ * @returns Hora formateada o "-" si no hay fecha
+ * @example "2:30 PM"
+ */
+export function formatTime(dateString?: string | Date): string {
+  if (!dateString) return "-";
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return "-";
+  return date.toLocaleTimeString("es-CO", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true, // Formato de 12 horas con AM/PM
   });
 }
 
 /**
  * Formatea un monto como moneda colombiana (COP)
+ * Usa punto como separador de miles, sin decimales
  * @param amount - Monto a formatear
- * @param options - Opciones de formateo
- * @returns Monto formateado como moneda
+ * @returns Monto formateado como moneda (ej: "$ 1.234.567")
  */
-export function formatCurrency(
-  amount: number,
-  options?: {
-    minimumFractionDigits?: number;
-    maximumFractionDigits?: number;
-  }
-): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: options?.minimumFractionDigits ?? 0,
-    maximumFractionDigits: options?.maximumFractionDigits ?? 0,
-  }).format(amount);
+export function formatCurrency(amount: number): string {
+  const integer = Math.round(Number(amount) || 0);
+  const formatted = integer.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `$ ${formatted}`;
+}
+
+/**
+ * Formatea un número mientras se escribe en un input, agregando puntos para miles
+ * Sin decimales - solo números enteros
+ * @param value - Valor del input
+ * @returns Valor formateado con puntos como separadores de miles
+ */
+export function formatNumberInput(value: string): string {
+  if (!value || value.trim() === "") return "";
+  
+  // Remover todos los caracteres no numéricos excepto puntos (que serán removidos y re-agregados)
+  const digits = value.replace(/\D/g, "");
+  
+  if (!digits) return "";
+  
+  // Formatear con puntos como separadores de miles
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+/**
+ * Parsea un valor formateado de input (con puntos) a número
+ * @param value - Valor formateado del input
+ * @returns Número sin formato
+ */
+export function parseFormattedNumber(value: string): number {
+  if (!value || value.trim() === "") return 0;
+  const digits = value.replace(/\./g, "");
+  const n = Number(digits);
+  return Number.isFinite(n) ? n : 0;
 }
 
 

@@ -106,8 +106,9 @@ export function SalesTab({ showNotification }: SalesTabProps) {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
-                      hour: "2-digit",
+                      hour: "numeric",
                       minute: "2-digit",
+                      hour12: true, // Formato de 12 horas con AM/PM
                     })}
                   </td>
                   <td style={{ padding: "12px", color: colors.text }}>{sale.items.length} producto(s)</td>

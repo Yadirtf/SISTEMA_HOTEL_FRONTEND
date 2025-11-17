@@ -10,6 +10,7 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import type { CloseCashRegisterFormData } from "@/app/caja/types";
 
 interface CloseCashRegisterModalProps {
@@ -90,12 +91,14 @@ export function CloseCashRegisterModal({
               Saldo Físico Contado *
             </Text>
             <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.actualBalance || ""}
-              onChange={(e) => onFormChange("actualBalance", parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
+              type="text"
+              value={formData.actualBalance ? formatNumberInput(formData.actualBalance.toString()) : ""}
+              onChange={(e) => {
+                const formatted = formatNumberInput(e.target.value);
+                const parsed = parseFormattedNumber(formatted);
+                onFormChange("actualBalance", parsed);
+              }}
+              placeholder="0"
               bg={colors.bg}
               color={colors.text}
               borderColor={colors.border}

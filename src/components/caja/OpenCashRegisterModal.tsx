@@ -10,6 +10,7 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
+import { formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import { useState } from "react";
 
 interface OpenCashRegisterModalProps {
@@ -31,7 +32,7 @@ export function OpenCashRegisterModal({
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    const amount = parseFloat(initialAmount);
+    const amount = parseFormattedNumber(initialAmount);
     if (!amount || amount <= 0) {
       alert("El monto inicial debe ser mayor a 0");
       return;
@@ -81,12 +82,13 @@ export function OpenCashRegisterModal({
               Monto Inicial *
             </Text>
             <Input
-              type="number"
-              step="0.01"
-              min="0"
+              type="text"
               value={initialAmount}
-              onChange={(e) => setInitialAmount(e.target.value)}
-              placeholder="0.00"
+              onChange={(e) => {
+                const formatted = formatNumberInput(e.target.value);
+                setInitialAmount(formatted);
+              }}
+              placeholder="0"
               bg={colors.bg}
               color={colors.text}
               borderColor={colors.border}

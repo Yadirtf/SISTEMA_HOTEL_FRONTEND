@@ -2,7 +2,7 @@
 
 import { Box, Button, Input, Text, Stack, Flex } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import { useState, useEffect } from "react";
 import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
 import { getToken } from "@/lib/session";
@@ -93,9 +93,9 @@ export function PaymentModal({
       return;
     }
 
-    const amount = parseFloat(amountReceived);
+    const amount = parseFormattedNumber(amountReceived);
     
-    if (isNaN(amount)) {
+    if (isNaN(amount) || amount === 0) {
       setChange(0);
       setCashChange("");
       setError("");
@@ -122,7 +122,7 @@ export function PaymentModal({
     
     // Si el método de pago NO es efectivo y hay cambio, establecer cashChange por defecto
     if (!isCashPayment && calculatedChange > 0) {
-      setCashChange(calculatedChange.toFixed(2));
+      setCashChange(formatNumberInput(calculatedChange.toString()));
     } else {
       setCashChange("");
     }
@@ -141,7 +141,7 @@ export function PaymentModal({
   }, [isOpen]);
 
   const handleConfirm = () => {
-    const amount = parseFloat(amountReceived);
+    const amount = parseFormattedNumber(amountReceived);
     
     if (isNaN(amount) || amount < total) {
       setError("Por favor ingresa un monto válido mayor o igual al total");
@@ -156,7 +156,7 @@ export function PaymentModal({
     // Si el método NO es efectivo y hay cambio, validar cashChange
     let cashChangeValue: number | undefined = undefined;
     if (!isCashPayment && change > 0) {
-      const cashChangeNum = parseFloat(cashChange);
+      const cashChangeNum = parseFormattedNumber(cashChange);
       if (isNaN(cashChangeNum) || cashChangeNum < 0) {
         setError("El cambio en efectivo debe ser un número válido mayor o igual a 0");
         return;
@@ -398,10 +398,13 @@ export function PaymentModal({
                 Monto recibido:
               </Text>
               <Input
-                type="number"
-                placeholder="0.00"
+                type="text"
+                placeholder="0"
                 value={amountReceived}
-                onChange={(e) => setAmountReceived(e.target.value)}
+                onChange={(e) => {
+                  const formatted = formatNumberInput(e.target.value);
+                  setAmountReceived(formatted);
+                }}
                 onKeyPress={handleKeyPress}
                 bg={colors.bg}
                 borderColor={error ? "red.500" : colors.border}
@@ -414,8 +417,6 @@ export function PaymentModal({
                 h="auto"
                 disabled={isLoading}
                 autoFocus
-                min={0}
-                step="0.01"
                 _hover={{
                   borderColor: error ? "red.500" : colors.gold,
                 }}
@@ -465,10 +466,13 @@ export function PaymentModal({
                   Este monto se descontará de la caja física.
                 </Text>
                 <Input
-                  type="number"
-                  placeholder="0.00"
+                  type="text"
+                  placeholder="0"
                   value={cashChange}
-                  onChange={(e) => setCashChange(e.target.value)}
+                  onChange={(e) => {
+                    const formatted = formatNumberInput(e.target.value);
+                    setCashChange(formatted);
+                  }}
                   bg={colors.bg}
                   borderColor={error && !cashChange ? "red.500" : colors.border}
                   borderWidth="2px"
@@ -479,9 +483,6 @@ export function PaymentModal({
                   p={{ base: 3, md: 4 }}
                   h="auto"
                   disabled={isLoading}
-                  min={0}
-                  step="0.01"
-                  max={change}
                   _hover={{
                     borderColor: error && !cashChange ? "red.500" : colors.gold,
                   }}
@@ -490,7 +491,7 @@ export function PaymentModal({
                     boxShadow: `0 0 0 2px ${error && !cashChange ? 'red' : colors.gold}40`,
                   }}
                 />
-                {cashChange && !isNaN(parseFloat(cashChange)) && (
+                {cashChange && !isNaN(parseFormattedNumber(cashChange)) && (
                   <Text fontSize="xs" color={colors.subtext} mt={1}>
                     Máximo: ${formatPrice(change)}
                   </Text>
@@ -533,10 +534,10 @@ export function PaymentModal({
                 !!error || 
                 change < 0 || 
                 amountReceived === "" || 
-                isNaN(parseFloat(amountReceived)) ||
-                parseFloat(amountReceived) < total ||
+                !amountReceived ||
+                parseFormattedNumber(amountReceived) < total ||
                 !paymentMethodId ||
-                (!isCashPayment && change > 0 && (!cashChange || isNaN(parseFloat(cashChange)) || parseFloat(cashChange) < 0))
+                (!isCashPayment && change > 0 && (!cashChange || isNaN(parseFormattedNumber(cashChange)) || parseFormattedNumber(cashChange) < 0))
               }
               minW={{ base: "140px", md: "200px" }}
               h={{ base: "38px", md: "44px" }}

@@ -122,12 +122,13 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
   const formatDate = (date: Date | string | undefined): string => {
     if (!date) return "No definida";
     const d = new Date(date);
-    return d.toLocaleString("es-ES", {
+    return d.toLocaleString("es-CO", {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit",
+      hour12: true, // Formato de 12 horas con AM/PM
     });
   };
 
