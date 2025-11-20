@@ -1,12 +1,13 @@
 "use client";
 
-import { Box, Button, Flex, Stack, Text, Input, Textarea, Heading } from "@chakra-ui/react";
+import { Box, Button, Flex, Stack, Text, Input, Textarea, Heading, Icon } from "@chakra-ui/react";
 import { formatPrice, formatPriceFromString } from "@/lib/format";
 import { useState, useEffect, useRef } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { searchGuests, Guest } from "@/services/reservations";
 import { getToken } from "@/lib/session";
 import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
+import { FiX, FiSearch, FiXCircle, FiCheckCircle } from "react-icons/fi";
 
 export type ReservationFormData = {
   documentNumber: string;
@@ -315,9 +316,11 @@ export function ReservationModal({
           borderColor={colors.border}
           bg={colors.bg}
         >
-          <Heading size="lg" color={colors.gold}>
-            Ocupar Habitación #{roomNumber}
-          </Heading>
+          <Flex align="center" gap={3}>
+            <Heading size="lg" color={colors.gold}>
+              Ocupar Habitación #{roomNumber}
+            </Heading>
+          </Flex>
           <Button
             variant="ghost"
             onClick={onClose}
@@ -328,7 +331,7 @@ export function ReservationModal({
             minW="auto"
             h="auto"
           >
-            ×
+            <Icon as={FiX} />
           </Button>
         </Flex>
 
@@ -360,16 +363,16 @@ export function ReservationModal({
                   placeholder="Buscar por documento, nombre o teléfono..."
                   pl={10}
                 />
-                <Box
+                <Icon
+                  as={FiSearch}
                   position="absolute"
                   left={3}
                   top="50%"
                   transform="translateY(-50%)"
                   color={colors.subtext}
                   fontSize="lg"
-                >
-                  🔍
-                </Box>
+                  pointerEvents="none"
+                />
                 {isSearching && (
                   <Box
                     position="absolute"
@@ -841,7 +844,10 @@ export function ReservationModal({
                 _hover={{ bg: colors.surface, borderColor: colors.gold, color: colors.gold }}
                 disabled={isLoading}
               >
-                Cancelar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiXCircle} />
+                  <Text>Cancelar</Text>
+                </Flex>
               </Button>
               <Button
                 type="submit"
@@ -852,7 +858,10 @@ export function ReservationModal({
                 disabled={isLoading}
                 boxShadow={`0 2px 8px ${colors.gold}50`}
               >
-                {isLoading ? "Guardando..." : "Confirmar Reserva"}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiCheckCircle} />
+                  <Text>{isLoading ? "Guardando..." : "Confirmar Reserva"}</Text>
+                </Flex>
               </Button>
             </Flex>
           </Stack>

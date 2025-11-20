@@ -1,12 +1,12 @@
 "use client";
 
-import { Box, Stack, Text, Flex, Input } from "@chakra-ui/react";
+import { Box, Stack, Text, Flex, Input, Icon } from "@chakra-ui/react";
 import { useCallback, useState, useMemo } from "react";
 import { formatPrice } from "@/lib/format";
-import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { FloorSection } from "./FloorSection";
 import { statusToEs, getStatusColor } from "../lib/status";
 import type { Room, Floor } from "../types";
+import { FiSearch, FiInbox } from "react-icons/fi";
 
 interface RoomsTabProps {
   rooms: Room[];
@@ -99,7 +99,17 @@ export function RoomsTab({
   return (
     <Stack gap={6}>
       {/* Filtro de búsqueda rápida */}
-      <Box>
+      <Box position="relative">
+        <Icon
+          as={FiSearch}
+          color={colors.subtext}
+          fontSize="lg"
+          position="absolute"
+          left={3}
+          top="50%"
+          transform="translateY(-50%)"
+          pointerEvents="none"
+        />
         <Input
           placeholder="Buscar habitación por número, tipo, estado o precio..."
           value={searchQuery}
@@ -110,23 +120,29 @@ export function RoomsTab({
           _hover={{ borderColor: colors.gold }}
           _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
           size="md"
+          pl={10}
         />
       </Box>
 
       {/* Habitaciones agrupadas por piso */}
       {filteredSortedFloors.length === 0 ? (
-        <Box
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
           bg={colors.surface}
           p={8}
           borderRadius="lg"
           borderWidth="2px"
           borderColor={colors.border}
           textAlign="center"
+          gap={3}
         >
+          <Icon as={FiInbox} color={colors.subtext} fontSize="4xl" />
           <Text color={colors.subtext} fontSize="lg">
             {searchQuery.trim() ? "No se encontraron habitaciones con ese criterio de búsqueda" : "No hay habitaciones disponibles"}
           </Text>
-        </Box>
+        </Flex>
       ) : (
         <Stack gap={8}>
           {filteredSortedFloors.map((floorNum) => (

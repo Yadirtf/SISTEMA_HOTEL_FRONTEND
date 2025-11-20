@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon } from "@chakra-ui/react";
 import type { Room } from "@/app/reservas/types";
 import { RoomCard } from "./RoomCard";
+import { FiLayers, FiHome } from "react-icons/fi";
 
 export function FloorSection({
   floorNum,
@@ -42,11 +43,17 @@ export function FloorSection({
           fontSize={{ base: "md", md: "lg" }}
           boxShadow={`0 2px 8px ${colors.gold}50`}
         >
-          Piso {floorNum}
+          <Flex align="center" gap={2}>
+            <Icon as={FiLayers} />
+            <Text>Piso {floorNum}</Text>
+          </Flex>
         </Box>
-        <Text color={colors.subtext} fontSize={{ base: "sm", md: "md" }}>
-          {rooms.length} habitación{rooms.length !== 1 ? "es" : ""}
-        </Text>
+        <Flex align="center" gap={2} color={colors.subtext} fontSize={{ base: "sm", md: "md" }}>
+          <Icon as={FiHome} />
+          <Text>
+            {rooms.length} habitación{rooms.length !== 1 ? "es" : ""}
+          </Text>
+        </Flex>
       </Flex>
 
       <Box

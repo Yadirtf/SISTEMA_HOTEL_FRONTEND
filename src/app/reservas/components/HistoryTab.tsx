@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Flex, Text, Input, Spinner, Stack, Button } from "@chakra-ui/react";
+import { Box, Flex, Text, Input, Spinner, Stack, Button, Icon } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useHistoryData } from "../hooks/useHistoryData";
 import { formatPrice } from "@/lib/format";
@@ -8,6 +8,7 @@ import { getToken } from "@/lib/session";
 import { useState } from "react";
 import { InvoiceModal } from "./InvoiceModal";
 import { getBillingDetails, type BillingDetails as BillingDetailsType } from "../services/billing";
+import { FiSearch, FiSliders, FiXCircle, FiFileText } from "react-icons/fi";
 
 export function HistoryTab() {
   const { colors } = useThemeMode();
@@ -115,18 +116,28 @@ export function HistoryTab() {
       {/* Barra de búsqueda y filtros */}
       <Box mb={6}>
         <Flex gap={3} mb={3} flexWrap="wrap" align="center">
-          <Input
-            placeholder="Buscar por nombre, habitación o profesión..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            bg={colors.bg}
-            borderColor={colors.border}
-            color={colors.text}
-            _hover={{ borderColor: colors.gold }}
-            _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-            flex={{ base: "1 1 100%", md: "1 1 auto" }}
-            minW={{ base: "100%", md: "250px" }}
-          />
+          <Box flex={{ base: "1 1 100%", md: "1 1 auto" }} minW={{ base: "100%", md: "250px" }} position="relative">
+            <Icon
+              as={FiSearch}
+              color={colors.subtext}
+              position="absolute"
+              left={3}
+              top="50%"
+              transform="translateY(-50%)"
+              pointerEvents="none"
+            />
+            <Input
+              placeholder="Buscar por nombre, habitación o profesión..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              bg={colors.bg}
+              borderColor={colors.border}
+              color={colors.text}
+              _hover={{ borderColor: colors.gold }}
+              _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
+              pl={10}
+            />
+          </Box>
           <Button
             onClick={() => setShowFilters(!showFilters)}
             bg={showFilters ? colors.gold : colors.surface}
@@ -140,7 +151,10 @@ export function HistoryTab() {
             fontSize="sm"
             px={4}
           >
-            {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+            <Flex align="center" gap={2}>
+              <Icon as={FiSliders} />
+              <Text>{showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}</Text>
+            </Flex>
             {hasActiveFilters && (
               <Box
                 as="span"
@@ -165,7 +179,10 @@ export function HistoryTab() {
               fontSize="sm"
               _hover={{ color: colors.text }}
             >
-              Limpiar Filtros
+              <Flex align="center" gap={2}>
+                <Icon as={FiXCircle} />
+                <Text>Limpiar Filtros</Text>
+              </Flex>
             </Button>
           )}
         </Flex>
@@ -500,7 +517,10 @@ export function HistoryTab() {
                           disabled={loadingInvoice}
                           loading={loadingInvoice}
                         >
-                          Ver Factura
+                          <Flex align="center" gap={2} justify="center">
+                            <Icon as={FiFileText} />
+                            <Text>Ver Factura</Text>
+                          </Flex>
                         </Button>
                       </Box>
                     </Box>
@@ -579,7 +599,10 @@ export function HistoryTab() {
                       disabled={loadingInvoice}
                       loading={loadingInvoice}
                     >
-                      Ver Factura
+                      <Flex align="center" gap={2} justify="center">
+                        <Icon as={FiFileText} />
+                        <Text>Ver Factura</Text>
+                      </Flex>
                     </Button>
                   </Box>
                 );

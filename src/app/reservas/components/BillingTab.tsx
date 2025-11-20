@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon } from "@chakra-ui/react";
 import { useState, useCallback, useEffect } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useBillingData } from "../hooks/useBillingData";
@@ -10,6 +10,7 @@ import { BillingDetails } from "./BillingDetails";
 import { InvoiceModal } from "./InvoiceModal";
 import { getToken } from "@/lib/session";
 import type { Reservation } from "../types";
+import { FiCreditCard } from "react-icons/fi";
 
 interface BillingTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
@@ -92,9 +93,10 @@ export function BillingTab({ showNotification, onCheckoutSuccess, initialReserva
 
   return (
     <Box>
-      <Text fontSize="xl" fontWeight="bold" color={colors.gold} mb={6}>
-        Facturación y Conciliación
-      </Text>
+      <Flex align="center" gap={2} fontSize="xl" fontWeight="bold" color={colors.gold} mb={6}>
+        <Icon as={FiCreditCard} />
+        <Text as="span">Facturación y Conciliación</Text>
+      </Flex>
 
       <Flex gap={6} direction={{ base: "column", lg: "row" }}>
         {/* Columna izquierda - Lista de reservas */}

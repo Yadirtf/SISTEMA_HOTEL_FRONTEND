@@ -1,7 +1,8 @@
 "use client";
 
-import { Box, Button, Flex, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Stack, Text, Icon } from "@chakra-ui/react";
 import type { Room } from "@/app/reservas/types";
+import { FiEye, FiFileText, FiLogIn, FiCheckCircle, FiUsers, FiDollarSign, FiTag } from "react-icons/fi";
 
 export function RoomCard({
   room,
@@ -61,9 +62,12 @@ export function RoomCard({
           {statusText}
         </Box>
         <Flex align="center" gap={2}>
-          <Text fontSize={{ base: "xs", md: "sm" }} color={colors.subtext} fontWeight="medium">
-            #{room.number}
-          </Text>
+          <Flex align="center" gap={1}>
+            <Icon as={FiTag} color={colors.subtext} />
+            <Text fontSize={{ base: "xs", md: "sm" }} color={colors.subtext} fontWeight="medium">
+              #{room.number}
+            </Text>
+          </Flex>
           {/* Mostrar botón de detalles solo cuando la habitación está ocupada (no en limpieza) */}
           {room.status === "occupied" && (
             <Button
@@ -81,7 +85,7 @@ export function RoomCard({
               transition="all 0.2s"
               title="Ver detalles de la habitación"
             >
-              👁️
+              <Icon as={FiEye} />
             </Button>
           )}
         </Flex>
@@ -89,26 +93,35 @@ export function RoomCard({
 
       <Stack gap={3}>
         <Box>
-          <Text fontSize="xs" color={colors.subtext} mb={1} textTransform="uppercase" letterSpacing="0.5px" fontWeight="semibold">
-            Tipo
-          </Text>
+          <Flex align="center" gap={2} mb={1}>
+            <Icon as={FiFileText} color={colors.subtext} />
+            <Text fontSize="xs" color={colors.subtext} textTransform="uppercase" letterSpacing="0.5px" fontWeight="semibold">
+              Tipo
+            </Text>
+          </Flex>
           <Text fontSize={{ base: "md", md: "lg" }} color={colors.gold} fontWeight="bold">
             {typeof room.roomType === "object" && room.roomType ? (room.roomType as any).tipo : "Tipo desconocido"}
           </Text>
         </Box>
         <Box>
-          <Text fontSize="xs" color={colors.subtext} mb={1} textTransform="uppercase" letterSpacing="0.5px" fontWeight="semibold">
-            Precio/Noche
-          </Text>
+          <Flex align="center" gap={2} mb={1}>
+            <Icon as={FiDollarSign} color={colors.subtext} />
+            <Text fontSize="xs" color={colors.subtext} textTransform="uppercase" letterSpacing="0.5px" fontWeight="semibold">
+              Precio/Noche
+            </Text>
+          </Flex>
           <Text fontSize={{ base: "lg", md: "xl" }} color={colors.text} fontWeight="bold">
             ${priceFormatter(room.pricePerNight)}
           </Text>
         </Box>
         {room.maxOccupancy && (
           <Box>
-            <Text fontSize="xs" color={colors.subtext} mb={1} textTransform="uppercase" letterSpacing="0.5px" fontWeight="semibold">
-              Capacidad
-            </Text>
+            <Flex align="center" gap={2} mb={1}>
+              <Icon as={FiUsers} color={colors.subtext} />
+              <Text fontSize="xs" color={colors.subtext} textTransform="uppercase" letterSpacing="0.5px" fontWeight="semibold">
+                Capacidad
+              </Text>
+            </Flex>
             <Flex align="center" gap={2}>
               <Text fontSize={{ base: "md", md: "lg" }} color={colors.text} fontWeight="semibold">
                 {room.maxOccupancy}
@@ -139,7 +152,10 @@ export function RoomCard({
               flex={1}
               disabled={isBusy}
             >
-              Detalles
+              <Flex align="center" gap={2} justify="center">
+                <Icon as={FiFileText} />
+                <Text>Detalles</Text>
+              </Flex>
             </Button>
           )}
           {/* Solo mostrar el botón de acción primaria si la habitación NO está ocupada */}
@@ -166,7 +182,10 @@ export function RoomCard({
               opacity={primaryEnabled ? 1 : 0.5}
               cursor={primaryEnabled ? "pointer" : "not-allowed"}
             >
-              {room.status === "available" ? "Ocupar" : "F. limpieza"}
+              <Flex align="center" gap={2} justify="center">
+                <Icon as={primaryEnabled ? (room.status === "available" ? FiLogIn : FiCheckCircle) : FiCheckCircle} />
+                <Text>{room.status === "available" ? "Ocupar" : "F. limpieza"}</Text>
+              </Flex>
             </Button>
           )}
         </Flex>

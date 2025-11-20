@@ -1,12 +1,13 @@
 "use client";
 
-import { Box, Button, Flex, Stack, Text, Heading, Badge } from "@chakra-ui/react";
+import { Box, Button, Flex, Stack, Text, Heading, Badge, Icon } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import type { BillingDetails as BillingDetailsType } from "../services/billing";
 import { useState, useMemo } from "react";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import { InvoicePDF } from "./InvoicePDF";
+import { FiX, FiDownload, FiEye, FiFileText } from "react-icons/fi";
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -220,7 +221,7 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               minW="auto"
               h="auto"
             >
-              ×
+              <Icon as={FiX} />
             </Button>
           </Flex>
         </Flex>
@@ -236,7 +237,10 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               borderColor={colors.border}
               onClick={() => setViewMode("preview")}
             >
-              Vista Previa
+              <Flex align="center" gap={2}>
+                <Icon as={FiEye} />
+                <Text>Vista Previa</Text>
+              </Flex>
             </Button>
             <Button
               size="sm"
@@ -246,7 +250,10 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               borderColor={colors.border}
               onClick={() => setViewMode("pdf")}
             >
-              Vista PDF
+              <Flex align="center" gap={2}>
+                <Icon as={FiFileText} />
+                <Text>Vista PDF</Text>
+              </Flex>
             </Button>
           </Flex>
           {/* Mostrar checkbox si hay productos (pendientes o pagados) */}
@@ -572,7 +579,10 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
             color={colors.subtext}
             _hover={{ bg: colors.surface, color: colors.text }}
           >
-            Cerrar
+            <Flex align="center" gap={2}>
+              <Icon as={FiX} />
+              <Text>Cerrar</Text>
+            </Flex>
           </Button>
           {billingDetails && pdfDocument && (
             <PDFDownloadLink
@@ -588,7 +598,10 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
                 _hover={{ bg: "#b8941f" }}
                 disabled={loading}
               >
-                {loading ? "Generando PDF..." : "Descargar PDF"}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiDownload} />
+                  <Text>{loading ? "Generando PDF..." : "Descargar PDF"}</Text>
+                </Flex>
               </Button>
             )}
           </PDFDownloadLink>

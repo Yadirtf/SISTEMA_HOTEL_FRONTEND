@@ -1,12 +1,22 @@
 "use client";
 
-import { Box, Text, Flex, Stack, Button, Badge, Spinner, Textarea } from "@chakra-ui/react";
+import { Box, Text, Flex, Stack, Button, Badge, Spinner, Textarea, Icon } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import type { BillingDetails as BillingDetailsType } from "../services/billing";
 import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
 import { getToken } from "@/lib/session";
+import {
+  FiInfo,
+  FiUser,
+  FiShoppingCart,
+  FiDollarSign,
+  FiCreditCard,
+  FiMessageCircle,
+  FiFileText,
+  FiCheckCircle,
+} from "react-icons/fi";
 
 interface BillingDetailsProps {
   billingDetails: BillingDetailsType | null;
@@ -149,9 +159,12 @@ export function BillingDetails({
         {/* Encabezado */}
         <Box pb={4} borderBottom="2px solid" borderColor={colors.border}>
           <Flex justify="space-between" align="center" mb={2}>
-            <Text fontSize="xl" fontWeight="bold" color={colors.gold}>
-              Detalles de Facturación
-            </Text>
+            <Flex align="center" gap={2} color={colors.gold}>
+              <Icon as={FiInfo} />
+              <Text fontSize="xl" fontWeight="bold">
+                Detalles de Facturación
+              </Text>
+            </Flex>
             {isOverdue && (
               <Badge colorScheme="red" fontSize="sm" px={3} py={1} borderRadius="full">
                 Vencida
@@ -166,9 +179,12 @@ export function BillingDetails({
         {/* Información del huésped */}
         {guest && (
           <Box>
-            <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-              Información del Huésped
-            </Text>
+            <Flex align="center" gap={2} color={colors.gold} mb={3}>
+              <Icon as={FiUser} />
+              <Text fontSize="md" fontWeight="bold">
+                Información del Huésped
+              </Text>
+            </Flex>
             <Stack gap={2}>
               <Flex justify="space-between">
                 <Text fontSize="sm" color={colors.subtext}>Nombre:</Text>
@@ -196,9 +212,12 @@ export function BillingDetails({
 
         {/* Detalles de la reserva */}
         <Box>
-          <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-            Detalles de la Reserva
-          </Text>
+          <Flex align="center" gap={2} color={colors.gold} mb={3}>
+            <Icon as={FiInfo} />
+            <Text fontSize="md" fontWeight="bold">
+              Detalles de la Reserva
+            </Text>
+          </Flex>
           <Stack gap={2}>
             <Flex justify="space-between">
               <Text fontSize="sm" color={colors.subtext}>Fecha de Entrada:</Text>
@@ -224,9 +243,12 @@ export function BillingDetails({
         {/* Productos fiados */}
         {pendingSales.length > 0 && (
           <Box>
-            <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-              Productos Fiados ({pendingSales.length})
-            </Text>
+            <Flex align="center" gap={2} color={colors.gold} mb={3}>
+              <Icon as={FiShoppingCart} />
+              <Text fontSize="md" fontWeight="bold">
+                Productos Fiados ({pendingSales.length})
+              </Text>
+            </Flex>
             <Box
               maxH="200px"
               overflowY="auto"
@@ -266,9 +288,12 @@ export function BillingDetails({
 
         {/* Desglose de pagos */}
         <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
-          <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-            Desglose de Pagos
-          </Text>
+          <Flex align="center" gap={2} color={colors.gold} mb={3}>
+            <Icon as={FiDollarSign} />
+            <Text fontSize="md" fontWeight="bold">
+              Desglose de Pagos
+            </Text>
+          </Flex>
           <Stack gap={2}>
             <Flex justify="space-between" align="center">
               <Flex align="center" gap={2}>
@@ -304,13 +329,16 @@ export function BillingDetails({
         {/* Formulario de checkout - Mostrar siempre si la reserva está checked_in o confirmed */}
         {(reservation.status === 'checked_in' || reservation.status === 'confirmed') && (
           <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.gold}>
-            <Text fontSize="md" fontWeight="bold" color={colors.gold} mb={3}>
-              {reservation.isPaid && pendingSales.length === 0
-                ? "Check-out y Facturación"
-                : reservation.isPaid && pendingSales.length > 0 
-                ? "Pagar Productos Fiados" 
-                : "Proceso de Pago"}
-            </Text>
+            <Flex align="center" gap={2} color={colors.gold} mb={3}>
+              <Icon as={FiCreditCard} />
+              <Text fontSize="md" fontWeight="bold">
+                {reservation.isPaid && pendingSales.length === 0
+                  ? "Check-out y Facturación"
+                  : reservation.isPaid && pendingSales.length > 0 
+                  ? "Pagar Productos Fiados" 
+                  : "Proceso de Pago"}
+              </Text>
+            </Flex>
             {reservation.isPaid && pendingSales.length === 0 && (
               <Text fontSize="sm" color={colors.subtext} mb={3} fontStyle="italic">
                 La habitación ya está pagada. Puedes generar la factura y realizar el check-out para liberar la habitación.
@@ -326,9 +354,17 @@ export function BillingDetails({
               {(!reservation.isPaid || pendingSales.length > 0) && (
                 <>
                   <Box>
-                    <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                      Método de Pago <Text as="span" color="red.500">*</Text>
-                    </Text>
+                    <Flex align="center" gap={2} mb={2}>
+                      <Icon as={FiCreditCard} color={colors.text} />
+                      <Flex align="center" gap={1}>
+                        <Text fontSize="sm" color={colors.text} fontWeight="semibold">
+                          Método de Pago
+                        </Text>
+                        <Text as="span" color="red.500" fontWeight="bold">
+                          *
+                        </Text>
+                      </Flex>
+                    </Flex>
                     <select
                       value={paymentMethodId}
                       onChange={(e) => setPaymentMethodId(e.target.value)}
@@ -353,9 +389,12 @@ export function BillingDetails({
                   </Box>
 
                   <Box>
-                    <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                      Tipo de Pago
-                    </Text>
+                    <Flex align="center" gap={2} mb={2}>
+                      <Icon as={FiDollarSign} color={colors.text} />
+                      <Text fontSize="sm" color={colors.text} fontWeight="semibold">
+                        Tipo de Pago
+                      </Text>
+                    </Flex>
                     <select
                       value={paymentTypeId}
                       onChange={(e) => setPaymentTypeId(e.target.value)}
@@ -382,9 +421,12 @@ export function BillingDetails({
               )}
 
               <Box>
-                <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                  Cargos Adicionales
-                </Text>
+                <Flex align="center" gap={2} mb={2}>
+                  <Icon as={FiDollarSign} color={colors.text} />
+                  <Text fontSize="sm" color={colors.text} fontWeight="semibold">
+                    Cargos Adicionales
+                  </Text>
+                </Flex>
                 <input
                   type="number"
                   value={additionalCharges}
@@ -405,9 +447,12 @@ export function BillingDetails({
               </Box>
 
               <Box>
-                <Text fontSize="sm" color={colors.text} mb={2} fontWeight="semibold">
-                  Notas
-                </Text>
+                <Flex align="center" gap={2} mb={2}>
+                  <Icon as={FiMessageCircle} color={colors.text} />
+                  <Text fontSize="sm" color={colors.text} fontWeight="semibold">
+                    Notas
+                  </Text>
+                </Flex>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -436,7 +481,10 @@ export function BillingDetails({
                   }}
                   disabled={isGeneratingInvoice}
                 >
-                  {isGeneratingInvoice ? "Generando..." : "Generar Factura"}
+                  <Flex align="center" gap={2} justify="center">
+                    <Icon as={FiFileText} />
+                    <Text>{isGeneratingInvoice ? "Generando..." : "Generar Factura"}</Text>
+                  </Flex>
                 </Button>
                 <Button
                   flex={1}
@@ -466,11 +514,16 @@ export function BillingDetails({
                   }}
                   disabled={isProcessingCheckout || ((!reservation.isPaid || pendingSales.length > 0) && !paymentMethodId && !(reservation as any).paymentMethodId && !(reservation as any).paymentMethod)}
                 >
-                  {isProcessingCheckout 
-                    ? "Procesando..." 
-                    : reservation.isPaid && pendingSales.length > 0
-                    ? "Pagar Productos Fiados"
-                    : "Realizar Check-out"}
+                  <Flex align="center" gap={2} justify="center">
+                    <Icon as={FiCheckCircle} />
+                    <Text>
+                      {isProcessingCheckout 
+                        ? "Procesando..." 
+                        : reservation.isPaid && pendingSales.length > 0
+                        ? "Pagar Productos Fiados"
+                        : "Realizar Check-out"}
+                    </Text>
+                  </Flex>
                 </Button>
               </Flex>
             </Stack>
