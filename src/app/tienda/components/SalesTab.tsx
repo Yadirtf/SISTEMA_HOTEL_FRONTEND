@@ -8,6 +8,8 @@ import { useSalesData } from "../hooks/useSalesData";
 import { useSalesActions } from "../hooks/useSalesActions";
 import { SaleModal } from "./SaleModal";
 import { PaymentModal } from "./PaymentModal";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/common/PaginationControls";
 
 interface SalesTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
@@ -16,6 +18,15 @@ interface SalesTabProps {
 export function SalesTab({ showNotification }: SalesTabProps) {
   const { colors } = useThemeMode();
   const { sales, stats, loading, loadSales } = useSalesData();
+
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedSales,
+    itemsPerPage,
+    totalItems
+  } = usePagination(sales, 13);
 
   const {
     isModalOpen,
@@ -91,44 +102,54 @@ export function SalesTab({ showNotification }: SalesTabProps) {
           <Text color={colors.subtext}>No hay ventas registradas</Text>
         </Box>
       ) : (
-        <Box overflowX="auto" bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Fecha</th>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Productos</th>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Total</th>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Ganancia</th>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sales.map((sale) => (
-                <tr key={sale._id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  <td style={{ padding: "12px", color: colors.text }}>
-                    {new Date(sale.saleDate).toLocaleDateString("es-CO", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true, // Formato de 12 horas con AM/PM
-                    })}
-                  </td>
-                  <td style={{ padding: "12px", color: colors.text }}>{sale.items.length} producto(s)</td>
-                  <td style={{ padding: "12px", color: colors.text }}>${formatPrice(sale.total)}</td>
-                  <td style={{ padding: "12px", color: colors.text }}>
-                    <Badge colorScheme="green">${formatPrice(sale.totalProfit)}</Badge>
-                  </td>
-                  <td style={{ padding: "12px", color: colors.text }}>
-                    <Badge colorScheme={(sale.paymentStatus || 'paid') === 'paid' ? 'green' : 'orange'}>
-                      {(sale.paymentStatus || 'paid') === 'paid' ? 'Pagado' : 'Fiado'}
-                    </Badge>
-                  </td>
+        <Box>
+          <Box overflowX="auto" bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} mb={4}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Fecha</th>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Productos</th>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Total</th>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Ganancia</th>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedSales.map((sale) => (
+                  <tr key={sale._id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <td style={{ padding: "12px", color: colors.text }}>
+                      {new Date(sale.saleDate).toLocaleDateString("es-CO", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true, // Formato de 12 horas con AM/PM
+                      })}
+                    </td>
+                    <td style={{ padding: "12px", color: colors.text }}>{sale.items.length} producto(s)</td>
+                    <td style={{ padding: "12px", color: colors.text }}>${formatPrice(sale.total)}</td>
+                    <td style={{ padding: "12px", color: colors.text }}>
+                      <Badge colorScheme="green">${formatPrice(sale.totalProfit)}</Badge>
+                    </td>
+                    <td style={{ padding: "12px", color: colors.text }}>
+                      <Badge colorScheme={(sale.paymentStatus || 'paid') === 'paid' ? 'green' : 'orange'}>
+                        {(sale.paymentStatus || 'paid') === 'paid' ? 'Pagado' : 'Fiado'}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Box>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </Box>
       )}
 

@@ -7,7 +7,7 @@ import { useState, useCallback } from "react";
 import { getToken } from "@/lib/session";
 import { ClientModal } from "@/components/clientes/ClientModal";
 import { CompaniesModal } from "@/components/clientes/CompaniesModal";
-import { PaginationControls } from "@/components/habitaciones/PaginationControls";
+import { PaginationControls } from "@/components/common/PaginationControls";
 import { InlineNotice } from "@/components/common/InlineNotice";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useClientsData } from "./hooks/useClientsData";

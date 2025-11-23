@@ -10,6 +10,8 @@ import { ReturnModal } from "./ReturnModal";
 import { useState, useMemo, useCallback } from "react";
 import { getSalesStats } from "@/services/sales";
 import { getToken } from "@/lib/session";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/common/PaginationControls";
 
 interface ReturnsTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
@@ -111,7 +113,17 @@ export function ReturnsTab({ showNotification }: ReturnsTabProps) {
     });
 
     return expandedReturns;
+    return expandedReturns;
   }, [returns, productNameFilter, dateFilter]);
+
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedReturns,
+    itemsPerPage,
+    totalItems
+  } = usePagination(filteredReturns, 13);
 
   return (
     <Box>
@@ -190,42 +202,52 @@ export function ReturnsTab({ showNotification }: ReturnsTabProps) {
           </Text>
         </Box>
       ) : (
-        <Box overflowX="auto" bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Fecha</th>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Producto</th>
-                <th style={{ padding: "12px", textAlign: "center", color: colors.gold, fontWeight: "bold" }}>Cantidad</th>
-                <th style={{ padding: "12px", textAlign: "right", color: colors.gold, fontWeight: "bold" }}>Total</th>
-                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Razón</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredReturns.map((expandedReturn, index) => (
-                <tr key={`${expandedReturn.returnId}-${index}`} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  <td style={{ padding: "12px", color: colors.text }}>
-                    {formatDate(expandedReturn.returnDate)}
-                  </td>
-                  <td style={{ padding: "12px", color: colors.text }}>
-                    <Text fontWeight="semibold">{expandedReturn.item.productName}</Text>
-                    <Text fontSize="xs" color={colors.subtext}>
-                      {expandedReturn.item.barcode}
-                    </Text>
-                  </td>
-                  <td style={{ padding: "12px", textAlign: "center", color: colors.text }}>
-                    {expandedReturn.item.quantity}
-                  </td>
-                  <td style={{ padding: "12px", textAlign: "right", color: "red.500", fontWeight: "bold" }}>
-                    -${formatPrice(expandedReturn.item.subtotal)}
-                  </td>
-                  <td style={{ padding: "12px", color: colors.text }}>
-                    {expandedReturn.reason || "Sin razón especificada"}
-                  </td>
+        <Box>
+          <Box overflowX="auto" bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} mb={4}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Fecha</th>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Producto</th>
+                  <th style={{ padding: "12px", textAlign: "center", color: colors.gold, fontWeight: "bold" }}>Cantidad</th>
+                  <th style={{ padding: "12px", textAlign: "right", color: colors.gold, fontWeight: "bold" }}>Total</th>
+                  <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Razón</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedReturns.map((expandedReturn, index) => (
+                  <tr key={`${expandedReturn.returnId}-${index}`} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <td style={{ padding: "12px", color: colors.text }}>
+                      {formatDate(expandedReturn.returnDate)}
+                    </td>
+                    <td style={{ padding: "12px", color: colors.text }}>
+                      <Text fontWeight="semibold">{expandedReturn.item.productName}</Text>
+                      <Text fontSize="xs" color={colors.subtext}>
+                        {expandedReturn.item.barcode}
+                      </Text>
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center", color: colors.text }}>
+                      {expandedReturn.item.quantity}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "right", color: "red.500", fontWeight: "bold" }}>
+                      -${formatPrice(expandedReturn.item.subtotal)}
+                    </td>
+                    <td style={{ padding: "12px", color: colors.text }}>
+                      {expandedReturn.reason || "Sin razón especificada"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Box>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </Box>
       )}
 

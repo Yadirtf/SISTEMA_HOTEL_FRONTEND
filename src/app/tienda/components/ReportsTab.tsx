@@ -5,6 +5,8 @@ import { Box, Button, Flex, Text, Spinner, SimpleGrid, Badge } from "@chakra-ui/
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import { useSalesData } from "../hooks/useSalesData";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/common/PaginationControls";
 
 interface ReportsTabProps {
   showNotification: (type: "success" | "error" | "info", title: string, description?: string) => void;
@@ -19,6 +21,15 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
     setPeriod(newPeriod);
     await loadReport(newPeriod);
   };
+
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedProducts,
+    itemsPerPage,
+    totalItems
+  } = usePagination(report?.topProducts || [], 13);
 
   useEffect(() => {
     if (!report && !loading) {
@@ -118,7 +129,7 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
               <Text fontSize="lg" fontWeight="bold" color={colors.text} mb={4}>
                 Top Productos Vendidos
               </Text>
-              <Box overflowX="auto" bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border}>
+              <Box overflowX="auto" bg={colors.surface} borderRadius="lg" borderWidth="2px" borderColor={colors.border} mb={4}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${colors.border}` }}>
@@ -129,7 +140,7 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.topProducts.map((product, idx) => (
+                    {paginatedProducts.map((product, idx) => (
                       <tr key={product.productId} style={{ borderBottom: `1px solid ${colors.border}` }}>
                         <td style={{ padding: "12px", color: colors.text }}>
                           <Text fontWeight="bold">{product.productName}</Text>
@@ -149,6 +160,14 @@ export function ReportsTab({ showNotification }: ReportsTabProps) {
                   </tbody>
                 </table>
               </Box>
+
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
             </Box>
           )}
         </Box>

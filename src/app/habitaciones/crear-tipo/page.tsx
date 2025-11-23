@@ -8,7 +8,8 @@ import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
 import { getToken } from "@/lib/session";
 import { RoomTypeFilters } from "@/components/habitaciones/RoomTypeFilters";
 import { RoomTypeModal, RoomTypeFormData } from "@/components/habitaciones/RoomTypeModal";
-import { PaginationControls } from "@/components/habitaciones/PaginationControls";
+import { PaginationControls } from "@/components/common/PaginationControls";
+import { usePagination } from "@/hooks/usePagination";
 import { GuestPricingModal } from "@/components/habitaciones/GuestPricingModal";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
@@ -29,12 +30,12 @@ export default function CrearTipoPage() {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
-  
+
   // Filtros
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Paginación
-  const [currentPage, setCurrentPage] = useState<number>(1);
+
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -171,7 +172,7 @@ export default function CrearTipoPage() {
     const isCurrentlyActive = type.isActive === true;
     const action = isCurrentlyActive ? "desactivar" : "activar";
     const actionPast = isCurrentlyActive ? "desactivado" : "activado";
-    
+
     if (
       !confirm(
         `¿Está seguro de que desea ${action} este tipo de habitación?`
@@ -246,25 +247,15 @@ export default function CrearTipoPage() {
     });
   }, [roomTypes, statusFilter]);
 
-  // Determinar si hay filtros activos
-  const hasFilters = useMemo(() => {
-    return statusFilter !== "all";
-  }, [statusFilter]);
-
   // Paginación
-  const itemsPerPage = useMemo(() => {
-    return hasFilters ? 5 : 13;
-  }, [hasFilters]);
-
-  const totalPages = Math.ceil(filteredTypes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedTypes = filteredTypes.slice(startIndex, endIndex);
-
-  // Resetear página cuando cambian los filtros
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter]);
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedTypes,
+    itemsPerPage,
+    totalItems
+  } = usePagination(filteredTypes, 13);
 
   // Componente para el hover de filas en modo claro
   const RowWithHover = ({ children, ...props }: any) => {
@@ -310,9 +301,9 @@ export default function CrearTipoPage() {
             onStatusChange={setStatusFilter}
           />
 
-          <Flex 
-            gap={3} 
-            align="end" 
+          <Flex
+            gap={3}
+            align="end"
             direction={{ base: "column", md: "row" }}
             w={{ base: "100%", md: "auto" }}
           >
@@ -339,7 +330,7 @@ export default function CrearTipoPage() {
               color={colors.bg}
               fontWeight="bold"
               size={{ base: "md", md: "md" }}
-              _hover={{ 
+              _hover={{
                 bg: "#b8941f",
                 transform: "translateY(-2px)",
                 boxShadow: `0 4px 12px ${colors.gold}40`
@@ -365,9 +356,9 @@ export default function CrearTipoPage() {
           p={{ base: 3, md: 5 }}
           boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
         >
-          <Heading 
+          <Heading
             size={{ base: "sm", md: "md" }}
-            color={colors.gold} 
+            color={colors.gold}
             mb={4}
             borderBottom="2px solid"
             borderBottomColor={colors.border}
@@ -375,16 +366,14 @@ export default function CrearTipoPage() {
             fontSize={{ base: "lg", md: "xl" }}
           >
             Listado de Tipos de Habitación
-            {hasFilters && (
-              <Text as="span" color={colors.subtext} fontSize={{ base: "xs", md: "sm" }} fontWeight="normal" ml={2}>
-                ({filteredTypes.length} de {roomTypes.length})
-              </Text>
-            )}
+            <Text as="span" color={colors.subtext} fontSize={{ base: "xs", md: "sm" }} fontWeight="normal" ml={2}>
+              ({totalItems} registros)
+            </Text>
           </Heading>
 
           {/* Vista de tabla para desktop */}
-          <Box 
-            overflowX="auto" 
+          <Box
+            overflowX="auto"
             display={{ base: "none", lg: "block" }}
           >
             <Box
@@ -500,7 +489,7 @@ export default function CrearTipoPage() {
                             setSelectedRoomTypeForPricing(type);
                             setIsPricingModalOpen(true);
                           }}
-                          _hover={{ 
+                          _hover={{
                             bg: colors.surface,
                             borderColor: colors.gold,
                             color: colors.gold,
@@ -517,7 +506,7 @@ export default function CrearTipoPage() {
                           bg={colors.gold}
                           color={colors.bg}
                           onClick={() => openEditModal(type)}
-                          _hover={{ 
+                          _hover={{
                             bg: "#b8941f",
                             transform: "scale(1.05)",
                             borderColor: mode === "light" ? "white" : undefined,
@@ -562,7 +551,7 @@ export default function CrearTipoPage() {
                           borderColor="#dc2626"
                           color="#dc2626"
                           onClick={() => deletePermanent(type)}
-                          _hover={{ 
+                          _hover={{
                             bg: "#dc2626",
                             color: "white",
                             transform: "scale(1.05)",
@@ -629,7 +618,7 @@ export default function CrearTipoPage() {
                           setSelectedRoomTypeForPricing(type);
                           setIsPricingModalOpen(true);
                         }}
-                        _hover={{ 
+                        _hover={{
                           bg: colors.surface,
                           borderColor: colors.gold,
                           color: colors.gold,
@@ -648,7 +637,7 @@ export default function CrearTipoPage() {
                         bg={colors.gold}
                         color={colors.bg}
                         onClick={() => openEditModal(type)}
-                        _hover={{ 
+                        _hover={{
                           bg: "#b8941f",
                           transform: "scale(1.05)"
                         }}
@@ -688,7 +677,7 @@ export default function CrearTipoPage() {
                         borderColor="#dc2626"
                         color="#dc2626"
                         onClick={() => deletePermanent(type)}
-                        _hover={{ 
+                        _hover={{
                           bg: "#dc2626",
                           color: "white",
                           transform: "scale(1.05)"
@@ -710,15 +699,13 @@ export default function CrearTipoPage() {
           </Box>
 
           {/* Controles de paginación */}
-          {filteredTypes.length > 0 && (
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={filteredTypes.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
-          )}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </Box>
 
         {/* Modal */}

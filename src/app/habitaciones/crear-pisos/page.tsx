@@ -8,7 +8,8 @@ import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
 import { getToken } from "@/lib/session";
 import { FloorFilters } from "@/components/habitaciones/FloorFilters";
 import { FloorModal, FloorFormData } from "@/components/habitaciones/FloorModal";
-import { PaginationControls } from "@/components/habitaciones/PaginationControls";
+import { PaginationControls } from "@/components/common/PaginationControls";
+import { usePagination } from "@/hooks/usePagination";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 type Floor = {
@@ -27,12 +28,12 @@ export default function CrearPisosPage() {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
-  
+
   // Filtros
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Paginación
-  const [currentPage, setCurrentPage] = useState<number>(1);
+
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,7 +110,7 @@ export default function CrearPisosPage() {
     }
 
     setIsSubmitting(true);
-    
+
     const body: any = {
       numero: formData.numero,
       descripcion: formData.descripcion || undefined,
@@ -142,7 +143,7 @@ export default function CrearPisosPage() {
     const isCurrentlyActive = floor.isActive === true;
     const action = isCurrentlyActive ? "desactivar" : "activar";
     const actionPast = isCurrentlyActive ? "desactivado" : "activado";
-    
+
     if (
       !confirm(
         `¿Está seguro de que desea ${action} este piso?`
@@ -194,35 +195,23 @@ export default function CrearPisosPage() {
   // Filtrar pisos según el filtro de estado
   const filteredFloors = useMemo(() => {
     return floors.filter((floor) => {
-      const matchesStatus = 
-        statusFilter === "all" || 
+      const matchesStatus =
+        statusFilter === "all" ||
         (statusFilter === "active" && floor.isActive === true) ||
         (statusFilter === "inactive" && floor.isActive === false);
       return matchesStatus;
     });
   }, [floors, statusFilter]);
 
-  // Determinar si hay filtros activos
-  const hasFilters = useMemo(() => {
-    return statusFilter !== "all";
-  }, [statusFilter]);
-
-  // Items por página según si hay filtros
-  const itemsPerPage = hasFilters ? 5 : 13;
-
-  // Calcular paginación
-  const totalPages = Math.max(1, Math.ceil(filteredFloors.length / itemsPerPage));
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter]);
-
-  // Obtener los pisos de la página actual
-  const paginatedFloors = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredFloors.slice(startIndex, endIndex);
-  }, [filteredFloors, currentPage, itemsPerPage]);
+  // Paginación
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedFloors,
+    itemsPerPage,
+    totalItems
+  } = usePagination(filteredFloors, 13);
 
   // Componente para el hover de filas en modo claro
   const RowWithHover = ({ children, ...props }: any) => {
@@ -268,9 +257,9 @@ export default function CrearPisosPage() {
             onStatusChange={setStatusFilter}
           />
 
-          <Flex 
-            gap={3} 
-            align="end" 
+          <Flex
+            gap={3}
+            align="end"
             direction={{ base: "column", md: "row" }}
             w={{ base: "100%", md: "auto" }}
           >
@@ -297,7 +286,7 @@ export default function CrearPisosPage() {
               color={colors.bg}
               fontWeight="bold"
               size={{ base: "md", md: "md" }}
-              _hover={{ 
+              _hover={{
                 bg: "#b8941f",
                 transform: "translateY(-2px)",
                 boxShadow: `0 4px 12px ${colors.gold}40`
@@ -323,9 +312,9 @@ export default function CrearPisosPage() {
           p={{ base: 3, md: 5 }}
           boxShadow="0 4px 6px rgba(0, 0, 0, 0.3)"
         >
-          <Heading 
+          <Heading
             size={{ base: "sm", md: "md" }}
-            color={colors.gold} 
+            color={colors.gold}
             mb={4}
             borderBottom="2px solid"
             borderBottomColor={colors.border}
@@ -333,16 +322,14 @@ export default function CrearPisosPage() {
             fontSize={{ base: "lg", md: "xl" }}
           >
             Listado de Pisos
-            {hasFilters && (
-              <Text as="span" color={colors.subtext} fontSize={{ base: "xs", md: "sm" }} fontWeight="normal" ml={2}>
-                ({filteredFloors.length} de {floors.length})
-              </Text>
-            )}
+            <Text as="span" color={colors.subtext} fontSize={{ base: "xs", md: "sm" }} fontWeight="normal" ml={2}>
+              ({totalItems} registros)
+            </Text>
           </Heading>
 
           {/* Vista de tabla para desktop */}
-          <Box 
-            overflowX="auto" 
+          <Box
+            overflowX="auto"
             display={{ base: "none", lg: "block" }}
           >
             <Box
@@ -452,7 +439,7 @@ export default function CrearPisosPage() {
                                 bg={colors.gold}
                                 color={colors.bg}
                                 onClick={() => openEditModal(f)}
-                                _hover={{ 
+                                _hover={{
                                   bg: "#b8941f",
                                   transform: "scale(1.05)"
                                 }}
@@ -472,7 +459,7 @@ export default function CrearPisosPage() {
                                 variant="outline"
                                 color={f.isActive ? "#dc2626" : "#22c55e"}
                                 onClick={() => toggleActive(f)}
-                                _hover={{ 
+                                _hover={{
                                   bg: f.isActive ? "#dc2626" : "#22c55e",
                                   color: "white",
                                   transform: "scale(1.05)",
@@ -492,7 +479,7 @@ export default function CrearPisosPage() {
                                 variant="outline"
                                 color="#dc2626"
                                 onClick={() => deletePermanent(f)}
-                                _hover={{ 
+                                _hover={{
                                   bg: "#dc2626",
                                   color: "white",
                                   transform: "scale(1.05)",
@@ -551,9 +538,9 @@ export default function CrearPisosPage() {
                         <Text fontSize="xs" color={colors.subtext} mb={0.5}>
                           Estado
                         </Text>
-                        <Text 
-                          fontSize="sm" 
-                          color={f.isActive ? "#22c55e" : "#dc2626"} 
+                        <Text
+                          fontSize="sm"
+                          color={f.isActive ? "#22c55e" : "#dc2626"}
                           fontWeight="medium"
                         >
                           {f.isActive ? "Activo" : "Inactivo"}
@@ -578,7 +565,7 @@ export default function CrearPisosPage() {
                         bg={colors.gold}
                         color={colors.bg}
                         onClick={() => openEditModal(f)}
-                        _hover={{ 
+                        _hover={{
                           bg: "#b8941f",
                           transform: "scale(1.05)"
                         }}
@@ -598,7 +585,7 @@ export default function CrearPisosPage() {
                         borderColor={f.isActive ? "#dc2626" : "#22c55e"}
                         color={f.isActive ? "#dc2626" : "#22c55e"}
                         onClick={() => toggleActive(f)}
-                        _hover={{ 
+                        _hover={{
                           bg: f.isActive ? "#dc2626" : "#22c55e",
                           color: "white",
                           transform: "scale(1.05)"
@@ -618,7 +605,7 @@ export default function CrearPisosPage() {
                         borderColor="#dc2626"
                         color="#dc2626"
                         onClick={() => deletePermanent(f)}
-                        _hover={{ 
+                        _hover={{
                           bg: "#dc2626",
                           color: "white",
                           transform: "scale(1.05)"
@@ -640,15 +627,13 @@ export default function CrearPisosPage() {
           </Box>
 
           {/* Paginación */}
-          {totalPages > 1 && (
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={filteredFloors.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
-          )}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </Box>
 
         {/* Notificación */}
