@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { getToken, getSessionUser } from "@/lib/session";
-import { getMyCashRegister, openMyCashRegister, closeMyCashRegister } from "@/services/cash-registers";
+import { getMyCashRegister, openMyCashRegister, closeMyCashRegister, getMyCashRegisterOperationsReport } from "@/services/cash-registers";
 import { CashRegister } from "@/app/caja/types";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { OpenCashRegisterModal } from "./OpenCashRegisterModal";
@@ -35,13 +35,41 @@ export function MyCashRegisterCard() {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; title: string; description?: string } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
-  
+  const [operationsReport, setOperationsReport] = useState<{
+    totalSales: number;
+    totalSalesAmount: number;
+    totalReservations: number;
+    totalReservationsAmount: number;
+    totalCashIncome: number;
+    totalCardIncome: number;
+    totalTransferIncome: number;
+    totalCashExpense: number;
+  } | null>(null);
+
+  const loadOperationsReport = useCallback(async () => {
+    if (!token) return;
+    try {
+      const resp = await getMyCashRegisterOperationsReport(token);
+      if (resp.success && resp.data) {
+        setOperationsReport(resp.data);
+      }
+    } catch (error) {
+      console.error("Error loading operations report:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (activeTab === 0) {
+      loadOperationsReport();
+    }
+  }, [activeTab, loadOperationsReport]);
+
   const {
     open: isOpenModalOpen,
     onOpen: onOpenModalOpen,
     onClose: onOpenModalClose,
   } = useDisclosure();
-  
+
   const {
     open: isCloseModalOpen,
     onOpen: onCloseModalOpen,
@@ -50,7 +78,7 @@ export function MyCashRegisterCard() {
 
   const loadMyCashRegister = useCallback(async () => {
     if (!token) return;
-    
+
     setLoading(true);
     try {
       const resp = await getMyCashRegister(token);
@@ -78,7 +106,7 @@ export function MyCashRegisterCard() {
 
   const handleOpen = async (initialAmount: number, notes?: string) => {
     if (!token) return;
-    
+
     try {
       const resp = await openMyCashRegister({ initialAmount, notes }, token);
       if (resp.success) {
@@ -105,7 +133,7 @@ export function MyCashRegisterCard() {
     };
   }) => {
     if (!token || !cashRegister) return;
-    
+
     try {
       const resp = await closeMyCashRegister(data, token);
       if (resp.success) {
@@ -155,7 +183,8 @@ export function MyCashRegisterCard() {
     );
   }
 
-  const statusColor = statusColors[cashRegister.status] || statusColors.closed;
+  const statusColor = cashRegister ? (statusColors[cashRegister.status] || statusColors.closed) : statusColors.closed;
+
 
   return (
     <Box>
@@ -197,8 +226,8 @@ export function MyCashRegisterCard() {
                 fontSize="sm"
                 fontWeight="bold"
               >
-                {cashRegister.status === "open" ? "Abierta" : 
-                 cashRegister.status === "closed" ? "Cerrada" : "Suspendida"}
+                {cashRegister.status === "open" ? "Abierta" :
+                  cashRegister.status === "closed" ? "Cerrada" : "Suspendida"}
               </Badge>
             </Box>
           </Flex>
@@ -336,9 +365,60 @@ export function MyCashRegisterCard() {
             borderRadius="lg"
             p={6}
           >
-            <Text color={colors.subtext} fontSize="sm" mb={4}>
-              Información de la caja mostrada arriba
-            </Text>
+            {operationsReport ? (
+              <Stack gap={6}>
+                <Box>
+                  <Heading size="sm" color={colors.gold} mb={4}>Resumen de Operaciones</Heading>
+                  <Stack gap={3}>
+                    <Flex justify="space-between" align="center" p={3} bg={colors.bg} borderRadius="md">
+                      <Box>
+                        <Text fontWeight="bold" color={colors.text}>Ventas</Text>
+                        <Text fontSize="xs" color={colors.subtext}>{operationsReport.totalSales} transacciones</Text>
+                      </Box>
+                      <Text fontWeight="bold" color="green.500">+{formatCurrency(operationsReport.totalSalesAmount)}</Text>
+                    </Flex>
+
+                    <Flex justify="space-between" align="center" p={3} bg={colors.bg} borderRadius="md">
+                      <Box>
+                        <Text fontWeight="bold" color={colors.text}>Reservas</Text>
+                        <Text fontSize="xs" color={colors.subtext}>{operationsReport.totalReservations} transacciones</Text>
+                      </Box>
+                      <Text fontWeight="bold" color="green.500">+{formatCurrency(operationsReport.totalReservationsAmount)}</Text>
+                    </Flex>
+                  </Stack>
+                </Box>
+
+                <Box>
+                  <Heading size="sm" color={colors.gold} mb={4}>Ingresos por Método de Pago</Heading>
+                  <Stack gap={3}>
+                    <Flex justify="space-between" align="center" p={2} borderBottom="1px solid" borderColor={colors.border}>
+                      <Text color={colors.text}>Efectivo</Text>
+                      <Text fontWeight="semibold" color={colors.text}>{formatCurrency(operationsReport.totalCashIncome)}</Text>
+                    </Flex>
+                    <Flex justify="space-between" align="center" p={2} borderBottom="1px solid" borderColor={colors.border}>
+                      <Text color={colors.text}>Tarjeta</Text>
+                      <Text fontWeight="semibold" color={colors.text}>{formatCurrency(operationsReport.totalCardIncome)}</Text>
+                    </Flex>
+                    <Flex justify="space-between" align="center" p={2} borderBottom="1px solid" borderColor={colors.border}>
+                      <Text color={colors.text}>Transferencia</Text>
+                      <Text fontWeight="semibold" color={colors.text}>{formatCurrency(operationsReport.totalTransferIncome)}</Text>
+                    </Flex>
+                  </Stack>
+                </Box>
+
+                <Box>
+                  <Heading size="sm" color={colors.gold} mb={4}>Egresos</Heading>
+                  <Flex justify="space-between" align="center" p={3} bg={colors.bg} borderRadius="md" borderLeft="4px solid" borderColor="red.500">
+                    <Text fontWeight="bold" color={colors.text}>Total Egresos</Text>
+                    <Text fontWeight="bold" color="red.500">-{formatCurrency(operationsReport.totalCashExpense)}</Text>
+                  </Flex>
+                </Box>
+              </Stack>
+            ) : (
+              <Flex justify="center" align="center" py={8}>
+                <Text color={colors.subtext}>Cargando información...</Text>
+              </Flex>
+            )}
           </Box>
         )}
 
