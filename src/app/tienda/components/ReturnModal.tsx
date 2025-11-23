@@ -317,7 +317,7 @@ export function ReturnModal({
                             borderWidth="2px"
                             borderColor={isSelected ? colors.gold : colors.border}
                             cursor="pointer"
-                            onClick={() => setSelectedSaleId(sale._id)}
+                            onClick={() => sale._id && setSelectedSaleId(sale._id)}
                             _hover={{
                               bg: isSelected ? colors.gold : colors.surface,
                               borderColor: colors.gold,

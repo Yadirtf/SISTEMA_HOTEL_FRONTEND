@@ -8,7 +8,9 @@ import {
   Textarea,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import type { CashRegisterFormData } from "@/app/caja/types";
 import { formatNumberInput, parseFormattedNumber } from "@/lib/format";
@@ -209,7 +211,10 @@ export function CashRegisterModal({
               _hover={{ bg: colors.subtext }}
               disabled={isLoading}
             >
-              Cancelar
+              <Flex align="center" gap={2}>
+                <Icon as={FiXCircle} />
+                <Text>Cancelar</Text>
+              </Flex>
             </Button>
             <Button
               onClick={onSubmit}
@@ -219,7 +224,10 @@ export function CashRegisterModal({
               _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
               disabled={isLoading}
             >
-              {isLoading ? "Guardando..." : (isEditing ? "Actualizar" : "Crear Caja")}
+              <Flex align="center" gap={2}>
+                <Icon as={FiCheckCircle} />
+                <Text>{isLoading ? "Guardando..." : (isEditing ? "Actualizar" : "Crear Caja")}</Text>
+              </Flex>
             </Button>
           </Flex>
         </Stack>

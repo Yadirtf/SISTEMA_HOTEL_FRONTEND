@@ -1,4 +1,5 @@
-import { Box, Heading, Text, Badge, Button, Flex } from "@chakra-ui/react";
+import { Box, Heading, Text, Badge, Button, Flex, Icon } from "@chakra-ui/react";
+import { FiBarChart2, FiLock, FiUnlock, FiPause, FiPlay, FiEye } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { CashRegister } from "../../app/caja/types";
 import { formatDate, formatCurrency } from "@/lib/format";
@@ -202,7 +203,10 @@ export function CashRegistersTable({
                           transition="all 0.2s"
                           fontWeight="semibold"
                         >
-                          Estadísticas
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiBarChart2} />
+                            <Text>Estadísticas</Text>
+                          </Flex>
                         </Button>
                         {/* Recepcionista solo puede cerrar su propia caja, admin puede cerrar cualquier caja */}
                         {(isAdmin || cashRegister.userId === currentUserId) && (
@@ -218,7 +222,10 @@ export function CashRegistersTable({
                             transition="all 0.2s"
                             fontWeight="semibold"
                           >
-                            Cerrar
+                            <Flex align="center" gap={1}>
+                              <Icon as={FiLock} />
+                              <Text>Cerrar</Text>
+                            </Flex>
                           </Button>
                         )}
                         {/* Solo admin puede suspender */}
@@ -236,7 +243,10 @@ export function CashRegistersTable({
                             }}
                             transition="all 0.2s"
                           >
-                            Suspender
+                            <Flex align="center" gap={1}>
+                              <Icon as={FiPause} />
+                              <Text>Suspender</Text>
+                            </Flex>
                           </Button>
                         )}
                       </>
@@ -255,7 +265,10 @@ export function CashRegistersTable({
                         }}
                         transition="all 0.2s"
                       >
-                        Reanudar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiPlay} />
+                          <Text>Reanudar</Text>
+                        </Flex>
                       </Button>
                     )}
                     {cashRegister.status === "closed" && (
@@ -273,7 +286,10 @@ export function CashRegistersTable({
                             transition="all 0.2s"
                             fontWeight="semibold"
                           >
-                            Abrir Caja
+                            <Flex align="center" gap={1}>
+                              <Icon as={FiUnlock} />
+                              <Text>Abrir Caja</Text>
+                            </Flex>
                           </Button>
                         )}
                         <Button
@@ -288,7 +304,10 @@ export function CashRegistersTable({
                           transition="all 0.2s"
                           fontWeight="semibold"
                         >
-                          Ver Detalles
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiEye} />
+                            <Text>Ver Detalles</Text>
+                          </Flex>
                         </Button>
                       </>
                     )}
@@ -350,7 +369,10 @@ export function CashRegistersTable({
                       flex="1"
                       minW="100px"
                     >
-                      Estadísticas
+                      <Flex align="center" gap={1}>
+                        <Icon as={FiBarChart2} />
+                        <Text>Estadísticas</Text>
+                      </Flex>
                     </Button>
                     {/* Recepcionista solo puede cerrar su propia caja, admin puede cerrar cualquier caja */}
                     {(isAdmin || cashRegister.userId === currentUserId) && (
@@ -362,7 +384,10 @@ export function CashRegistersTable({
                         flex="1"
                         minW="100px"
                       >
-                        Cerrar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiLock} />
+                          <Text>Cerrar</Text>
+                        </Flex>
                       </Button>
                     )}
                     {/* Solo admin puede suspender */}
@@ -376,7 +401,10 @@ export function CashRegistersTable({
                         flex="1"
                         minW="100px"
                       >
-                        Suspender
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiPause} />
+                          <Text>Suspender</Text>
+                        </Flex>
                       </Button>
                     )}
                   </>
@@ -390,7 +418,10 @@ export function CashRegistersTable({
                     onClick={() => onResume(cashRegister)}
                     flex="1"
                   >
-                    Reanudar
+                    <Flex align="center" gap={1}>
+                      <Icon as={FiPlay} />
+                      <Text>Reanudar</Text>
+                    </Flex>
                   </Button>
                 )}
                 {cashRegister.status === "closed" && (
@@ -404,7 +435,10 @@ export function CashRegistersTable({
                         flex="1"
                         minW="100px"
                       >
-                        Abrir Caja
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiUnlock} />
+                          <Text>Abrir Caja</Text>
+                        </Flex>
                       </Button>
                     )}
                     <Button
@@ -414,7 +448,10 @@ export function CashRegistersTable({
                       onClick={() => onViewStats(cashRegister)}
                       flex="1"
                     >
-                      Ver Detalles
+                      <Flex align="center" gap={1}>
+                        <Icon as={FiEye} />
+                        <Text>Ver Detalles</Text>
+                      </Flex>
                     </Button>
                   </>
                 )}

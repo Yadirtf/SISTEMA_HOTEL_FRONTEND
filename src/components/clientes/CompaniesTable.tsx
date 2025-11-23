@@ -1,4 +1,5 @@
-import { Box, Heading, Text, Badge, Button, Flex } from "@chakra-ui/react";
+import { Box, Heading, Text, Badge, Button, Flex, Icon } from "@chakra-ui/react";
+import { FiEdit, FiXCircle, FiCheckCircle, FiTrash2, FiPhone, FiMail, FiMapPin, FiUser } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { Company } from "../../app/huespedes/types";
 
@@ -159,7 +160,10 @@ export function CompaniesTable({
                       transition="all 0.2s"
                       fontWeight="semibold"
                     >
-                      Editar
+                      <Flex align="center" gap={1}>
+                        <Icon as={FiEdit} />
+                        <Text>Editar</Text>
+                      </Flex>
                     </Button>
                     {company.status === "active" ? (
                       <Button
@@ -175,7 +179,10 @@ export function CompaniesTable({
                         }}
                         transition="all 0.2s"
                       >
-                        Desactivar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiXCircle} />
+                          <Text>Desactivar</Text>
+                        </Flex>
                       </Button>
                     ) : (
                       <Button
@@ -191,7 +198,10 @@ export function CompaniesTable({
                         }}
                         transition="all 0.2s"
                       >
-                        Activar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiCheckCircle} />
+                          <Text>Activar</Text>
+                        </Flex>
                       </Button>
                     )}
                     <Button
@@ -207,7 +217,10 @@ export function CompaniesTable({
                       }}
                       transition="all 0.2s"
                     >
-                      Eliminar
+                      <Flex align="center" gap={1}>
+                        <Icon as={FiTrash2} />
+                        <Text>Eliminar</Text>
+                      </Flex>
                     </Button>
                   </Flex>
                 </Box>
@@ -238,9 +251,10 @@ export function CompaniesTable({
                     NIT: {company.nit}
                   </Text>
                   {company.address && (
-                    <Text color={colors.subtext} fontSize="sm" mt={1}>
-                      📍 {company.address}
-                    </Text>
+                    <Flex align="center" gap={1} color={colors.subtext} fontSize="sm" mt={1}>
+                      <Icon as={FiMapPin} />
+                      <Text>{company.address}</Text>
+                    </Flex>
                   )}
                 </Box>
                 <Badge
@@ -251,76 +265,90 @@ export function CompaniesTable({
                 </Badge>
               </Flex>
               {(company.contact || company.phone || company.email) && (
-                <Text color={colors.subtext} fontSize="sm" mb={2}>
-                  {company.contact && `👤 ${company.contact}`}
-                  {company.phone && ` • 📞 ${company.phone}`}
-                  {company.email && ` • ✉️ ${company.email}`}
-                </Text>
+                <Flex align="center" gap={2} color={colors.subtext} fontSize="sm" mb={2} flexWrap="wrap">
+                  {company.contact && (
+                    <>
+                      <Icon as={FiUser} />
+                      <Text>{company.contact}</Text>
+                    </>
+                  )}
+                  {company.phone && (
+                    <>
+                      <Text>•</Text>
+                      <Icon as={FiPhone} />
+                      <Text>{company.phone}</Text>
+                    </>
+                  )}
+                  {company.email && (
+                    <>
+                      <Text>•</Text>
+                      <Icon as={FiMail} />
+                      <Text>{company.email}</Text>
+                    </>
+                  )}
+                </Flex>
               )}
               <Flex gap={2}>
-                <Box
-                  as="button"
+                <Button
                   onClick={() => onEdit(company)}
                   flex="1"
-                  p={2}
+                  size="sm"
                   bg={colors.surface}
                   borderWidth="1px"
                   borderColor={colors.border}
-                  borderRadius="md"
                   color={colors.text}
-                  fontSize="sm"
                   _hover={{ bg: colors.bg, borderColor: colors.gold }}
                 >
-                  Editar
-                </Box>
+                  <Flex align="center" gap={1}>
+                    <Icon as={FiEdit} />
+                    <Text>Editar</Text>
+                  </Flex>
+                </Button>
                 {company.status === "active" ? (
-                  <Box
-                    as="button"
+                  <Button
                     onClick={() => onDeactivate(company)}
                     flex="1"
-                    p={2}
-                    bg={colors.surface}
-                    borderWidth="1px"
+                    size="sm"
+                    variant="outline"
                     borderColor={colors.border}
-                    borderRadius="md"
-                    color={colors.text}
-                    fontSize="sm"
-                    _hover={{ bg: colors.bg, borderColor: colors.gold }}
+                    color={colors.subtext}
+                    _hover={{ borderColor: colors.gold, color: colors.gold }}
                   >
-                    Desactivar
-                  </Box>
+                    <Flex align="center" gap={1}>
+                      <Icon as={FiXCircle} />
+                      <Text>Desactivar</Text>
+                    </Flex>
+                  </Button>
                 ) : (
-                  <Box
-                    as="button"
+                  <Button
                     onClick={() => onActivate(company)}
                     flex="1"
-                    p={2}
-                    bg={colors.surface}
-                    borderWidth="1px"
+                    size="sm"
+                    variant="outline"
                     borderColor="green.500"
-                    borderRadius="md"
                     color="green.400"
-                    fontSize="sm"
-                    _hover={{ bg: colors.bg, borderColor: "green.300" }}
+                    _hover={{ borderColor: "green.300", color: "green.300" }}
                   >
-                    Activar
-                  </Box>
+                    <Flex align="center" gap={1}>
+                      <Icon as={FiCheckCircle} />
+                      <Text>Activar</Text>
+                    </Flex>
+                  </Button>
                 )}
-                <Box
-                  as="button"
+                <Button
                   onClick={() => onDelete(company)}
                   flex="1"
-                  p={2}
-                  bg={colors.surface}
-                  borderWidth="1px"
+                  size="sm"
+                  variant="outline"
                   borderColor="red.500"
-                  borderRadius="md"
                   color="red.400"
-                  fontSize="sm"
-                  _hover={{ bg: colors.bg, borderColor: "red.300" }}
+                  _hover={{ borderColor: "red.300", color: "red.300" }}
                 >
-                  Eliminar
-                </Box>
+                  <Flex align="center" gap={1}>
+                    <Icon as={FiTrash2} />
+                    <Text>Eliminar</Text>
+                  </Flex>
+                </Button>
               </Flex>
             </Box>
           ))}

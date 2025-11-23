@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Button, Flex, Input, Text, Spinner, SimpleGrid, Badge, IconButton } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, Text, Spinner, SimpleGrid, Badge, IconButton, Icon } from "@chakra-ui/react";
+import { FiPlus, FiEdit, FiCheckCircle, FiXCircle, FiTrash2 } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import { useProductsData } from "../hooks/useProductsData";
@@ -177,7 +178,10 @@ export function ProductsTab({ showNotification }: ProductsTabProps) {
           _hover={{ bg: "#b8941f" }}
           whiteSpace="nowrap"
         >
-          + Nuevo Producto
+          <Flex align="center" gap={2}>
+            <Icon as={FiPlus} />
+            <Text>Nuevo Producto</Text>
+          </Flex>
         </Button>
       </Flex>
 
@@ -244,7 +248,10 @@ export function ProductsTab({ showNotification }: ProductsTabProps) {
                   flex={1}
                   minW="100px"
                 >
-                  Editar
+                  <Flex align="center" gap={1}>
+                    <Icon as={FiEdit} />
+                    <Text>Editar</Text>
+                  </Flex>
                 </Button>
                 <Button
                   size="sm"
@@ -254,18 +261,23 @@ export function ProductsTab({ showNotification }: ProductsTabProps) {
                   _hover={{ bg: product.isActive ? "orange.600" : "green.600" }}
                   whiteSpace="nowrap"
                 >
-                  {product.isActive ? "Desactivar" : "Activar"}
+                  <Flex align="center" gap={1}>
+                    <Icon as={product.isActive ? FiXCircle : FiCheckCircle} />
+                    <Text>{product.isActive ? "Desactivar" : "Activar"}</Text>
+                  </Flex>
                 </Button>
-                <IconButton
+                <Button
                   size="sm"
-                  aria-label="Eliminar"
                   onClick={() => handleDelete(product)}
                   bg="red.500"
                   color="white"
                   _hover={{ bg: "red.600" }}
                 >
-                  🗑️
-                </IconButton>
+                  <Flex align="center" gap={1}>
+                    <Icon as={FiTrash2} />
+                    <Text>Eliminar</Text>
+                  </Flex>
+                </Button>
               </Flex>
             </Box>
           ))}

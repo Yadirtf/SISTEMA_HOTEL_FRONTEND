@@ -1,7 +1,8 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
+import { FiShoppingCart, FiRotateCcw, FiBarChart2, FiPackage, FiTag } from "react-icons/fi";
 import { useState, useCallback } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { InlineNotice } from "@/components/common/InlineNotice";
@@ -43,11 +44,11 @@ export default function TiendaPage() {
             flexWrap="wrap"
           >
             {[
-              { id: 0, label: "Ventas" },
-              { id: 1, label: "Devoluciones" },
-              { id: 2, label: "Reportes" },
-              { id: 3, label: "Productos" },
-              { id: 4, label: "Categorías" },
+              { id: 0, label: "Ventas", icon: FiShoppingCart },
+              { id: 1, label: "Devoluciones", icon: FiRotateCcw },
+              { id: 2, label: "Reportes", icon: FiBarChart2 },
+              { id: 3, label: "Productos", icon: FiPackage },
+              { id: 4, label: "Categorías", icon: FiTag },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -65,7 +66,10 @@ export default function TiendaPage() {
                 px={6}
                 py={4}
               >
-                {tab.label}
+                <Flex align="center" gap={2} justify="center">
+                  <Icon as={tab.icon} fontSize="lg" />
+                  <Text>{tab.label}</Text>
+                </Flex>
               </Button>
             ))}
           </Flex>

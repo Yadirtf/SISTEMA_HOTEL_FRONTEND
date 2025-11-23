@@ -1,7 +1,8 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Stack, Text, Icon } from "@chakra-ui/react";
+import { FiRefreshCw, FiPlus, FiDollarSign, FiEdit, FiCheckCircle, FiXCircle, FiTrash2, FiX } from "react-icons/fi";
 import { useEffect, useState, useMemo } from "react";
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
 import { getToken } from "@/lib/session";
@@ -327,7 +328,10 @@ export default function CrearTipoPage() {
               transition="all 0.2s"
               w={{ base: "100%", md: "auto" }}
             >
-              {loading ? "Cargando..." : "Refrescar"}
+              <Flex align="center" gap={2}>
+                <Icon as={FiRefreshCw} />
+                <Text>{loading ? "Cargando..." : "Refrescar"}</Text>
+              </Flex>
             </Button>
             <Button
               onClick={openCreateModal}
@@ -344,7 +348,10 @@ export default function CrearTipoPage() {
               boxShadow={`0 2px 8px ${colors.gold}50`}
               w={{ base: "100%", md: "auto" }}
             >
-              Crear Tipo
+              <Flex align="center" gap={2}>
+                <Icon as={FiPlus} />
+                <Text>Crear Tipo</Text>
+              </Flex>
             </Button>
           </Flex>
         </Flex>
@@ -500,7 +507,10 @@ export default function CrearTipoPage() {
                           }}
                           title="Configurar precios por número de huéspedes"
                         >
-                          💰 Precios
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiDollarSign} />
+                            <Text>Precios</Text>
+                          </Flex>
                         </Button>
                         <Button
                           size="sm"
@@ -519,7 +529,10 @@ export default function CrearTipoPage() {
                           transition="all 0.2s"
                           fontWeight="semibold"
                         >
-                          Editar
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiEdit} />
+                            <Text>Editar</Text>
+                          </Flex>
                         </Button>
                         <Button
                           size="sm"
@@ -538,7 +551,10 @@ export default function CrearTipoPage() {
                           }}
                           transition="all 0.2s"
                         >
-                          {type.isActive === true ? "Desactivar" : "Activar"}
+                          <Flex align="center" gap={1}>
+                            <Icon as={type.isActive === true ? FiXCircle : FiCheckCircle} />
+                            <Text>{type.isActive === true ? "Desactivar" : "Activar"}</Text>
+                          </Flex>
                         </Button>
                         <Button
                           size="sm"
@@ -554,7 +570,10 @@ export default function CrearTipoPage() {
                           }}
                           transition="all 0.2s"
                         >
-                          Eliminar
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiTrash2} />
+                            <Text>Eliminar</Text>
+                          </Flex>
                         </Button>
                       </Flex>
                     </Box>
@@ -619,7 +638,10 @@ export default function CrearTipoPage() {
                         flex="1"
                         minW="80px"
                       >
-                        💰 Precios
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiDollarSign} />
+                          <Text>Precios</Text>
+                        </Flex>
                       </Button>
                       <Button
                         size="sm"
@@ -635,7 +657,10 @@ export default function CrearTipoPage() {
                         flex="1"
                         minW="80px"
                       >
-                        Editar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiEdit} />
+                          <Text>Editar</Text>
+                        </Flex>
                       </Button>
                       <Button
                         size="sm"
@@ -652,7 +677,10 @@ export default function CrearTipoPage() {
                         flex="1"
                         minW="80px"
                       >
-                        {type.isActive === true ? "Desactivar" : "Activar"}
+                        <Flex align="center" gap={1}>
+                          <Icon as={type.isActive === true ? FiXCircle : FiCheckCircle} />
+                          <Text>{type.isActive === true ? "Desactivar" : "Activar"}</Text>
+                        </Flex>
                       </Button>
                       <Button
                         size="sm"
@@ -669,7 +697,10 @@ export default function CrearTipoPage() {
                         flex="1"
                         minW="80px"
                       >
-                        Eliminar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiTrash2} />
+                          <Text>Eliminar</Text>
+                        </Flex>
                       </Button>
                     </Flex>
                   </Box>
@@ -758,7 +789,7 @@ export default function CrearTipoPage() {
                 minW="auto"
                 h="auto"
               >
-                ×
+                <Icon as={FiX} />
               </Button>
             </Flex>
           </Box>

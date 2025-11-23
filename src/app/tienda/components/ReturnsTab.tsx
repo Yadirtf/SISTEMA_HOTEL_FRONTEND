@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Button, Flex, Text, Spinner, Input } from "@chakra-ui/react";
+import { Box, Button, Flex, Text, Spinner, Input, Icon } from "@chakra-ui/react";
+import { FiPlus } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice, formatDate } from "@/lib/format";
 import { useReturnsData } from "../hooks/useReturnsData";
@@ -119,7 +120,10 @@ export function ReturnsTab({ showNotification }: ReturnsTabProps) {
           Devoluciones
         </Text>
         <Button onClick={openModal} bg={colors.gold} color="white" _hover={{ bg: "#b8941f" }}>
-          + Nueva Devolución
+          <Flex align="center" gap={2}>
+            <Icon as={FiPlus} />
+            <Text>Nueva Devolución</Text>
+          </Flex>
         </Button>
       </Flex>
 

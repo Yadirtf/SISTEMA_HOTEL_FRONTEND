@@ -7,7 +7,9 @@ import {
   Input,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 export type UserFormData = {
@@ -96,7 +98,7 @@ export function UserModal({
             p={2}
             transition="all 0.2s"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -288,7 +290,10 @@ export function UserModal({
                 transition="all 0.2s"
                 w={{ base: "100%", md: "auto" }}
               >
-                Cancelar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiXCircle} />
+                  <Text>Cancelar</Text>
+                </Flex>
               </Button>
               <Button
                 bg={colors.gold}
@@ -309,7 +314,10 @@ export function UserModal({
                 boxShadow={`0 2px 8px ${colors.gold}50`}
                 w={{ base: "100%", md: "auto" }}
               >
-                {isLoading ? (isEditMode ? "Actualizando..." : "Creando...") : (isEditMode ? "Actualizar Usuario" : "Crear Usuario")}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiCheckCircle} />
+                  <Text>{isLoading ? (isEditMode ? "Actualizando..." : "Creando...") : (isEditMode ? "Actualizar Usuario" : "Crear Usuario")}</Text>
+                </Flex>
               </Button>
             </Flex>
           </Stack>

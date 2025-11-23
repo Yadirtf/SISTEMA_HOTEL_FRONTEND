@@ -1,4 +1,5 @@
-import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text, Icon } from "@chakra-ui/react";
+import { FiEdit, FiCheckCircle, FiXCircle, FiTrash2 } from "react-icons/fi";
 import { useState } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
@@ -75,7 +76,10 @@ export function RoomTableRow({
             borderColor={isHovered && mode === "light" ? "white" : "transparent"}
             borderStyle="solid"
           >
-            Editar
+            <Flex align="center" gap={1}>
+              <Icon as={FiEdit} />
+              <Text>Editar</Text>
+            </Flex>
           </Button>
           <Button
             size="xs"
@@ -94,7 +98,10 @@ export function RoomTableRow({
               color: isHovered && mode === "light" ? "white" : colors.subtext,
             }}
           >
-            {room.isActive === true ? "Desactivar" : "Activar"}
+            <Flex align="center" gap={1}>
+              <Icon as={room.isActive === true ? FiXCircle : FiCheckCircle} />
+              <Text>{room.isActive === true ? "Desactivar" : "Activar"}</Text>
+            </Flex>
           </Button>
           <Button
             size="xs"
@@ -109,7 +116,10 @@ export function RoomTableRow({
             }}
             transition="all 0.2s"
           >
-            Eliminar
+            <Flex align="center" gap={1}>
+              <Icon as={FiTrash2} />
+              <Text>Eliminar</Text>
+            </Flex>
           </Button>
         </Flex>
       </Box>

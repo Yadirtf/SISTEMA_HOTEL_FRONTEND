@@ -9,7 +9,9 @@ import {
   Text,
   Stack,
   Flex,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { PaymentType, PaymentTypeFormData, createPaymentType, updatePaymentType } from "@/services/payment-methods";
 
@@ -135,9 +137,8 @@ export function PaymentTypeModal({
             w="32px"
             h="32px"
             p={0}
-            fontSize="xl"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -240,7 +241,10 @@ export function PaymentTypeModal({
 
             <Flex gap={3} justify="flex-end">
               <Button onClick={onClose} variant="ghost" color={colors.subtext}>
-                Cancelar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiXCircle} />
+                  <Text>Cancelar</Text>
+                </Flex>
               </Button>
               <Button
                 bg={colors.gold}
@@ -249,7 +253,10 @@ export function PaymentTypeModal({
                 onClick={handleSubmit}
                 loading={isSubmitting}
               >
-                {paymentType ? "Actualizar" : "Crear"}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiCheckCircle} />
+                  <Text>{paymentType ? "Actualizar" : "Crear"}</Text>
+                </Flex>
               </Button>
             </Flex>
           </Stack>

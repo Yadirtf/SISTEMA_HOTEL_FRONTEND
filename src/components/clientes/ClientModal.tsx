@@ -8,7 +8,9 @@ import {
   Textarea,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import type { ClientFormData, Company } from "@/app/huespedes/types";
 
@@ -94,7 +96,7 @@ export function ClientModal({
             p={2}
             transition="all 0.2s"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -355,7 +357,10 @@ export function ClientModal({
                 _hover={{ borderColor: colors.gold, color: colors.gold }}
                 disabled={isLoading}
               >
-                Cancelar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiXCircle} />
+                  <Text>Cancelar</Text>
+                </Flex>
               </Button>
               <Button
                 onClick={onSubmit}
@@ -365,7 +370,10 @@ export function ClientModal({
                 _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
                 disabled={isLoading}
               >
-                {isLoading ? (isEditing ? "Actualizando..." : "Registrando...") : (isEditing ? "Actualizar" : "Registrar")}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiCheckCircle} />
+                  <Text>{isLoading ? (isEditing ? "Actualizando..." : "Registrando...") : (isEditing ? "Actualizar" : "Registrar")}</Text>
+                </Flex>
               </Button>
             </Flex>
           </Stack>

@@ -1,4 +1,5 @@
-import { Box, Button, Flex, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text, Icon } from "@chakra-ui/react";
+import { FiEdit, FiCheckCircle, FiXCircle, FiTrash2 } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import { Room } from "../../app/habitaciones/types";
@@ -93,7 +94,10 @@ export function RoomsCard({
           flex="1"
           minW="80px"
         >
-          Editar
+          <Flex align="center" gap={1}>
+            <Icon as={FiEdit} />
+            <Text>Editar</Text>
+          </Flex>
         </Button>
         <Button
           size="sm"
@@ -110,7 +114,10 @@ export function RoomsCard({
           flex="1"
           minW="80px"
         >
-          {room.isActive === true ? "Desactivar" : "Activar"}
+          <Flex align="center" gap={1}>
+            <Icon as={room.isActive === true ? FiXCircle : FiCheckCircle} />
+            <Text>{room.isActive === true ? "Desactivar" : "Activar"}</Text>
+          </Flex>
         </Button>
         <Button
           size="sm"
@@ -127,7 +134,10 @@ export function RoomsCard({
           flex="1"
           minW="80px"
         >
-          Eliminar
+          <Flex align="center" gap={1}>
+            <Icon as={FiTrash2} />
+            <Text>Eliminar</Text>
+          </Flex>
         </Button>
       </Flex>
     </Box>

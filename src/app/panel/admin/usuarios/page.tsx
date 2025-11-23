@@ -1,7 +1,8 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Stack, Text, Icon } from "@chakra-ui/react";
+import { FiRefreshCw, FiPlus, FiEdit, FiCheckCircle, FiXCircle, FiUserCheck, FiX } from "react-icons/fi";
 import { useEffect, useState, useMemo } from "react";
 import { apiGet, apiPatch, apiPost, apiPut } from "@/lib/api";
 import { getSessionUser, getToken } from "@/lib/session";
@@ -254,7 +255,10 @@ export default function AdminUsuariosPage() {
               transition="all 0.2s"
               w={{ base: "100%", md: "auto" }}
             >
-              {loadingUsuarios ? "Cargando..." : "Refrescar"}
+              <Flex align="center" gap={2}>
+                <Icon as={FiRefreshCw} />
+                <Text>{loadingUsuarios ? "Cargando..." : "Refrescar"}</Text>
+              </Flex>
             </Button>
             <Button
               onClick={openCreateModal}
@@ -271,7 +275,10 @@ export default function AdminUsuariosPage() {
               boxShadow={`0 2px 8px ${colors.gold}50`}
               w={{ base: "100%", md: "auto" }}
             >
-              Crear Usuario
+              <Flex align="center" gap={2}>
+                <Icon as={FiPlus} />
+                <Text>Crear Usuario</Text>
+              </Flex>
             </Button>
           </Flex>
         </Flex>
@@ -482,7 +489,10 @@ export default function AdminUsuariosPage() {
                                 borderColor={isHovered && mode === "light" ? "white" : "transparent"}
                                 borderStyle="solid"
                               >
-                                Editar
+                                <Flex align="center" gap={1}>
+                                  <Icon as={FiEdit} />
+                                  <Text>Editar</Text>
+                                </Flex>
                               </Button>
                               <Button
                                 size="xs"
@@ -499,7 +509,10 @@ export default function AdminUsuariosPage() {
                                 borderColor={isHovered && mode === "light" ? "white" : "transparent"}
                                 borderStyle="solid"
                               >
-                                Cambiar Estado
+                                <Flex align="center" gap={1}>
+                                  <Icon as={u.estado === "Activo" ? FiXCircle : FiCheckCircle} />
+                                  <Text>Cambiar Estado</Text>
+                                </Flex>
                               </Button>
                               <Button
                                 size="xs"
@@ -518,7 +531,10 @@ export default function AdminUsuariosPage() {
                                   color: isHovered && mode === "light" ? "white" : colors.subtext,
                                 }}
                               >
-                                Actualizar Rol
+                                <Flex align="center" gap={1}>
+                                  <Icon as={FiUserCheck} />
+                                  <Text>Actualizar Rol</Text>
+                                </Flex>
                               </Button>
                             </Flex>
                           </Box>
@@ -609,7 +625,10 @@ export default function AdminUsuariosPage() {
                           flex="1"
                           minW="120px"
                         >
-                          Editar
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiEdit} />
+                            <Text>Editar</Text>
+                          </Flex>
                         </Button>
                         <Button
                           size="sm"
@@ -625,7 +644,10 @@ export default function AdminUsuariosPage() {
                           flex="1"
                           minW="120px"
                         >
-                          Cambiar Estado
+                          <Flex align="center" gap={1}>
+                            <Icon as={u.estado === "Activo" ? FiXCircle : FiCheckCircle} />
+                            <Text>Cambiar Estado</Text>
+                          </Flex>
                         </Button>
                         <Button
                           size="sm"
@@ -642,7 +664,10 @@ export default function AdminUsuariosPage() {
                           flex="1"
                           minW="120px"
                         >
-                          Actualizar Rol
+                          <Flex align="center" gap={1}>
+                            <Icon as={FiUserCheck} />
+                            <Text>Actualizar Rol</Text>
+                          </Flex>
                         </Button>
                       </Flex>
                     </Box>
@@ -692,7 +717,7 @@ export default function AdminUsuariosPage() {
                 minW="auto"
                 h="auto"
               >
-                ×
+                <Icon as={FiX} />
               </Button>
             </Flex>
           </Box>

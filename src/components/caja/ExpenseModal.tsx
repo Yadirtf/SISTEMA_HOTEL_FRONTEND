@@ -8,7 +8,9 @@ import {
   Stack,
   Flex,
   Textarea,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatCurrency, formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import type { CashTransactionFormData } from "@/app/caja/types";
@@ -103,9 +105,8 @@ export function ExpenseModal({
             w="32px"
             h="32px"
             p={0}
-            fontSize="xl"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -193,7 +194,10 @@ export function ExpenseModal({
               _hover={{ bg: colors.bg, color: colors.text }}
               disabled={isLoading}
             >
-              Cancelar
+              <Flex align="center" gap={2}>
+                <Icon as={FiXCircle} />
+                <Text>Cancelar</Text>
+              </Flex>
             </Button>
             <Button
               type="submit"
@@ -201,11 +205,14 @@ export function ExpenseModal({
               color={colors.bg}
               fontWeight="bold"
               _hover={{ bg: "#b8941f" }}
-              isLoading={isLoading}
+              loading={isLoading}
               loadingText="Registrando..."
               disabled={isLoading}
             >
-              Registrar Egreso
+              <Flex align="center" gap={2}>
+                <Icon as={FiCheckCircle} />
+                <Text>Registrar Egreso</Text>
+              </Flex>
             </Button>
           </Flex>
         </form>

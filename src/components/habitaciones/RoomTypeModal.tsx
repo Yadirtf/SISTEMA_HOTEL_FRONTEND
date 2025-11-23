@@ -8,7 +8,9 @@ import {
   Textarea,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 export type RoomTypeFormData = {
@@ -88,9 +90,8 @@ export function RoomTypeModal({
             w="32px"
             h="32px"
             p={0}
-            fontSize="xl"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -152,7 +153,10 @@ export function RoomTypeModal({
                   _hover={{ bg: colors.surface, borderColor: colors.gold, color: colors.gold }}
                   transition="all 0.2s"
                 >
-                  Cancelar
+                  <Flex align="center" gap={2}>
+                    <Icon as={FiXCircle} />
+                    <Text>Cancelar</Text>
+                  </Flex>
                 </Button>
                 <Button
                   type="submit"
@@ -172,7 +176,10 @@ export function RoomTypeModal({
                   fontWeight="bold"
                   boxShadow={`0 2px 8px ${colors.gold}50`}
                 >
-                  {isLoading ? (isEditing ? "Guardando..." : "Creando...") : (isEditing ? "Guardar" : "Crear")}
+                  <Flex align="center" gap={2}>
+                    <Icon as={FiCheckCircle} />
+                    <Text>{isLoading ? (isEditing ? "Guardando..." : "Creando...") : (isEditing ? "Guardar" : "Crear")}</Text>
+                  </Flex>
                 </Button>
               </Flex>
             </Stack>

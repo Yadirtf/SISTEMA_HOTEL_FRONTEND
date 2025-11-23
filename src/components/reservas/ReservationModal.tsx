@@ -7,7 +7,8 @@ import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { searchGuests, Guest } from "@/services/reservations";
 import { getToken } from "@/lib/session";
 import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
-import { FiX, FiSearch, FiXCircle, FiCheckCircle } from "react-icons/fi";
+import { FiX, FiSearch, FiXCircle, FiCheckCircle, FiChevronDown } from "react-icons/fi";
+import { renderPaymentIcon } from "@/components/payments/IconSelector";
 
 export type ReservationFormData = {
   documentNumber: string;
@@ -719,26 +720,74 @@ export function ReservationModal({
                       <Text fontSize="sm" color={colors.subtext} mb={1}>
                         Método de Pago
                       </Text>
-                      <select
-                        value={formData.paymentMethodId || ""}
-                        onChange={(e) => handleChange("paymentMethodId", e.target.value || undefined)}
-                        style={{
-                          width: "100%",
-                          padding: "8px 12px",
-                          backgroundColor: colors.bg,
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: "6px",
-                          color: colors.text,
-                          fontSize: "14px",
-                        }}
-                      >
-                        <option value="">Seleccionar método de pago</option>
-                        {paymentMethods.map((method) => (
-                          <option key={method._id} value={method._id}>
-                            {method.icon ? `${method.icon} ` : ""}{method.name}
-                          </option>
-                        ))}
-                      </select>
+                      <Box position="relative">
+                        <select
+                          value={formData.paymentMethodId || ""}
+                          onChange={(e) => handleChange("paymentMethodId", e.target.value || undefined)}
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            paddingLeft: formData.paymentMethodId ? "40px" : "12px",
+                            backgroundColor: colors.bg,
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: "6px",
+                            color: colors.text,
+                            fontSize: "14px",
+                            appearance: "none",
+                            WebkitAppearance: "none",
+                            MozAppearance: "none",
+                            cursor: "pointer",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = colors.gold;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = colors.border;
+                          }}
+                          onFocus={(e) => {
+                            e.currentTarget.style.borderColor = colors.gold;
+                            e.currentTarget.style.boxShadow = `0 0 0 1px ${colors.gold}`;
+                          }}
+                          onBlur={(e) => {
+                            e.currentTarget.style.borderColor = colors.border;
+                            e.currentTarget.style.boxShadow = "none";
+                          }}
+                        >
+                          <option value="">Seleccionar método de pago</option>
+                          {paymentMethods.map((method) => (
+                            <option key={method._id} value={method._id}>
+                              {method.name}
+                            </option>
+                          ))}
+                        </select>
+                        {formData.paymentMethodId && (() => {
+                          const selectedMethod = paymentMethods.find(m => m._id === formData.paymentMethodId);
+                          return selectedMethod ? (
+                            <Box
+                              position="absolute"
+                              left="12px"
+                              top="50%"
+                              transform="translateY(-50%)"
+                              pointerEvents="none"
+                              display="flex"
+                              alignItems="center"
+                              fontSize="18px"
+                            >
+                              {renderPaymentIcon(selectedMethod.icon, "18px")}
+                            </Box>
+                          ) : null;
+                        })()}
+                        <Box
+                          position="absolute"
+                          right="8px"
+                          top="50%"
+                          transform="translateY(-50%)"
+                          pointerEvents="none"
+                          color={colors.subtext}
+                        >
+                          <Icon as={FiChevronDown} fontSize="sm" />
+                        </Box>
+                      </Box>
                     </Box>
 
                     <Box>

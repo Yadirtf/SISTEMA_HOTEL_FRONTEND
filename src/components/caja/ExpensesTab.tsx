@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Button, Flex, Text, Spinner, Input, Stack } from "@chakra-ui/react";
+import { Box, Button, Flex, Text, Spinner, Input, Stack, Icon } from "@chakra-ui/react";
+import { FiPlus } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useExpensesData } from "@/app/caja/hooks/useExpensesData";
@@ -82,9 +83,12 @@ export function ExpensesTab({ cashRegisterId, showNotification, onExpenseRegiste
           bg={colors.gold}
           color="white"
           _hover={{ bg: "#b8941f" }}
-          isDisabled={!cashRegisterId}
+          disabled={!cashRegisterId}
         >
-          + Registrar Egreso
+          <Flex align="center" gap={2}>
+            <Icon as={FiPlus} />
+            <Text>Registrar Egreso</Text>
+          </Flex>
         </Button>
       </Flex>
 

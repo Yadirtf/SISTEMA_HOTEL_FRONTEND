@@ -8,7 +8,9 @@ import {
   Textarea,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice, parseFormattedPrice, formatPriceFromString } from "@/lib/format";
 import type { RoomFormData, RoomType, Floor } from "@/app/habitaciones/types";
@@ -106,7 +108,7 @@ export function RoomModal({
             p={2}
             transition="all 0.2s"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -368,7 +370,10 @@ export function RoomModal({
                 transition="all 0.2s"
                 w={{ base: "100%", md: "auto" }}
               >
-                Cancelar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiXCircle} />
+                  <Text>Cancelar</Text>
+                </Flex>
               </Button>
               <Button
                 bg={colors.gold}
@@ -389,7 +394,10 @@ export function RoomModal({
                 boxShadow={`0 2px 8px ${colors.gold}50`}
                 w={{ base: "100%", md: "auto" }}
               >
-                {isLoading ? (isEditing ? "Actualizando..." : "Registrando...") : (isEditing ? "Actualizar" : "Registrar")}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiCheckCircle} />
+                  <Text>{isLoading ? (isEditing ? "Actualizando..." : "Registrando...") : (isEditing ? "Actualizar" : "Registrar")}</Text>
+                </Flex>
               </Button>
             </Flex>
           </Stack>

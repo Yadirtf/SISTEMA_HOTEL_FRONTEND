@@ -1,9 +1,11 @@
 "use client";
 
-import { Box, IconButton, Spinner, Text, Badge, Flex } from "@chakra-ui/react";
+import { Box, Button, Spinner, Text, Badge, Flex, Icon } from "@chakra-ui/react";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { PaymentMethod } from "@/services/payment-methods";
 import { deletePaymentMethod } from "@/services/payment-methods";
+import { renderPaymentIcon } from "./IconSelector";
 
 interface PaymentMethodsListProps {
   paymentMethods: PaymentMethod[];
@@ -73,7 +75,11 @@ export function PaymentMethodsList({
             <tr key={method._id} style={{ borderBottom: `1px solid ${colors.border}` }}>
               <td style={{ padding: "12px", color: colors.text }}>{method.name}</td>
               <td style={{ padding: "12px", color: colors.subtext }}>{method.description || "-"}</td>
-              <td style={{ padding: "12px", color: colors.text }}>{method.icon || "-"}</td>
+              <td style={{ padding: "12px", color: colors.text }}>
+                <Flex align="center" gap={2}>
+                  {renderPaymentIcon(method.icon, "20px") || <Text color={colors.subtext}>-</Text>}
+                </Flex>
+              </td>
               <td style={{ padding: "12px", color: colors.text }}>{method.order}</td>
               <td style={{ padding: "12px" }}>
                 <Badge colorScheme={method.isActive ? "green" : "red"}>
@@ -82,26 +88,30 @@ export function PaymentMethodsList({
               </td>
               <td style={{ padding: "12px" }}>
                 <Flex gap={2}>
-                  <IconButton
-                    aria-label="Editar"
+                  <Button
                     size="sm"
                     bg={colors.gold}
                     color="white"
                     _hover={{ bg: "#b8941f" }}
                     onClick={() => onEdit(method)}
                   >
-                    ✏️
-                  </IconButton>
-                  <IconButton
-                    aria-label="Eliminar"
+                    <Flex align="center" gap={1.5}>
+                      <Icon as={FiEdit} />
+                      <Text>Editar</Text>
+                    </Flex>
+                  </Button>
+                  <Button
                     size="sm"
                     bg="red.500"
                     color="white"
                     _hover={{ bg: "red.600" }}
                     onClick={() => method._id && handleDelete(method._id)}
                   >
-                    🗑️
-                  </IconButton>
+                    <Flex align="center" gap={1.5}>
+                      <Icon as={FiTrash2} />
+                      <Text>Eliminar</Text>
+                    </Flex>
+                  </Button>
                 </Flex>
               </td>
             </tr>

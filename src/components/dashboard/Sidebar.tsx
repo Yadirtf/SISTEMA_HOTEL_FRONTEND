@@ -11,6 +11,7 @@ import {
   FiCalendar,
   FiUsers,
   FiShoppingBag,
+  FiCreditCard,
   FiBriefcase,
   FiKey,
   FiPlusSquare,
@@ -36,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Reservas", href: "/reservas", icon: FiCalendar },
   { label: "Huéspedes", href: "/huespedes", icon: FiUsers },
   { label: "Tienda", href: "/tienda", icon: FiShoppingBag },
-  { label: "Caja", href: "/caja", icon: FiBriefcase },
+  { label: "Caja", href: "/caja", icon: FiCreditCard },
   {
     label: "Gestionar habitaciones",
     href: "/habitaciones",

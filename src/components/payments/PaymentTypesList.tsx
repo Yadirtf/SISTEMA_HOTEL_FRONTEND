@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, IconButton, Spinner, Text, Badge, Flex } from "@chakra-ui/react";
+import { Box, Button, Spinner, Text, Badge, Flex, Icon } from "@chakra-ui/react";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { PaymentType } from "@/services/payment-methods";
 import { deletePaymentType } from "@/services/payment-methods";
@@ -86,26 +87,30 @@ export function PaymentTypesList({
               </td>
               <td style={{ padding: "12px" }}>
                 <Flex gap={2}>
-                  <IconButton
-                    aria-label="Editar"
+                  <Button
                     size="sm"
                     bg={colors.gold}
                     color="white"
                     _hover={{ bg: "#b8941f" }}
                     onClick={() => onEdit(type)}
                   >
-                    ✏️
-                  </IconButton>
-                  <IconButton
-                    aria-label="Eliminar"
+                    <Flex align="center" gap={1.5}>
+                      <Icon as={FiEdit} />
+                      <Text>Editar</Text>
+                    </Flex>
+                  </Button>
+                  <Button
                     size="sm"
                     bg="red.500"
                     color="white"
                     _hover={{ bg: "red.600" }}
                     onClick={() => type._id && handleDelete(type._id)}
                   >
-                    🗑️
-                  </IconButton>
+                    <Flex align="center" gap={1.5}>
+                      <Icon as={FiTrash2} />
+                      <Text>Eliminar</Text>
+                    </Flex>
+                  </Button>
                 </Flex>
               </td>
             </tr>

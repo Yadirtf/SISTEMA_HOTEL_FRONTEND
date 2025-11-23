@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Button, Flex, Text, Spinner, Badge } from "@chakra-ui/react";
+import { Box, Button, Flex, Text, Spinner, Badge, Icon } from "@chakra-ui/react";
+import { FiPlus } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice } from "@/lib/format";
 import { useSalesData } from "../hooks/useSalesData";
@@ -43,7 +44,10 @@ export function SalesTab({ showNotification }: SalesTabProps) {
           Ventas
         </Text>
         <Button onClick={openModal} bg={colors.gold} color="white" _hover={{ bg: "#b8941f" }}>
-          + Nueva Venta
+          <Flex align="center" gap={2}>
+            <Icon as={FiPlus} />
+            <Text>Nueva Venta</Text>
+          </Flex>
         </Button>
       </Flex>
 

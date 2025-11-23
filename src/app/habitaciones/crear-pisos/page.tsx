@@ -1,7 +1,8 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Stack, Text, Icon } from "@chakra-ui/react";
+import { FiRefreshCw, FiPlus, FiEdit, FiCheckCircle, FiXCircle, FiTrash2, FiX } from "react-icons/fi";
 import { useEffect, useState, useMemo } from "react";
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
 import { getToken } from "@/lib/session";
@@ -285,7 +286,10 @@ export default function CrearPisosPage() {
               transition="all 0.2s"
               w={{ base: "100%", md: "auto" }}
             >
-              {loading ? "Cargando..." : "Refrescar"}
+              <Flex align="center" gap={2}>
+                <Icon as={FiRefreshCw} />
+                <Text>{loading ? "Cargando..." : "Refrescar"}</Text>
+              </Flex>
             </Button>
             <Button
               onClick={openCreateModal}
@@ -302,7 +306,10 @@ export default function CrearPisosPage() {
               boxShadow={`0 2px 8px ${colors.gold}50`}
               w={{ base: "100%", md: "auto" }}
             >
-              Registrar Piso
+              <Flex align="center" gap={2}>
+                <Icon as={FiPlus} />
+                <Text>Registrar Piso</Text>
+              </Flex>
             </Button>
           </Flex>
         </Flex>
@@ -455,7 +462,10 @@ export default function CrearPisosPage() {
                                 borderColor={isHovered && mode === "light" ? "white" : "transparent"}
                                 borderStyle="solid"
                               >
-                                Editar
+                                <Flex align="center" gap={1}>
+                                  <Icon as={FiEdit} />
+                                  <Text>Editar</Text>
+                                </Flex>
                               </Button>
                               <Button
                                 size="xs"
@@ -472,7 +482,10 @@ export default function CrearPisosPage() {
                                 borderWidth={isHovered && mode === "light" ? "1px" : "1px"}
                                 borderColor={isHovered && mode === "light" ? "white" : (f.isActive ? "#dc2626" : "#22c55e")}
                               >
-                                {f.isActive ? "Desactivar" : "Activar"}
+                                <Flex align="center" gap={1}>
+                                  <Icon as={f.isActive ? FiXCircle : FiCheckCircle} />
+                                  <Text>{f.isActive ? "Desactivar" : "Activar"}</Text>
+                                </Flex>
                               </Button>
                               <Button
                                 size="xs"
@@ -489,7 +502,10 @@ export default function CrearPisosPage() {
                                 borderWidth={isHovered && mode === "light" ? "1px" : "1px"}
                                 borderColor={isHovered && mode === "light" ? "white" : "#dc2626"}
                               >
-                                Eliminar
+                                <Flex align="center" gap={1}>
+                                  <Icon as={FiTrash2} />
+                                  <Text>Eliminar</Text>
+                                </Flex>
                               </Button>
                             </Flex>
                           </Box>
@@ -571,7 +587,10 @@ export default function CrearPisosPage() {
                         flex="1"
                         minW="80px"
                       >
-                        Editar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiEdit} />
+                          <Text>Editar</Text>
+                        </Flex>
                       </Button>
                       <Button
                         size="sm"
@@ -588,7 +607,10 @@ export default function CrearPisosPage() {
                         flex="1"
                         minW="80px"
                       >
-                        {f.isActive ? "Desactivar" : "Activar"}
+                        <Flex align="center" gap={1}>
+                          <Icon as={f.isActive ? FiXCircle : FiCheckCircle} />
+                          <Text>{f.isActive ? "Desactivar" : "Activar"}</Text>
+                        </Flex>
                       </Button>
                       <Button
                         size="sm"
@@ -605,7 +627,10 @@ export default function CrearPisosPage() {
                         flex="1"
                         minW="80px"
                       >
-                        Eliminar
+                        <Flex align="center" gap={1}>
+                          <Icon as={FiTrash2} />
+                          <Text>Eliminar</Text>
+                        </Flex>
                       </Button>
                     </Flex>
                   </Box>
@@ -665,7 +690,7 @@ export default function CrearPisosPage() {
                 minW="auto"
                 h="auto"
               >
-                ×
+                <Icon as={FiX} />
               </Button>
             </Flex>
           </Box>

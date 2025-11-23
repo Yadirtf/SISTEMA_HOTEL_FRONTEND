@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
+import { FiCreditCard, FiTag, FiPlus } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { getToken, getSessionUser } from "@/lib/session";
 import { PaymentMethodsList } from "@/components/payments/PaymentMethodsList";
@@ -112,8 +113,8 @@ export default function PagosPage() {
           flexWrap="wrap"
         >
           {[
-            { id: 0, label: "Medios de Pago" },
-            { id: 1, label: "Tipos de Pago" },
+            { id: 0, label: "Medios de Pago", icon: FiCreditCard },
+            { id: 1, label: "Tipos de Pago", icon: FiTag },
           ].map((tab) => (
             <Button
               key={tab.id}
@@ -131,7 +132,10 @@ export default function PagosPage() {
               px={6}
               py={4}
             >
-              {tab.label}
+              <Flex align="center" gap={2}>
+                <Icon as={tab.icon} fontSize="lg" />
+                <Text>{tab.label}</Text>
+              </Flex>
             </Button>
           ))}
         </Flex>
@@ -145,7 +149,10 @@ export default function PagosPage() {
                 _hover={{ bg: "#b8941f" }}
                 onClick={handleCreateMethod}
               >
-                Crear Medio de Pago
+                <Flex align="center" gap={2}>
+                  <Icon as={FiPlus} />
+                  <Text>Crear Medio de Pago</Text>
+                </Flex>
               </Button>
             </Box>
             <PaymentMethodsList
@@ -167,7 +174,10 @@ export default function PagosPage() {
                 _hover={{ bg: "#b8941f" }}
                 onClick={handleCreateType}
               >
-                Crear Tipo de Pago
+                <Flex align="center" gap={2}>
+                  <Icon as={FiPlus} />
+                  <Text>Crear Tipo de Pago</Text>
+                </Flex>
               </Button>
             </Box>
             <PaymentTypesList

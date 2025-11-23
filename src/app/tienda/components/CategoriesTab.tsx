@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Flex, Input, Text, Spinner, SimpleGrid, Badge, IconButton } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, Text, Spinner, SimpleGrid, Badge, IconButton, Icon } from "@chakra-ui/react";
+import { FiPlus, FiEdit, FiCheckCircle, FiXCircle, FiTrash2 } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { useCategoriesData } from "../hooks/useCategoriesData";
 import { useCategoriesActions } from "../hooks/useCategoriesActions";
@@ -82,7 +83,10 @@ export function CategoriesTab({ showNotification }: CategoriesTabProps) {
         </select>
         
         <Button onClick={openCreateModal} bg={colors.gold} color="white" _hover={{ bg: "#b8941f" }} whiteSpace="nowrap">
-          + Nueva Categoría
+          <Flex align="center" gap={2}>
+            <Icon as={FiPlus} />
+            <Text>Nueva Categoría</Text>
+          </Flex>
         </Button>
       </Flex>
 
@@ -135,7 +139,10 @@ export function CategoriesTab({ showNotification }: CategoriesTabProps) {
                   flex={1}
                   minW="100px"
                 >
-                  Editar
+                  <Flex align="center" gap={1}>
+                    <Icon as={FiEdit} />
+                    <Text>Editar</Text>
+                  </Flex>
                 </Button>
                 <Button
                   size="sm"
@@ -145,18 +152,23 @@ export function CategoriesTab({ showNotification }: CategoriesTabProps) {
                   _hover={{ bg: category.isActive ? "orange.600" : "green.600" }}
                   whiteSpace="nowrap"
                 >
-                  {category.isActive ? "Desactivar" : "Activar"}
+                  <Flex align="center" gap={1}>
+                    <Icon as={category.isActive ? FiXCircle : FiCheckCircle} />
+                    <Text>{category.isActive ? "Desactivar" : "Activar"}</Text>
+                  </Flex>
                 </Button>
-                <IconButton
+                <Button
                   size="sm"
-                  aria-label="Eliminar"
                   onClick={() => handleDelete(category)}
                   bg="red.500"
                   color="white"
                   _hover={{ bg: "red.600" }}
                 >
-                  🗑️
-                </IconButton>
+                  <Flex align="center" gap={1}>
+                    <Icon as={FiTrash2} />
+                    <Text>Eliminar</Text>
+                  </Flex>
+                </Button>
               </Flex>
             </Box>
           ))}

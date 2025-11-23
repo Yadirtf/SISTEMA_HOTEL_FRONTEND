@@ -2,6 +2,7 @@
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Box, Button, Flex, Stack, Text, Icon } from "@chakra-ui/react";
+import { FiGrid, FiDollarSign, FiClock } from "react-icons/fi";
 import { useCallback, useState } from "react";
 import { formatPrice, parseFormattedPrice } from "@/lib/format";
 import { getToken } from "@/lib/session";
@@ -16,14 +17,6 @@ import { useReservationsData } from "@/app/reservas/hooks/useReservationsData";
 import { useReservationActions } from "@/app/reservas/hooks/useReservationActions";
 import type { Room } from "@/app/reservas/types";
 import { InlineNotice } from "@/components/common/InlineNotice";
-import { IconType } from "react-icons";
-import { FiGrid, FiDollarSign, FiClock } from "react-icons/fi";
-
-const TABS: { id: number; label: string; icon: IconType }[] = [
-  { id: 0, label: "Habitaciones", icon: FiGrid },
-  { id: 1, label: "Facturación", icon: FiDollarSign },
-  { id: 2, label: "Historial de Alquileres", icon: FiClock },
-];
 
 export default function ReservasPage() {
   const token = getToken() || undefined;
@@ -135,7 +128,11 @@ export default function ReservasPage() {
             mb={6}
             flexWrap="wrap"
           >
-            {TABS.map((tab) => (
+            {[
+              { id: 0, label: "Habitaciones", icon: FiGrid },
+              { id: 1, label: "Facturación", icon: FiDollarSign },
+              { id: 2, label: "Historial de Alquileres", icon: FiClock },
+            ].map((tab) => (
               <Button
                 key={tab.id}
                 variant="ghost"

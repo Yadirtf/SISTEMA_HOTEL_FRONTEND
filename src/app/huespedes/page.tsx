@@ -1,7 +1,8 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Stack, Box, Button, Flex } from "@chakra-ui/react";
+import { Stack, Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
+import { FiUsers, FiBriefcase } from "react-icons/fi";
 import { useState, useCallback } from "react";
 import { getToken } from "@/lib/session";
 import { ClientModal } from "@/components/clientes/ClientModal";
@@ -138,8 +139,8 @@ export default function HuespedesPage() {
             flexWrap="wrap"
           >
             {[
-              { id: 0, label: "Clientes" },
-              { id: 1, label: "Empresas" },
+              { id: 0, label: "Clientes", icon: FiUsers },
+              { id: 1, label: "Empresas", icon: FiBriefcase },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -157,7 +158,10 @@ export default function HuespedesPage() {
                 px={6}
                 py={4}
               >
-                {tab.label}
+                <Flex align="center" gap={2} justify="center">
+                  <Icon as={tab.icon} fontSize="lg" />
+                  <Text>{tab.label}</Text>
+                </Flex>
               </Button>
             ))}
           </Flex>

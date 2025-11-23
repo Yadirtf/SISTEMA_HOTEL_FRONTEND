@@ -1,4 +1,5 @@
-import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, Text, Icon } from "@chakra-ui/react";
+import { FiSearch, FiRefreshCw, FiBriefcase } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 type CompaniesHeaderProps = {
@@ -118,7 +119,10 @@ export function CompaniesHeader({
           disabled={loading}
           minW={{ base: "100%", md: "auto" }}
         >
-          🔄 Actualizar
+          <Flex align="center" gap={2}>
+            <Icon as={FiRefreshCw} />
+            <Text>Actualizar</Text>
+          </Flex>
         </Button>
         <Button
           onClick={onCreate}
@@ -128,7 +132,10 @@ export function CompaniesHeader({
           _hover={{ bg: "#b8941f", transform: "translateY(-2px)" }}
           minW={{ base: "100%", md: "auto" }}
         >
-          ➕ Registrar Empresa
+          <Flex align="center" gap={2}>
+            <Icon as={FiBriefcase} />
+            <Text>Registrar Empresa</Text>
+          </Flex>
         </Button>
       </Flex>
     </Flex>

@@ -9,9 +9,12 @@ import {
   Text,
   Stack,
   Flex,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { PaymentMethod, PaymentMethodFormData, createPaymentMethod, updatePaymentMethod } from "@/services/payment-methods";
+import { IconSelector } from "./IconSelector";
 
 interface PaymentMethodModalProps {
   isOpen: boolean;
@@ -135,9 +138,8 @@ export function PaymentMethodModal({
             w="32px"
             h="32px"
             p={0}
-            fontSize="xl"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -175,21 +177,10 @@ export function PaymentMethodModal({
               />
             </Box>
 
-            <Box>
-              <Text color={colors.text} mb={2} fontWeight="semibold">
-                Icono
-              </Text>
-              <Input
-                value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="Ej: 💵, 💳, 🏦"
-                bg={colors.bg}
-                borderColor={colors.border}
-                color={colors.text}
-                _hover={{ borderColor: colors.gold }}
-                _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 1px ${colors.gold}` }}
-              />
-            </Box>
+            <IconSelector
+              selectedIcon={formData.icon}
+              onSelectIcon={(iconName) => setFormData({ ...formData, icon: iconName })}
+            />
 
             <Box>
               <Text color={colors.text} mb={2} fontWeight="semibold">
@@ -233,7 +224,10 @@ export function PaymentMethodModal({
 
             <Flex gap={3} justify="flex-end">
               <Button onClick={onClose} variant="ghost" color={colors.subtext}>
-                Cancelar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiXCircle} />
+                  <Text>Cancelar</Text>
+                </Flex>
               </Button>
               <Button
                 bg={colors.gold}
@@ -242,7 +236,10 @@ export function PaymentMethodModal({
                 onClick={handleSubmit}
                 loading={isSubmitting}
               >
-                {paymentMethod ? "Actualizar" : "Crear"}
+                <Flex align="center" gap={2}>
+                  <Icon as={FiCheckCircle} />
+                  <Text>{paymentMethod ? "Actualizar" : "Crear"}</Text>
+                </Flex>
               </Button>
             </Flex>
           </Stack>

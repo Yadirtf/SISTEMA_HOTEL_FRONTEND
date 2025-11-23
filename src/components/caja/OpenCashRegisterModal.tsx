@@ -8,7 +8,9 @@ import {
   Textarea,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiXCircle, FiUnlock } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatNumberInput, parseFormattedNumber } from "@/lib/format";
 import { useState } from "react";
@@ -124,7 +126,10 @@ export function OpenCashRegisterModal({
               _hover={{ bg: colors.subtext }}
               disabled={isSubmitting}
             >
-              Cancelar
+              <Flex align="center" gap={2}>
+                <Icon as={FiXCircle} />
+                <Text>Cancelar</Text>
+              </Flex>
             </Button>
             <Button
               onClick={handleSubmit}
@@ -134,7 +139,10 @@ export function OpenCashRegisterModal({
               _hover={{ bg: "#b8941f" }}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Abriendo..." : "Abrir Caja"}
+              <Flex align="center" gap={2}>
+                <Icon as={FiUnlock} />
+                <Text>{isSubmitting ? "Abriendo..." : "Abrir Caja"}</Text>
+              </Flex>
             </Button>
           </Flex>
         </Stack>

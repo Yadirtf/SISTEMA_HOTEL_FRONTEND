@@ -1,4 +1,5 @@
-import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Input, Text, Icon } from "@chakra-ui/react";
+import { FiSearch, FiRefreshCw, FiUserPlus } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 type ClientsHeaderProps = {
@@ -178,7 +179,10 @@ export function ClientsHeader({
           transition="all 0.2s"
           w={{ base: "100%", md: "auto" }}
         >
-          {loading ? "Cargando..." : "Refrescar"}
+          <Flex align="center" gap={2}>
+            <Icon as={FiRefreshCw} />
+            <Text>{loading ? "Cargando..." : "Refrescar"}</Text>
+          </Flex>
         </Button>
         <Button
           onClick={onCreate}
@@ -195,7 +199,10 @@ export function ClientsHeader({
           boxShadow={`0 2px 8px ${colors.gold}50`}
           w={{ base: "100%", md: "auto" }}
         >
-          Registrar Huésped
+          <Flex align="center" gap={2}>
+            <Icon as={FiUserPlus} />
+            <Text>Registrar Huésped</Text>
+          </Flex>
         </Button>
       </Flex>
     </Flex>

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Button, Input, Textarea, Text, Stack, Flex } from "@chakra-ui/react";
+import { Box, Button, Input, Textarea, Text, Stack, Flex, Icon } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { formatPrice, parseFormattedNumber, formatNumberInput } from "@/lib/format";
 import type { ProductFormData, Category } from "../types";
@@ -112,9 +113,8 @@ export function ProductModal({
             w="32px"
             h="32px"
             p={0}
-            fontSize="xl"
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -302,7 +302,10 @@ export function ProductModal({
 
               <Flex gap={3} justify="flex-end">
                 <Button onClick={onClose} variant="ghost" color={colors.subtext}>
-                  Cancelar
+                  <Flex align="center" gap={2}>
+                    <Icon as={FiXCircle} />
+                    <Text>Cancelar</Text>
+                  </Flex>
                 </Button>
                 <Button
                   type="submit"
@@ -311,7 +314,10 @@ export function ProductModal({
                   _hover={{ bg: "#b8941f" }}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Cargando..." : isEditing ? "Actualizar" : "Crear"}
+                  <Flex align="center" gap={2}>
+                    <Icon as={FiCheckCircle} />
+                    <Text>{isLoading ? "Cargando..." : isEditing ? "Actualizar" : "Crear"}</Text>
+                  </Flex>
                 </Button>
               </Flex>
             </Stack>

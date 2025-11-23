@@ -8,7 +8,9 @@ import {
   Textarea,
   Text,
   Box,
+  Icon,
 } from "@chakra-ui/react";
+import { FiX, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 
 export type FloorFormData = {
@@ -91,7 +93,7 @@ export function FloorModal({
             h="auto"
             p={1}
           >
-            ×
+            <Icon as={FiX} fontSize="xl" />
           </Button>
         </Box>
 
@@ -161,7 +163,10 @@ export function FloorModal({
             disabled={isLoading}
             size={{ base: "md", md: "sm" }}
           >
-            Cancelar
+            <Flex align="center" gap={2}>
+              <Icon as={FiXCircle} />
+              <Text>Cancelar</Text>
+            </Flex>
           </Button>
           <Button
             onClick={onSubmit}
@@ -177,7 +182,10 @@ export function FloorModal({
             disabled={isLoading || !formData.numero}
             size={{ base: "md", md: "sm" }}
           >
-            {isLoading ? "Guardando..." : isEditing ? "Actualizar" : "Registrar"}
+            <Flex align="center" gap={2}>
+              <Icon as={FiCheckCircle} />
+              <Text>{isLoading ? "Guardando..." : isEditing ? "Actualizar" : "Registrar"}</Text>
+            </Flex>
           </Button>
         </Box>
       </Box>
