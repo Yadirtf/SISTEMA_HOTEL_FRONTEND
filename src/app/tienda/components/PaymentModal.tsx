@@ -6,6 +6,7 @@ import { formatPrice, formatNumberInput, parseFormattedNumber } from "@/lib/form
 import { useState, useEffect } from "react";
 import { getPaymentMethods, getPaymentTypes, PaymentMethod, PaymentType } from "@/services/payment-methods";
 import { getToken } from "@/lib/session";
+import { renderPaymentIcon } from "@/components/payments/IconSelector";
 
 // Hook para detectar tamaño de pantalla
 function useIsMobile() {
@@ -15,7 +16,7 @@ function useIsMobile() {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
     return () => window.removeEventListener('resize', checkIsMobile);
@@ -51,11 +52,12 @@ export function PaymentModal({
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
   const [loadingPaymentData, setLoadingPaymentData] = useState(false);
-  
+  const [isPaymentMenuOpen, setIsPaymentMenuOpen] = useState(false);
+
   // Detectar si el método de pago seleccionado es efectivo
   const selectedPaymentMethod = paymentMethods.find(m => m._id === paymentMethodId);
-  const isCashPayment = selectedPaymentMethod?.name?.toLowerCase().includes('efectivo') || 
-                        selectedPaymentMethod?.name?.toLowerCase().includes('cash');
+  const isCashPayment = selectedPaymentMethod?.name?.toLowerCase().includes('efectivo') ||
+    selectedPaymentMethod?.name?.toLowerCase().includes('cash');
 
   // Cargar métodos y tipos de pago cuando se abre el modal
   useEffect(() => {
@@ -94,7 +96,7 @@ export function PaymentModal({
     }
 
     const amount = parseFormattedNumber(amountReceived);
-    
+
     if (isNaN(amount) || amount === 0) {
       setChange(0);
       setCashChange("");
@@ -119,7 +121,7 @@ export function PaymentModal({
     setError("");
     const calculatedChange = amount - total;
     setChange(calculatedChange);
-    
+
     // Si el método de pago NO es efectivo y hay cambio, establecer cashChange por defecto
     if (!isCashPayment && calculatedChange > 0) {
       setCashChange(formatNumberInput(calculatedChange.toString()));
@@ -127,7 +129,7 @@ export function PaymentModal({
       setCashChange("");
     }
   }, [amountReceived, total, paymentMethodId, isCashPayment]);
-  
+
   // Resetear el formulario cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
@@ -142,7 +144,7 @@ export function PaymentModal({
 
   const handleConfirm = () => {
     const amount = parseFormattedNumber(amountReceived);
-    
+
     if (isNaN(amount) || amount < total) {
       setError("Por favor ingresa un monto válido mayor o igual al total");
       return;
@@ -240,7 +242,7 @@ export function PaymentModal({
         </Box>
 
         {/* Contenido con scroll */}
-        <Box 
+        <Box
           p={{ base: 3, md: 6 }}
           overflowY="auto"
           overflowX="hidden"
@@ -275,62 +277,105 @@ export function PaymentModal({
             </Box>
 
             {/* Método de Pago */}
-            <Box>
+            <Box position="relative">
               <Text mb={{ base: 2, md: 3 }} fontSize={{ base: "sm", md: "md" }} fontWeight="semibold" color={colors.text}>
                 Método de Pago <Text as="span" color="red.500">*</Text>
               </Text>
-              <select
-                value={paymentMethodId}
-                onChange={(e) => setPaymentMethodId(e.target.value)}
+
+              {/* Trigger Button */}
+              <Button
+                onClick={() => !isLoading && !loadingPaymentData && setIsPaymentMenuOpen(!isPaymentMenuOpen)}
+                width="100%"
+                textAlign="left"
+                bg={colors.bg}
+                color={colors.text}
+                borderRadius="8px"
+                border={`2px solid ${error && !paymentMethodId ? 'red' : colors.border}`}
+                _hover={{ borderColor: colors.gold }}
+                _active={{ borderColor: colors.gold }}
+                _focus={{ borderColor: colors.gold, boxShadow: `0 0 0 2px ${colors.gold}40` }}
                 disabled={isLoading || loadingPaymentData}
-                style={{
-                  width: '100%',
-                  backgroundColor: colors.bg,
-                  color: colors.text,
-                  borderRadius: '8px',
-                  padding: isMobile ? '10px 14px' : '12px 16px',
-                  paddingRight: '2.5rem',
-                  border: `2px solid ${error && !paymentMethodId ? 'red' : colors.border}`,
-                  fontSize: isMobile ? '15px' : '16px',
-                  cursor: isLoading || loadingPaymentData ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  MozAppearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 0.5rem center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '1.5em 1.5em',
-                  opacity: isLoading || loadingPaymentData ? 0.6 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading && !loadingPaymentData) {
-                    e.currentTarget.style.borderColor = colors.gold;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isLoading && !loadingPaymentData) {
-                    e.currentTarget.style.borderColor = error && !paymentMethodId ? 'red' : colors.border;
-                  }
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.gold;
-                  e.currentTarget.style.boxShadow = `0 0 0 2px ${colors.gold}40`;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = error && !paymentMethodId ? 'red' : colors.border;
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+                fontWeight="normal"
+                h="auto"
+                py={isMobile ? '10px' : '12px'}
+                px={isMobile ? '14px' : '16px'}
+                fontSize={isMobile ? '15px' : '16px'}
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
               >
-                <option value="" style={{ backgroundColor: colors.surface, color: colors.text }}>
-                  {loadingPaymentData ? "Cargando..." : "Seleccionar método de pago"}
-                </option>
-                {!loadingPaymentData && paymentMethods.map((method) => (
-                  <option key={method._id} value={method._id} style={{ backgroundColor: colors.surface, color: colors.text }}>
-                    {method.icon ? `${method.icon} ` : ""}{method.name}
-                  </option>
-                ))}
-              </select>
+                <Flex align="center" gap={2} width="100%" overflow="hidden">
+                  {paymentMethodId ? (
+                    <>
+                      {(() => {
+                        const selected = paymentMethods.find(m => m._id === paymentMethodId);
+                        return selected ? (
+                          <>
+                            {renderPaymentIcon(selected.icon)}
+                            <Text truncate>{selected.name}</Text>
+                          </>
+                        ) : "Seleccionar método de pago";
+                      })()}
+                    </>
+                  ) : (
+                    <Text color={colors.subtext}>
+                      {loadingPaymentData ? "Cargando..." : "Seleccionar método de pago"}
+                    </Text>
+                  )}
+                </Flex>
+                <Box as="span" transform={`rotate(${isPaymentMenuOpen ? 180 : 0}deg)`} transition="transform 0.2s" ml={2}>▼</Box>
+              </Button>
+
+              {/* Backdrop for closing menu */}
+              {isPaymentMenuOpen && (
+                <Box
+                  position="fixed"
+                  top="0"
+                  left="0"
+                  right="0"
+                  bottom="0"
+                  zIndex={2001}
+                  onClick={() => setIsPaymentMenuOpen(false)}
+                />
+              )}
+
+              {/* Dropdown List */}
+              {isPaymentMenuOpen && (
+                <Box
+                  position="absolute"
+                  top="100%"
+                  left="0"
+                  right="0"
+                  mt={1}
+                  bg={colors.surface}
+                  border="1px solid"
+                  borderColor={colors.border}
+                  borderRadius="md"
+                  boxShadow="lg"
+                  maxH="200px"
+                  overflowY="auto"
+                  zIndex={2002}
+                >
+                  {paymentMethods.map((method) => (
+                    <Box
+                      key={method._id}
+                      onClick={() => {
+                        setPaymentMethodId(method._id || "");
+                        setIsPaymentMenuOpen(false);
+                      }}
+                      p={3}
+                      cursor="pointer"
+                      _hover={{ bg: colors.bg }}
+                      transition="background 0.2s"
+                    >
+                      <Flex align="center" gap={2}>
+                        {renderPaymentIcon(method.icon)}
+                        <Text color={colors.text}>{method.name}</Text>
+                      </Flex>
+                    </Box>
+                  ))}
+                </Box>
+              )}
             </Box>
 
             {/* Tipo de Pago */}
@@ -462,7 +507,7 @@ export function PaymentModal({
                   Cambio en Efectivo a Dar <Text as="span" color="red.500">*</Text>
                 </Text>
                 <Text fontSize={{ base: "xs", md: "sm" }} color={colors.subtext} mb={{ base: 2, md: 3 }} fontStyle="italic">
-                  Ingrese el monto en efectivo que dará al cliente como cambio. 
+                  Ingrese el monto en efectivo que dará al cliente como cambio.
                   Este monto se descontará de la caja física.
                 </Text>
                 <Input
@@ -529,11 +574,11 @@ export function PaymentModal({
               color="white"
               _hover={{ bg: "#b8941f" }}
               disabled={
-                isLoading || 
+                isLoading ||
                 loadingPaymentData ||
-                !!error || 
-                change < 0 || 
-                amountReceived === "" || 
+                !!error ||
+                change < 0 ||
+                amountReceived === "" ||
                 !amountReceived ||
                 parseFormattedNumber(amountReceived) < total ||
                 !paymentMethodId ||
