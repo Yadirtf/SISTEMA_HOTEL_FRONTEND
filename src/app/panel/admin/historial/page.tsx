@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api";
 import { getSessionUser, getToken } from "@/lib/session";
 import { useRouter } from "next/navigation";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/common/PaginationControls";
 
 type Accion = {
   idAccion: number;
@@ -51,6 +53,15 @@ export default function AdminHistorialPage() {
     return u.correo;
   };
 
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData: paginatedAcciones,
+    itemsPerPage,
+    totalItems
+  } = usePagination(acciones, 13);
+
   return (
     <DashboardShell title="Administración - Historial">
       <Stack gap={4}>
@@ -65,7 +76,7 @@ export default function AdminHistorialPage() {
               </tr>
             </thead>
             <tbody>
-              {acciones.map((a) => (
+              {paginatedAcciones.map((a) => (
                 <tr key={a.idAccion}>
                   <td style={{ padding: '8px', color: '#E2E8F0' }}>{nombreDe(a.idUsuario)}</td>
                   <td style={{ padding: '8px', color: '#E2E8F0' }}>{a.descripcionAccion}</td>
@@ -79,13 +90,22 @@ export default function AdminHistorialPage() {
                   })}</td>
                 </tr>
               ))}
-              {acciones.length === 0 && (
+              {paginatedAcciones.length === 0 && (
                 <tr>
                   <td colSpan={3} style={{ padding: '12px', color: '#A0AEC0' }}>No hay acciones registradas.</td>
                 </tr>
               )}
             </tbody>
           </table>
+
+          {/* Paginación */}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </Box>
       </Stack>
     </DashboardShell>
