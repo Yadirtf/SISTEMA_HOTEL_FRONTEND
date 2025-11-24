@@ -190,12 +190,24 @@ interface InvoicePDFProps {
 type InvoiceStatus = "paid" | "pending" | "overdue";
 
 export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true, includeAdditionalCharges = true }: InvoicePDFProps) {
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay, allSales, allSalesTotal, additionalCharges } = billingDetails;
+  const {
+    reservation,
+    pendingSales,
+    pendingSalesTotal,
+    pendingLaundryServices = [],
+    pendingLaundryTotal = 0,
+    allSales,
+    allSalesTotal,
+    laundryServices,
+    laundryServicesTotal,
+    additionalCharges,
+  } = billingDetails;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
   
   // Usar allSales si está disponible (incluye pendientes y pagadas), sino usar pendingSales
   const salesToShow = allSales && allSales.length > 0 ? allSales : pendingSales;
+  const laundryToShow = laundryServices && laundryServices.length > 0 ? laundryServices : pendingLaundryServices;
 
   const formatDate = (date: Date | string | undefined): string => {
     if (!date) return "No definida";
@@ -234,20 +246,12 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status,
 
   // Calcular total según si se incluyen productos y cargos adicionales
   const additionalChargesValue = additionalCharges ?? 0;
-  let baseTotal: number;
+  let baseTotal: number = roomTotal;
   
   if (includeProducts) {
-    // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
-    // Si no, calcular con productos pendientes
-    if (allSalesTotal !== undefined) {
-      baseTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
-    } else {
-      // Antes del checkout: totalToPay incluye habitación + productos pendientes + cargos adicionales
-      // Necesitamos calcular sin los cargos adicionales
-      baseTotal = roomTotal + pendingSalesTotal;
-    }
-  } else {
-    baseTotal = roomTotal; // Solo habitación
+    const aggregatedSales = typeof allSalesTotal === "number" ? allSalesTotal : pendingSalesTotal;
+    const aggregatedLaundry = typeof laundryServicesTotal === "number" ? laundryServicesTotal : pendingLaundryTotal;
+    baseTotal = roomTotal + aggregatedSales + aggregatedLaundry;
   }
   
   // Agregar cargos adicionales si están incluidos
@@ -385,6 +389,20 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status,
                 </View>
               ))
             )}
+
+            {/* Servicios de lavandería */}
+            {includeProducts && laundryToShow.map((service) => (
+              <View key={service._id || service.serviceNumber} style={styles.tableRow}>
+                <Text style={styles.tableCol1}>
+                  Servicio Lavandería {service.serviceNumber}
+                </Text>
+                <Text style={styles.tableCol2}>
+                  {service.items?.reduce((count, item) => count + (item.quantity || 0), 0)}
+                </Text>
+                <Text style={styles.tableCol3}>-</Text>
+                <Text style={styles.tableCol4}>{formatCurrency(service.totalAmount)}</Text>
+              </View>
+            ))}
 
             {/* Cargos adicionales - solo si includeAdditionalCharges es true */}
             {includeAdditionalCharges && additionalChargesValue > 0 && (

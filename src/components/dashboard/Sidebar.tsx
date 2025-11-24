@@ -20,6 +20,7 @@ import {
   FiSun,
   FiMoon,
   FiLogOut,
+  FiDroplet,
 } from "react-icons/fi";
 
 const GOLD = "#d4af37";
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Huéspedes", href: "/huespedes", icon: FiUsers },
   { label: "Tienda", href: "/tienda", icon: FiShoppingBag },
   { label: "Caja", href: "/caja", icon: FiCreditCard },
+  { label: "Lavandería", href: "/lavanderia", icon: FiDroplet },
   {
     label: "Gestionar habitaciones",
     href: "/habitaciones",

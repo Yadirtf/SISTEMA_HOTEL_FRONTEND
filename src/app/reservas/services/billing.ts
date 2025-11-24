@@ -1,6 +1,24 @@
 import { apiGet, Caja } from "@/lib/api";
 import type { Reservation } from "../types";
 
+export interface BillingLaundryItem {
+  garmentName?: string;
+  categoryName?: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
+export interface BillingLaundryService {
+  _id?: string;
+  serviceNumber: string;
+  totalAmount: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  paymentStatus?: 'paid' | 'pending';
+  createdAt?: string | Date;
+  items: BillingLaundryItem[];
+}
+
 export interface BillingDetails {
   reservation: Reservation;
   pendingSales: Array<{
@@ -30,6 +48,10 @@ export interface BillingDetails {
   }>;
   allSalesTotal?: number;
   additionalCharges?: number; // Cargos adicionales registrados en el checkout
+  pendingLaundryServices?: BillingLaundryService[];
+  pendingLaundryTotal?: number;
+  laundryServices?: BillingLaundryService[];
+  laundryServicesTotal?: number;
 }
 
 export async function getBillingActiveReservations(token?: string): Promise<Caja<Reservation[]>> {

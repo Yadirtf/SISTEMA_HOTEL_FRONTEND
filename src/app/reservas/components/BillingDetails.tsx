@@ -16,6 +16,7 @@ import {
   FiMessageCircle,
   FiFileText,
   FiCheckCircle,
+  FiDroplet,
 } from "react-icons/fi";
 
 interface BillingDetailsProps {
@@ -126,9 +127,19 @@ export function BillingDetails({
     );
   }
 
-  const { reservation, pendingSales, pendingSalesTotal, totalToPay } = billingDetails;
+  const {
+    reservation,
+    pendingSales,
+    pendingSalesTotal,
+    pendingLaundryServices = [],
+    pendingLaundryTotal = 0,
+    totalToPay,
+  } = billingDetails;
   const guest = typeof reservation.guest === 'object' ? reservation.guest : null;
   const room = typeof reservation.room === 'object' ? reservation.room : null;
+  const hasPendingProducts = pendingSales.length > 0;
+  const hasPendingLaundry = pendingLaundryServices.length > 0;
+  const hasPendingCharges = hasPendingProducts || hasPendingLaundry;
 
   const formatDate = (date: Date | string | undefined): string => {
     if (!date) return "No definida";
@@ -241,7 +252,7 @@ export function BillingDetails({
         </Box>
 
         {/* Productos fiados */}
-        {pendingSales.length > 0 && (
+        {hasPendingProducts && (
           <Box>
             <Flex align="center" gap={2} color={colors.gold} mb={3}>
               <Icon as={FiShoppingCart} />
@@ -286,6 +297,55 @@ export function BillingDetails({
           </Box>
         )}
 
+        {/* Servicios de lavandería pendientes */}
+        {hasPendingLaundry && (
+          <Box>
+            <Flex align="center" gap={2} color={colors.gold} mb={3}>
+              <Icon as={FiDroplet} />
+              <Text fontSize="md" fontWeight="bold">
+                Servicios de Lavandería ({pendingLaundryServices.length})
+              </Text>
+            </Flex>
+            <Box
+              maxH="200px"
+              overflowY="auto"
+              bg={colors.bg}
+              p={3}
+              borderRadius="md"
+              borderWidth="1px"
+              borderColor={colors.border}
+            >
+              <Stack gap={2}>
+                {pendingLaundryServices.map((service) => (
+                  <Box key={service._id} pb={2} borderBottom="1px solid" borderColor={colors.border}>
+                    <Flex justify="space-between" mb={1}>
+                      <Text fontSize="xs" color={colors.subtext}>
+                        {service.serviceNumber} •{" "}
+                        {service.createdAt
+                          ? new Date(service.createdAt).toLocaleDateString('es-CO', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
+                          : 'Fecha no disponible'}
+                      </Text>
+                      <Badge colorScheme="orange" fontSize="xs">Fiado</Badge>
+                    </Flex>
+                    <Text fontSize="xs" color={colors.text} mb={1}>
+                      {service.items?.reduce((count, item) => count + item.quantity, 0)} prenda(s)
+                    </Text>
+                    <Text fontSize="sm" color={colors.gold} fontWeight="bold">
+                      ${formatPrice(service.totalAmount)}
+                    </Text>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </Box>
+        )}
+
         {/* Desglose de pagos */}
         <Box p={4} bg={colors.bg} borderRadius="md" borderWidth="2px" borderColor={colors.border}>
           <Flex align="center" gap={2} color={colors.gold} mb={3}>
@@ -309,12 +369,23 @@ export function BillingDetails({
             <Flex justify="space-between" align="center">
               <Flex align="center" gap={2}>
                 <Text fontSize="sm" color={colors.subtext}>Productos Fiados:</Text>
-                <Badge colorScheme={pendingSales.length > 0 ? "orange" : "green"} fontSize="xs">
-                  {pendingSales.length > 0 ? "Pendiente" : "Pagado"}
+                <Badge colorScheme={hasPendingProducts ? "orange" : "green"} fontSize="xs">
+                  {hasPendingProducts ? "Pendiente" : "Pagado"}
                 </Badge>
               </Flex>
               <Text fontSize="sm" color={colors.text} fontWeight="semibold">
                 ${formatPrice(pendingSalesTotal)}
+              </Text>
+            </Flex>
+            <Flex justify="space-between" align="center">
+              <Flex align="center" gap={2}>
+                <Text fontSize="sm" color={colors.subtext}>Servicios Lavandería:</Text>
+                <Badge colorScheme={hasPendingLaundry ? "orange" : "green"} fontSize="xs">
+                  {hasPendingLaundry ? "Pendiente" : "Pagado"}
+                </Badge>
+              </Flex>
+              <Text fontSize="sm" color={colors.text} fontWeight="semibold">
+                ${formatPrice(pendingLaundryTotal)}
               </Text>
             </Flex>
             <Flex justify="space-between" pt={2} borderTop="1px solid" borderColor={colors.border}>
@@ -332,26 +403,26 @@ export function BillingDetails({
             <Flex align="center" gap={2} color={colors.gold} mb={3}>
               <Icon as={FiCreditCard} />
               <Text fontSize="md" fontWeight="bold">
-                {reservation.isPaid && pendingSales.length === 0
+                {reservation.isPaid && !hasPendingCharges
                   ? "Check-out y Facturación"
-                  : reservation.isPaid && pendingSales.length > 0 
-                  ? "Pagar Productos Fiados" 
+                  : reservation.isPaid && hasPendingCharges 
+                  ? "Pagar cargos pendientes" 
                   : "Proceso de Pago"}
               </Text>
             </Flex>
-            {reservation.isPaid && pendingSales.length === 0 && (
+            {reservation.isPaid && !hasPendingCharges && (
               <Text fontSize="sm" color={colors.subtext} mb={3} fontStyle="italic">
                 La habitación ya está pagada. Puedes generar la factura y realizar el check-out para liberar la habitación.
               </Text>
             )}
-            {reservation.isPaid && pendingSales.length > 0 && (
+            {reservation.isPaid && hasPendingCharges && (
               <Text fontSize="sm" color={colors.subtext} mb={3} fontStyle="italic">
-                La habitación ya está pagada. Estás pagando los productos fiados pendientes.
+                La habitación ya está pagada. Estás pagando cargos pendientes (productos y/o lavandería).
               </Text>
             )}
             <Stack gap={3}>
               {/* Mostrar campos de pago solo si hay algo pendiente de pagar */}
-              {(!reservation.isPaid || pendingSales.length > 0) && (
+              {(!reservation.isPaid || hasPendingCharges) && (
                 <>
                   <Box>
                     <Flex align="center" gap={2} mb={2}>
@@ -512,15 +583,15 @@ export function BillingDetails({
                     
                     onCheckout(finalPaymentMethodId, finalPaymentTypeId, parseFloat(additionalCharges) || 0, notes.trim() || undefined);
                   }}
-                  disabled={isProcessingCheckout || ((!reservation.isPaid || pendingSales.length > 0) && !paymentMethodId && !(reservation as any).paymentMethodId && !(reservation as any).paymentMethod)}
+                  disabled={isProcessingCheckout || ((!reservation.isPaid || hasPendingCharges) && !paymentMethodId && !(reservation as any).paymentMethodId && !(reservation as any).paymentMethod)}
                 >
                   <Flex align="center" gap={2} justify="center">
                     <Icon as={FiCheckCircle} />
                     <Text>
                       {isProcessingCheckout 
                         ? "Procesando..." 
-                        : reservation.isPaid && pendingSales.length > 0
-                        ? "Pagar Productos Fiados"
+                        : reservation.isPaid && hasPendingCharges
+                        ? "Pagar Cargos Pendientes"
                         : "Realizar Check-out"}
                     </Text>
                   </Flex>
