@@ -28,6 +28,7 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
   const { colors } = useThemeMode();
   const [viewMode, setViewMode] = useState<"preview" | "pdf">("preview");
   const [includeProducts, setIncludeProducts] = useState(true); // Por defecto incluir productos
+  const [includeLaundryServices, setIncludeLaundryServices] = useState(true); // Por defecto incluir servicios de lavandería
   const [includeAdditionalCharges, setIncludeAdditionalCharges] = useState(true); // Por defecto incluir cargos adicionales
   const invoiceDate = useMemo(() => new Date(), []);
   const invoiceNumber = useMemo(() => {
@@ -38,14 +39,13 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
   // Determinar estado de la factura - debe estar antes del return condicional
   const invoiceStatus = useMemo(() => {
     if (!billingDetails) return "pending";
-    const { reservation, pendingSales, pendingLaundryServices } = billingDetails;
-    const hasPendingCharges = pendingSales.length > 0 || (pendingLaundryServices?.length ?? 0) > 0;
+    const { reservation, pendingSales, pendingLaundryServices = [] } = billingDetails;
     
-    // Si la reserva está pagada y no hay cargos pendientes, está pagada
-    if (reservation.isPaid && !hasPendingCharges) return "paid";
+    // Si la reserva está pagada y no hay ventas ni servicios de lavandería pendientes, está pagada
+    if (reservation.isPaid && pendingSales.length === 0 && pendingLaundryServices.length === 0) return "paid";
     
     // Si la reserva tiene estado checked_out y está pagada, está pagada
-    if (reservation.status === "checked_out" && reservation.isPaid && !hasPendingCharges) return "paid";
+    if (reservation.status === "checked_out" && reservation.isPaid && pendingSales.length === 0 && pendingLaundryServices.length === 0) return "paid";
     
     // Si tiene fecha de salida y ya pasó, está vencida (solo si no está pagada)
     if (reservation.checkOutTime && new Date(reservation.checkOutTime) < new Date() && !reservation.isPaid) {
@@ -55,18 +55,20 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
     return "pending";
   }, [billingDetails]);
 
-  // Calcular total según si se incluyen productos y cargos adicionales - debe estar antes del return condicional
+  // Calcular total según si se incluyen productos, servicios de lavandería y cargos adicionales - debe estar antes del return condicional
   const calculatedTotal = useMemo(() => {
     if (!billingDetails) return 0;
-    const {
-      reservation,
-      pendingSalesTotal,
-      pendingLaundryTotal = 0,
+    const { 
+      reservation, 
+      totalToPay, 
+      allSalesTotal, 
+      pendingSalesTotal, 
       additionalCharges,
-      allSalesTotal,
-      laundryServicesTotal,
+      allLaundryServicesTotal = 0,
+      pendingLaundryServicesTotal = 0,
     } = billingDetails;
     
+    // Calcular noches
     const calculateNights = (): number => {
       if (!reservation.checkOutTime) return 0;
       const checkIn = new Date(reservation.checkInTime);
@@ -84,13 +86,33 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
     let baseTotal = roomTotal;
     
     if (includeProducts) {
-      const aggregatedSales = typeof allSalesTotal === "number" ? allSalesTotal : pendingSalesTotal;
-      const aggregatedLaundry = typeof laundryServicesTotal === "number" ? laundryServicesTotal : pendingLaundryTotal;
-      baseTotal = roomTotal + aggregatedSales + aggregatedLaundry;
+      // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
+      // Si no, calcular con productos pendientes
+      if (allSalesTotal !== undefined) {
+        baseTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
+      } else {
+        // Antes del checkout: totalToPay incluye habitación + productos pendientes + cargos adicionales
+        // Necesitamos restar los cargos adicionales si no se incluyen
+        baseTotal = roomTotal + pendingSalesTotal;
+      }
     }
     
-    return includeAdditionalCharges ? baseTotal + additionalChargesValue : baseTotal;
-  }, [billingDetails, includeProducts, includeAdditionalCharges]);
+    // Agregar servicios de lavandería si están incluidos (independiente de productos)
+    if (includeLaundryServices) {
+      if (allLaundryServicesTotal > 0) {
+        baseTotal += allLaundryServicesTotal; // Todos los servicios de lavandería (pendientes y pagados)
+      } else if (pendingLaundryServicesTotal > 0) {
+        baseTotal += pendingLaundryServicesTotal; // Solo servicios de lavandería pendientes
+      }
+    }
+    
+    // Agregar cargos adicionales si están incluidos
+    if (includeAdditionalCharges) {
+      return baseTotal + additionalChargesValue;
+    } else {
+      return baseTotal;
+    }
+  }, [billingDetails, includeProducts, includeLaundryServices, includeAdditionalCharges]);
 
   // Memorizar el documento PDF para evitar problemas con PDFDownloadLink - debe estar antes del return condicional
   const pdfDocument = useMemo(() => {
@@ -102,32 +124,30 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
         invoiceDate={invoiceDate}
         status={invoiceStatus}
         includeProducts={includeProducts}
+        includeLaundryServices={includeLaundryServices}
         includeAdditionalCharges={includeAdditionalCharges}
       />
     );
-  }, [billingDetails, invoiceNumber, invoiceDate, invoiceStatus, includeProducts, includeAdditionalCharges]);
+  }, [billingDetails, invoiceNumber, invoiceDate, invoiceStatus, includeProducts, includeLaundryServices, includeAdditionalCharges]);
 
   if (!isOpen || !billingDetails) return null;
 
-  const {
-    reservation,
-    pendingSales,
-    pendingSalesTotal,
-    pendingLaundryServices = [],
-    pendingLaundryTotal = 0,
-    totalToPay,
-    allSales,
-    allSalesTotal,
-    laundryServices,
-    laundryServicesTotal,
+  const { 
+    reservation, 
+    pendingSales, 
+    pendingSalesTotal, 
+    totalToPay, 
+    allSales, 
+    allSalesTotal, 
     additionalCharges,
+    pendingLaundryServices = [],
+    pendingLaundryServicesTotal = 0,
+    allLaundryServices = [],
+    allLaundryServicesTotal = 0,
   } = billingDetails;
   
+  // Usar allSales si está disponible (incluye pendientes y pagadas), sino usar pendingSales
   const salesToShow = allSales && allSales.length > 0 ? allSales : pendingSales;
-  const laundryToShow = laundryServices && laundryServices.length > 0 ? laundryServices : pendingLaundryServices;
-  const hasPendingProducts = pendingSales.length > 0;
-  const hasPendingLaundry = pendingLaundryServices.length > 0;
-  const hasPendingCharges = hasPendingProducts || hasPendingLaundry;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
 
@@ -283,6 +303,25 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               />
               <Text fontSize="sm" color={colors.text}>
                 Incluir productos fiados
+              </Text>
+            </Flex>
+          )}
+          {/* Mostrar checkbox si hay servicios de lavandería (pendientes o pagados) */}
+          {(allLaundryServices.length > 0 || pendingLaundryServices.length > 0) && (
+            <Flex gap={2} align="center">
+              <input
+                type="checkbox"
+                checked={includeLaundryServices}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIncludeLaundryServices(e.target.checked)}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer',
+                  accentColor: colors.gold,
+                }}
+              />
+              <Text fontSize="sm" color={colors.text}>
+                Incluir servicios de lavandería
               </Text>
             </Flex>
           )}
@@ -512,38 +551,42 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
                         </Box>
                       ))
                     )}
-                    {includeProducts && laundryToShow.map((service) => (
-                      <Box
-                        key={service._id || service.serviceNumber}
-                        as="tr"
-                        borderBottom="1px solid"
-                        borderColor={colors.border}
-                      >
-                        <Box as="td" p={3} fontSize="sm" color={colors.text}>
-                          Servicio Lavandería {service.serviceNumber}
-                          {service.createdAt && (
-                            <Text fontSize="xs" color={colors.subtext}>
-                              {new Date(service.createdAt).toLocaleDateString("es-ES", {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "numeric",
-                                minute: "2-digit",
-                              })}
-                            </Text>
-                          )}
-                        </Box>
-                        <Box as="td" p={3} textAlign="center" fontSize="sm" color={colors.text}>
-                          {service.items?.reduce((count, item) => count + (item.quantity || 0), 0)}
-                        </Box>
-                        <Box as="td" p={3} textAlign="right" fontSize="sm" color={colors.text}>
-                          -
-                        </Box>
-                        <Box as="td" p={3} textAlign="right" fontSize="sm" color={colors.gold} fontWeight="bold">
-                          ${formatPrice(service.totalAmount)}
-                        </Box>
-                      </Box>
-                    ))}
+                    {/* Servicios de lavandería - solo si includeLaundryServices es true */}
+                    {includeLaundryServices && (allLaundryServices.length > 0 || pendingLaundryServices.length > 0) && (
+                      <>
+                        {(allLaundryServices.length > 0 ? allLaundryServices : pendingLaundryServices).map((service) =>
+                          service.items.map((item, idx) => {
+                            const garment = typeof item.garmentId === "object" ? item.garmentId : null;
+                            const garmentName = garment ? garment.name : `Prenda ${idx + 1}`;
+                            return (
+                              <Box
+                                key={`${service._id}-${idx}`}
+                                as="tr"
+                                borderBottom="1px solid"
+                                borderColor={colors.border}
+                              >
+                                <Box as="td" p={3} fontSize="sm" color={colors.text}>
+                                  {garmentName} - {service.serviceNumber} {service.createdAt ? new Date(service.createdAt).toLocaleDateString("es-ES", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                  }) : ""}
+                                </Box>
+                                <Box as="td" p={3} textAlign="center" fontSize="sm" color={colors.text}>
+                                  {item.quantity}
+                                </Box>
+                                <Box as="td" p={3} textAlign="right" fontSize="sm" color={colors.text}>
+                                  ${formatPrice(item.unitPrice)}
+                                </Box>
+                                <Box as="td" p={3} textAlign="right" fontSize="sm" color={colors.gold} fontWeight="bold">
+                                  ${formatPrice(item.subtotal)}
+                                </Box>
+                              </Box>
+                            );
+                          })
+                        )}
+                      </>
+                    )}
                     {/* Cargos adicionales - solo si includeAdditionalCharges es true */}
                     {includeAdditionalCharges && (additionalCharges ?? 0) > 0 && (
                       <Box
@@ -629,9 +672,9 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
           </Button>
           {billingDetails && pdfDocument && (
             <PDFDownloadLink
-              key={`${invoiceNumber}-${includeProducts}-${includeAdditionalCharges}`}
+              key={`${invoiceNumber}-${includeProducts ? '1' : '0'}-${includeLaundryServices ? '1' : '0'}-${includeAdditionalCharges ? '1' : '0'}`}
               document={pdfDocument}
-              fileName={`Factura-${invoiceNumber}${!includeProducts ? '-SoloAlojamiento' : ''}${!includeAdditionalCharges ? '-SinCargosAdicionales' : ''}.pdf`}
+              fileName={`Factura-${invoiceNumber}${!includeProducts ? '-SoloAlojamiento' : ''}${!includeLaundryServices ? '-SinLavanderia' : ''}${!includeAdditionalCharges ? '-SinCargosAdicionales' : ''}.pdf`}
             >
             {({ loading }) => (
               <Button

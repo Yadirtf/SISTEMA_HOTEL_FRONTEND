@@ -184,30 +184,34 @@ interface InvoicePDFProps {
   invoiceDate: Date;
   status: "paid" | "pending" | "overdue";
   includeProducts?: boolean; // Por defecto true para mantener compatibilidad
+  includeLaundryServices?: boolean; // Por defecto true para mantener compatibilidad
   includeAdditionalCharges?: boolean; // Por defecto true para mantener compatibilidad
 }
 
 type InvoiceStatus = "paid" | "pending" | "overdue";
 
-export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true, includeAdditionalCharges = true }: InvoicePDFProps) {
-  const {
-    reservation,
-    pendingSales,
-    pendingSalesTotal,
-    pendingLaundryServices = [],
-    pendingLaundryTotal = 0,
-    allSales,
-    allSalesTotal,
-    laundryServices,
-    laundryServicesTotal,
+export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status, includeProducts = true, includeLaundryServices = true, includeAdditionalCharges = true }: InvoicePDFProps) {
+  const { 
+    reservation, 
+    pendingSales, 
+    pendingSalesTotal, 
+    totalToPay, 
+    allSales, 
+    allSalesTotal, 
     additionalCharges,
+    pendingLaundryServices = [],
+    pendingLaundryServicesTotal = 0,
+    allLaundryServices = [],
+    allLaundryServicesTotal = 0,
   } = billingDetails;
   const guest = typeof reservation.guest === "object" ? reservation.guest : null;
   const room = typeof reservation.room === "object" ? reservation.room : null;
   
   // Usar allSales si está disponible (incluye pendientes y pagadas), sino usar pendingSales
   const salesToShow = allSales && allSales.length > 0 ? allSales : pendingSales;
-  const laundryToShow = laundryServices && laundryServices.length > 0 ? laundryServices : pendingLaundryServices;
+  
+  // Usar allLaundryServices si está disponible, sino usar pendingLaundryServices
+  const laundryServicesToShow = allLaundryServices && allLaundryServices.length > 0 ? allLaundryServices : pendingLaundryServices;
 
   const formatDate = (date: Date | string | undefined): string => {
     if (!date) return "No definida";
@@ -244,14 +248,31 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status,
   const nights = calculateNights();
   const roomTotal = (reservation.roomPrice || 0) * nights;
 
-  // Calcular total según si se incluyen productos y cargos adicionales
+  // Calcular total según si se incluyen productos, servicios de lavandería y cargos adicionales
   const additionalChargesValue = additionalCharges ?? 0;
-  let baseTotal: number = roomTotal;
+  let baseTotal: number;
   
   if (includeProducts) {
-    const aggregatedSales = typeof allSalesTotal === "number" ? allSalesTotal : pendingSalesTotal;
-    const aggregatedLaundry = typeof laundryServicesTotal === "number" ? laundryServicesTotal : pendingLaundryTotal;
-    baseTotal = roomTotal + aggregatedSales + aggregatedLaundry;
+    // Si hay allSalesTotal (después del checkout), usar roomTotal + allSalesTotal
+    // Si no, calcular con productos pendientes
+    if (allSalesTotal !== undefined) {
+      baseTotal = roomTotal + allSalesTotal; // Habitación + todos los productos (pendientes y pagados)
+    } else {
+      // Antes del checkout: totalToPay incluye habitación + productos pendientes + cargos adicionales
+      // Necesitamos calcular sin los cargos adicionales
+      baseTotal = roomTotal + pendingSalesTotal;
+    }
+  } else {
+    baseTotal = roomTotal; // Solo habitación
+  }
+  
+  // Agregar servicios de lavandería si están incluidos (independiente de productos)
+  if (includeLaundryServices) {
+    if (allLaundryServicesTotal > 0) {
+      baseTotal += allLaundryServicesTotal; // Todos los servicios de lavandería (pendientes y pagados)
+    } else if (pendingLaundryServicesTotal > 0) {
+      baseTotal += pendingLaundryServicesTotal; // Solo servicios de lavandería pendientes
+    }
   }
   
   // Agregar cargos adicionales si están incluidos
@@ -390,19 +411,27 @@ export function InvoicePDF({ billingDetails, invoiceNumber, invoiceDate, status,
               ))
             )}
 
-            {/* Servicios de lavandería */}
-            {includeProducts && laundryToShow.map((service) => (
-              <View key={service._id || service.serviceNumber} style={styles.tableRow}>
-                <Text style={styles.tableCol1}>
-                  Servicio Lavandería {service.serviceNumber}
-                </Text>
-                <Text style={styles.tableCol2}>
-                  {service.items?.reduce((count, item) => count + (item.quantity || 0), 0)}
-                </Text>
-                <Text style={styles.tableCol3}>-</Text>
-                <Text style={styles.tableCol4}>{formatCurrency(service.totalAmount)}</Text>
-              </View>
-            ))}
+            {/* Servicios de lavandería - solo si includeLaundryServices es true */}
+            {includeLaundryServices && laundryServicesToShow && laundryServicesToShow.length > 0 && laundryServicesToShow.map((service) =>
+              service.items && service.items.length > 0 ? service.items.map((item, idx) => {
+                const garment = typeof item.garmentId === "object" ? item.garmentId : null;
+                const garmentName = garment ? garment.name : `Prenda ${idx + 1}`;
+                return (
+                  <View key={`${service._id}-${idx}`} style={styles.tableRow}>
+                    <Text style={styles.tableCol1}>
+                      {garmentName} - {service.serviceNumber} {service.createdAt ? new Date(service.createdAt).toLocaleDateString("es-ES", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      }) : ""}
+                    </Text>
+                    <Text style={styles.tableCol2}>{item.quantity}</Text>
+                    <Text style={styles.tableCol3}>{formatCurrency(item.unitPrice)}</Text>
+                    <Text style={styles.tableCol4}>{formatCurrency(item.subtotal)}</Text>
+                  </View>
+                );
+              }) : null
+            )}
 
             {/* Cargos adicionales - solo si includeAdditionalCharges es true */}
             {includeAdditionalCharges && additionalChargesValue > 0 && (

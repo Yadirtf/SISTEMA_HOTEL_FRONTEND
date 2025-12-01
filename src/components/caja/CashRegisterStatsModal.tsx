@@ -143,6 +143,17 @@ export function CashRegisterStatsModal({
                 </Box>
               )}
 
+              {stats.operationsReport.totalLaundryServices && stats.operationsReport.totalLaundryServices > 0 && (
+                <Box>
+                  <Text color={colors.subtext} fontSize="sm" mb={1}>
+                    Servicios de Lavandería Registrados
+                  </Text>
+                  <Text color={colors.text} fontSize="md" fontWeight="semibold">
+                    {stats.operationsReport.totalLaundryServices} servicio(s) - {formatCurrency(stats.operationsReport.totalLaundryServicesAmount || 0)}
+                  </Text>
+                </Box>
+              )}
+
               {stats.operationsReport.totalCashIncome > 0 && (
                 <Box>
                   <Text color={colors.subtext} fontSize="sm" mb={1}>

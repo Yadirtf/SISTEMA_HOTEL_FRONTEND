@@ -1,7 +1,7 @@
 export type CashRegisterStatus = "open" | "closed" | "suspended";
 export type TransactionType = "income" | "expense";
-export type TransactionCategory = "sale" | "reservation_payment" | "refund" | "adjustment" | "withdrawal" | "deposit" | "expense" | "other";
-export type ReferenceType = "sale" | "reservation" | "refund" | "adjustment";
+export type TransactionCategory = "sale" | "reservation_payment" | "refund" | "adjustment" | "withdrawal" | "deposit" | "expense" | "other" | "laundry_service";
+export type ReferenceType = "sale" | "reservation" | "refund" | "adjustment" | "laundry";
 
 export type CashRegister = {
   _id: string;
@@ -89,6 +89,8 @@ export type CashRegisterStats = {
     totalSalesAmount: number;
     totalReservations: number;
     totalReservationsAmount: number;
+    totalLaundryServices?: number;
+    totalLaundryServicesAmount?: number;
     totalCashIncome: number;
     totalCardIncome: number;
     totalTransferIncome: number;

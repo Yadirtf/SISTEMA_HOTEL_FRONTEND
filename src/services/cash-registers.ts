@@ -81,6 +81,8 @@ export async function getMyCashRegisterOperationsReport(token?: string): Promise
   totalSalesAmount: number;
   totalReservations: number;
   totalReservationsAmount: number;
+  totalLaundryServices: number;
+  totalLaundryServicesAmount: number;
   totalCashIncome: number;
   totalCardIncome: number;
   totalTransferIncome: number;
@@ -91,6 +93,8 @@ export async function getMyCashRegisterOperationsReport(token?: string): Promise
     totalSalesAmount: number;
     totalReservations: number;
     totalReservationsAmount: number;
+    totalLaundryServices: number;
+    totalLaundryServicesAmount: number;
     totalCashIncome: number;
     totalCardIncome: number;
     totalTransferIncome: number;
@@ -105,6 +109,8 @@ export async function closeMyCashRegister(
       totalSalesAmount?: number;
       totalReservations?: number;
       totalReservationsAmount?: number;
+      totalLaundryServices?: number;
+      totalLaundryServicesAmount?: number;
       totalCashIncome?: number;
       totalCardIncome?: number;
       totalTransferIncome?: number;

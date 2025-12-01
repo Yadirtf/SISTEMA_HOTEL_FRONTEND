@@ -322,6 +322,14 @@ export function CashRegisterDetailsModal({
                               </Text>
                             </Flex>
                           )}
+                          {stats.operationsReport.totalLaundryServices && stats.operationsReport.totalLaundryServices > 0 && (
+                            <Flex justify="space-between" align="center">
+                              <Text color={colors.subtext} fontSize="sm">Servicios de Lavandería:</Text>
+                              <Text color={colors.text} fontSize="sm" fontWeight="semibold">
+                                {stats.operationsReport.totalLaundryServices} servicio(s) - {formatCurrency(stats.operationsReport.totalLaundryServicesAmount || 0)}
+                              </Text>
+                            </Flex>
+                          )}
                           <Box borderTop="1px solid" borderColor={colors.border} pt={3} mt={2}>
                             {stats.operationsReport.totalCashIncome > 0 && (
                               <Flex justify="space-between" align="center" mb={2}>

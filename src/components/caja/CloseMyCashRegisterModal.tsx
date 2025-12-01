@@ -55,6 +55,8 @@ export function CloseMyCashRegisterModal({
     totalSalesAmount?: number;
     totalReservations?: number;
     totalReservationsAmount?: number;
+    totalLaundryServices?: number;
+    totalLaundryServicesAmount?: number;
     totalCashIncome?: number;
     totalCardIncome?: number;
     totalTransferIncome?: number;
@@ -280,6 +282,53 @@ export function CloseMyCashRegisterModal({
                       </Box>
                     )}
                     
+                    {/* Servicios de Lavandería */}
+                    {operationsReport.totalLaundryServices !== undefined && operationsReport.totalLaundryServices > 0 && (
+                      <Box mb={2} pl={4}>
+                        <Flex justify="space-between" mb={1}>
+                          <Text color={colors.text} fontSize="xs">
+                            Servicios de Lavandería:
+                          </Text>
+                          <Text color={colors.gold} fontSize="xs" fontWeight="semibold">
+                            {operationsReport.totalLaundryServices} servicio(s)
+                          </Text>
+                        </Flex>
+                        {operationsReport.totalLaundryServicesAmount !== undefined && operationsReport.totalLaundryServicesAmount > 0 && (
+                          <Flex justify="space-between">
+                            <Text color={colors.subtext} fontSize="xs" pl={2}>
+                              Monto Total:
+                            </Text>
+                            <Text color={colors.gold} fontSize="sm" fontWeight="bold">
+                              {formatCurrency(operationsReport.totalLaundryServicesAmount)}
+                            </Text>
+                          </Flex>
+                        )}
+                      </Box>
+                    )}
+                    
+                    {/* Total de Operaciones (Ventas + Alquileres + Servicios de Lavandería) */}
+                    {((operationsReport.totalSalesAmount !== undefined && operationsReport.totalSalesAmount > 0) ||
+                      (operationsReport.totalReservationsAmount !== undefined && operationsReport.totalReservationsAmount > 0) ||
+                      (operationsReport.totalLaundryServicesAmount !== undefined && operationsReport.totalLaundryServicesAmount > 0)) && (
+                      <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2} mb={2}>
+                        <Text color={colors.subtext} fontSize="xs" mb={2} fontWeight="semibold">
+                          Total de Operaciones:
+                        </Text>
+                        <Flex justify="space-between" pl={4}>
+                          <Text color={colors.text} fontSize="sm" fontWeight="bold">
+                            Total (Ventas + Alquileres + Servicios de Lavandería):
+                          </Text>
+                          <Text color={colors.gold} fontSize="lg" fontWeight="bold">
+                            {formatCurrency(
+                              (operationsReport.totalSalesAmount || 0) +
+                              (operationsReport.totalReservationsAmount || 0) +
+                              (operationsReport.totalLaundryServicesAmount || 0)
+                            )}
+                          </Text>
+                        </Flex>
+                      </Box>
+                    )}
+                    
                     {/* Totales por Método de Pago */}
                     <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2} mb={2}>
                       <Text color={colors.subtext} fontSize="xs" mb={2} fontWeight="semibold">
@@ -364,7 +413,8 @@ export function CloseMyCashRegisterModal({
                     </Box>
                     
                     {(!operationsReport.totalSales || operationsReport.totalSales === 0) && 
-                     (!operationsReport.totalReservations || operationsReport.totalReservations === 0) && (
+                     (!operationsReport.totalReservations || operationsReport.totalReservations === 0) &&
+                     (!operationsReport.totalLaundryServices || operationsReport.totalLaundryServices === 0) && (
                       <Text color={colors.subtext} fontSize="xs" pl={4} fontStyle="italic" mt={2}>
                         No hay operaciones registradas
                       </Text>
