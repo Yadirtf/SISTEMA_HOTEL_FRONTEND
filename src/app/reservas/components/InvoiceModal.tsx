@@ -6,6 +6,7 @@ import { formatPrice } from "@/lib/format";
 import type { BillingDetails as BillingDetailsType } from "../services/billing";
 import { useState, useMemo } from "react";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import React from "react";
 import { InvoicePDF } from "./InvoicePDF";
 import { FiX, FiDownload, FiEye, FiFileText } from "react-icons/fi";
 
@@ -114,20 +115,18 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
     }
   }, [billingDetails, includeProducts, includeLaundryServices, includeAdditionalCharges]);
 
-  // Memorizar el documento PDF para evitar problemas con PDFDownloadLink - debe estar antes del return condicional
-  const pdfDocument = useMemo(() => {
+  // Memorizar las props del documento PDF para evitar problemas con PDFDownloadLink - debe estar antes del return condicional
+  const pdfProps = useMemo(() => {
     if (!billingDetails) return null;
-    return (
-      <InvoicePDF
-        billingDetails={billingDetails}
-        invoiceNumber={invoiceNumber}
-        invoiceDate={invoiceDate}
-        status={invoiceStatus}
-        includeProducts={includeProducts}
-        includeLaundryServices={includeLaundryServices}
-        includeAdditionalCharges={includeAdditionalCharges}
-      />
-    );
+    return {
+      billingDetails,
+      invoiceNumber,
+      invoiceDate,
+      status: invoiceStatus,
+      includeProducts,
+      includeLaundryServices,
+      includeAdditionalCharges,
+    };
   }, [billingDetails, invoiceNumber, invoiceDate, invoiceStatus, includeProducts, includeLaundryServices, includeAdditionalCharges]);
 
   if (!isOpen || !billingDetails) return null;
@@ -647,13 +646,23 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               </Box>
             )}
           </Stack>
+        ) : pdfProps ? (
+          <Box p={4} h="calc(90vh - 200px)" minH="600px" position="relative">
+            <PDFViewer width="100%" height="100%">
+              <InvoicePDF 
+                billingDetails={pdfProps.billingDetails}
+                invoiceNumber={pdfProps.invoiceNumber}
+                invoiceDate={pdfProps.invoiceDate}
+                status={pdfProps.status}
+                includeProducts={pdfProps.includeProducts}
+                includeLaundryServices={pdfProps.includeLaundryServices}
+                includeAdditionalCharges={pdfProps.includeAdditionalCharges}
+              />
+            </PDFViewer>
+          </Box>
         ) : (
-          <Box p={4} h="calc(90vh - 200px)" minH="600px">
-            {pdfDocument && (
-              <PDFViewer width="100%" height="100%">
-                {pdfDocument}
-              </PDFViewer>
-            )}
+          <Box p={4} h="calc(90vh - 200px)" minH="600px" position="relative" display="flex" alignItems="center" justifyContent="center">
+            <Text color={colors.subtext}>Cargando vista previa...</Text>
           </Box>
         )}
 
@@ -670,10 +679,10 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
               <Text>Cerrar</Text>
             </Flex>
           </Button>
-          {billingDetails && pdfDocument && (
+          {billingDetails && pdfProps && (
             <PDFDownloadLink
               key={`${invoiceNumber}-${includeProducts ? '1' : '0'}-${includeLaundryServices ? '1' : '0'}-${includeAdditionalCharges ? '1' : '0'}`}
-              document={pdfDocument}
+              document={<InvoicePDF {...pdfProps} />}
               fileName={`Factura-${invoiceNumber}${!includeProducts ? '-SoloAlojamiento' : ''}${!includeLaundryServices ? '-SinLavanderia' : ''}${!includeAdditionalCharges ? '-SinCargosAdicionales' : ''}.pdf`}
             >
             {({ loading }) => (

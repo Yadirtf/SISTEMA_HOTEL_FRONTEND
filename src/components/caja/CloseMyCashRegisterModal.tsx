@@ -306,29 +306,6 @@ export function CloseMyCashRegisterModal({
                       </Box>
                     )}
                     
-                    {/* Total de Operaciones (Ventas + Alquileres + Servicios de Lavandería) */}
-                    {((operationsReport.totalSalesAmount !== undefined && operationsReport.totalSalesAmount > 0) ||
-                      (operationsReport.totalReservationsAmount !== undefined && operationsReport.totalReservationsAmount > 0) ||
-                      (operationsReport.totalLaundryServicesAmount !== undefined && operationsReport.totalLaundryServicesAmount > 0)) && (
-                      <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2} mb={2}>
-                        <Text color={colors.subtext} fontSize="xs" mb={2} fontWeight="semibold">
-                          Total de Operaciones:
-                        </Text>
-                        <Flex justify="space-between" pl={4}>
-                          <Text color={colors.text} fontSize="sm" fontWeight="bold">
-                            Total (Ventas + Alquileres + Servicios de Lavandería):
-                          </Text>
-                          <Text color={colors.gold} fontSize="lg" fontWeight="bold">
-                            {formatCurrency(
-                              (operationsReport.totalSalesAmount || 0) +
-                              (operationsReport.totalReservationsAmount || 0) +
-                              (operationsReport.totalLaundryServicesAmount || 0)
-                            )}
-                          </Text>
-                        </Flex>
-                      </Box>
-                    )}
-                    
                     {/* Totales por Método de Pago */}
                     <Box borderTop="1px solid" borderColor={colors.border} pt={2} mt={2} mb={2}>
                       <Text color={colors.subtext} fontSize="xs" mb={2} fontWeight="semibold">
