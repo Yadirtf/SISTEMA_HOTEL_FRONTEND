@@ -618,7 +618,7 @@ export function ServiceModal({
                   bg={colors.gold}
                   color="white"
                   _hover={{ bg: "#b8941f" }}
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText={isEditing ? "Actualizando..." : "Creando..."}
                   disabled={formData.items.length === 0}
                 >

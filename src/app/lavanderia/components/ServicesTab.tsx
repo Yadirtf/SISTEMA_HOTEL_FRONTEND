@@ -200,30 +200,33 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                           <IconButton
                             onClick={() => openEditModal(service)}
                             aria-label="Editar"
-                            icon={<FiEdit />}
                             size="sm"
                             variant="ghost"
                             color={colors.gold}
                             _hover={{ bg: colors.bg }}
-                          />
+                          >
+                            <Icon as={FiEdit} />
+                          </IconButton>
                           <IconButton
                             onClick={() => openCompleteModal(service._id!)}
                             aria-label="Completar"
-                            icon={<FiCheckCircle />}
                             size="sm"
                             variant="ghost"
                             color="green.400"
                             _hover={{ bg: colors.bg, color: "green.500" }}
-                          />
+                          >
+                            <Icon as={FiCheckCircle} />
+                          </IconButton>
                           <IconButton
                             onClick={() => handleCancel(service._id!)}
                             aria-label="Cancelar"
-                            icon={<FiXCircle />}
                             size="sm"
                             variant="ghost"
                             color="red.400"
                             _hover={{ bg: colors.bg, color: "red.500" }}
-                          />
+                          >
+                            <Icon as={FiXCircle} />
+                          </IconButton>
                         </>
                       )}
                       {service.status === 'completed' && (
@@ -233,12 +236,13 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                             showNotification("info", "Servicio completado", `Servicio ${service.serviceNumber} fue completado y pagado`);
                           }}
                           aria-label="Ver detalles"
-                          icon={<FiEye />}
                           size="sm"
                           variant="ghost"
                           color={colors.subtext}
                           _hover={{ bg: colors.bg }}
-                        />
+                        >
+                          <Icon as={FiEye} />
+                        </IconButton>
                       )}
                     </Flex>
                   </td>

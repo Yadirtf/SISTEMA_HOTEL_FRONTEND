@@ -6,7 +6,8 @@ import { FiX } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { getToken } from "@/lib/session";
 import { getPaymentMethods } from "@/services/payment-methods";
-import type { CompleteLaundryServiceFormData, PaymentMethod } from "../types";
+import type { PaymentMethod } from "@/services/payment-methods";
+import type { CompleteLaundryServiceFormData } from "../types";
 
 interface CompleteServiceModalProps {
   isOpen: boolean;
@@ -199,7 +200,7 @@ export function CompleteServiceModal({
                   bg={colors.gold}
                   color="white"
                   _hover={{ bg: "#b8941f" }}
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText="Procesando..."
                 >
                   Completar y Pagar

@@ -173,7 +173,7 @@ export function GarmentModal({
                   bg={colors.gold}
                   color="white"
                   _hover={{ bg: "#b8941f" }}
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText={isEditing ? "Actualizando..." : "Creando..."}
                 >
                   {isEditing ? "Actualizar" : "Crear"}

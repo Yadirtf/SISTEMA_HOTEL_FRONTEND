@@ -38,7 +38,7 @@ export function InvoiceModal({ isOpen, onClose, billingDetails }: InvoiceModalPr
   }, [billingDetails, invoiceDate]);
 
   // Determinar estado de la factura - debe estar antes del return condicional
-  const invoiceStatus = useMemo(() => {
+  const invoiceStatus = useMemo<"paid" | "pending" | "overdue">(() => {
     if (!billingDetails) return "pending";
     const { reservation, pendingSales, pendingLaundryServices = [] } = billingDetails;
     
