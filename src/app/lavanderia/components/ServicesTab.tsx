@@ -60,6 +60,21 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
     );
   };
 
+  const getPaymentStatusBadge = (paymentStatus?: string) => {
+    if (!paymentStatus || paymentStatus === 'pending') {
+      return (
+        <Badge colorScheme="orange" fontSize="xs" px={2} py={1} borderRadius="md">
+          Pendiente de Pago
+        </Badge>
+      );
+    }
+    return (
+      <Badge colorScheme="green" fontSize="xs" px={2} py={1} borderRadius="md">
+        Pagado
+      </Badge>
+    );
+  };
+
   const getClientName = (service: LaundryService): string => {
     if (typeof service.clientId === 'object' && service.clientId) {
       return `${service.clientId.firstName} ${service.clientId.lastName}`;
@@ -164,6 +179,7 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Prendas</th>
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Total</th>
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Estado</th>
+                <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Estado de Pago</th>
                 <th style={{ padding: "12px", textAlign: "left", color: colors.gold, fontWeight: "bold" }}>Acciones</th>
               </tr>
             </thead>
@@ -192,6 +208,9 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                   </td>
                   <td style={{ padding: "12px" }}>
                     {getStatusBadge(service.status)}
+                  </td>
+                  <td style={{ padding: "12px" }}>
+                    {getPaymentStatusBadge(service.paymentStatus)}
                   </td>
                   <td style={{ padding: "12px" }}>
                     <Flex gap={2}>

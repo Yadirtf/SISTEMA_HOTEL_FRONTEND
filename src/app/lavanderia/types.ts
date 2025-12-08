@@ -54,7 +54,9 @@ export interface LaundryService {
   status: 'pending' | 'completed' | 'cancelled';
   completedAt?: string;
   notes?: string;
+  paymentStatus?: 'paid' | 'pending';
   paymentMethodId?: string;
+  paymentTypeId?: string;
   paidAt?: string;
   createdAt?: string;
   updatedAt?: string;
