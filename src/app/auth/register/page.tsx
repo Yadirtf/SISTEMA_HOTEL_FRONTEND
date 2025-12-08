@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet, apiPost } from "@/lib/api";
-import { Box, Button, Container, Field, Heading, Input, Link, Stack, Text, Flex } from "@chakra-ui/react";
+import { Box, Button, Container, Field, Heading, Input, Link, Stack, Text, Flex, Icon } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
+import { FiMail } from "react-icons/fi";
 
 type UserResponseDto = {
   idUsuario: number;
@@ -24,6 +27,8 @@ export default function RegisterPage() {
   const [showPass, setShowPass] = useState(false);
   const [isRegisterAvailable, setIsRegisterAvailable] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleFormData, setGoogleFormData] = useState<{ nombre: string; apellido: string; telefono: string } | null>(null);
 
   // Verificar si el registro está disponible
   useEffect(() => {
@@ -77,6 +82,89 @@ export default function RegisterPage() {
     } catch (err: any) {
       setErrorMsg(err?.message || "No se pudo registrar");
       // Si hay una excepción, asumir que el registro podría estar desactivado
+      setIsRegisterAvailable(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    setErrorMsg(null);
+    
+    if (!auth || !googleProvider) {
+      setErrorMsg("Firebase no está configurado correctamente. Verifica las variables de entorno.");
+      return;
+    }
+    
+    setIsGoogleLoading(true);
+    try {
+      // Autenticar con Google usando Firebase
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      
+      // Extraer nombre y apellido del usuario de Google
+      const displayName = result.user.displayName || "";
+      const nameParts = displayName.split(" ");
+      const nombre = nameParts[0] || "";
+      const apellido = nameParts.slice(1).join(" ") || "";
+
+      // Mostrar modal para completar datos (teléfono es requerido)
+      setGoogleFormData({ nombre, apellido, telefono: "" });
+      
+      // Guardar el token temporalmente para usarlo después
+      (window as any).__googleIdToken = idToken;
+    } catch (err: any) {
+      console.error("Error en registro con Google:", err);
+      if (err.code === "auth/popup-closed-by-user") {
+        setErrorMsg("Se cerró la ventana de autenticación");
+      } else {
+        setErrorMsg(err?.message || "No se pudo autenticar con Google");
+      }
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleCompleteGoogleRegister = async () => {
+    if (!googleFormData || !googleFormData.telefono) {
+      setErrorMsg("El teléfono es requerido");
+      return;
+    }
+
+    const idToken = (window as any).__googleIdToken;
+    if (!idToken) {
+      setErrorMsg("Error: token de Google no encontrado. Por favor, intenta de nuevo.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      const resp = await apiPost<UserResponseDto, { idToken: string; nombre: string; apellido: string; telefono: string }>(
+        "/auth/register/google",
+        {
+          idToken,
+          nombre: googleFormData.nombre,
+          apellido: googleFormData.apellido,
+          telefono: googleFormData.telefono,
+        }
+      );
+
+      if (!resp || resp.success === false || !resp.data) {
+        setErrorMsg(resp?.message || "No se pudo registrar");
+        if (resp?.message?.includes("desactivado")) {
+          setIsRegisterAvailable(false);
+        }
+        return;
+      }
+
+      // Limpiar token temporal
+      delete (window as any).__googleIdToken;
+      setGoogleFormData(null);
+      setIsRegisterAvailable(false);
+      router.push("/auth/login");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "No se pudo registrar");
       setIsRegisterAvailable(false);
     } finally {
       setIsSubmitting(false);
@@ -218,6 +306,28 @@ export default function RegisterPage() {
                 </Box>
               </Field.Root>
               <Button type="submit" colorScheme="blue" loading={isSubmitting} w="full">Registrarme</Button>
+              
+              <Flex align="center" gap={2} my={2}>
+                <Box flex="1" h="1px" bg="gray.300" />
+                <Text fontSize="sm" color="gray.500">o</Text>
+                <Box flex="1" h="1px" bg="gray.300" />
+              </Flex>
+
+              <Button
+                type="button"
+                onClick={handleGoogleRegister}
+                loading={isGoogleLoading}
+                w="full"
+                variant="outline"
+                colorScheme="red"
+                leftIcon={<Icon as={FiMail} />}
+              >
+                Registrarse con Google
+              </Button>
+              <Text fontSize="xs" textAlign="center" color="gray.600" fontStyle="italic">
+                Solo para el primer administrador
+              </Text>
+
               <Text fontSize="sm" textAlign="center" color="black">
                 ¿Ya tienes cuenta? {" "}
                 <Link as={NextLink} href="/auth/login" color="black">Inicia sesión</Link>
@@ -226,6 +336,88 @@ export default function RegisterPage() {
           </Box>
         </Container>
       </Flex>
+
+      {/* Modal para completar datos de Google */}
+      {googleFormData && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="rgba(0, 0, 0, 0.8)"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          zIndex={1000}
+        >
+          <Box
+            bg="white"
+            borderRadius="lg"
+            p={6}
+            maxW="md"
+            w="90%"
+            boxShadow="xl"
+          >
+            <Stack gap={4}>
+              <Heading size="md">Completar Registro</Heading>
+              <Text fontSize="sm" color="gray.600">
+                Por favor, completa los siguientes datos para finalizar tu registro:
+              </Text>
+              {errorMsg && (
+                <Box bg="red.50" color="red.700" borderWidth="1px" borderColor="red.200" borderRadius="md" p={3}>
+                  {errorMsg}
+                </Box>
+              )}
+              <Field.Root>
+                <Field.Label>Nombre</Field.Label>
+                <Input
+                  value={googleFormData.nombre}
+                  onChange={(e) => setGoogleFormData({ ...googleFormData, nombre: e.target.value })}
+                  placeholder="Juan"
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>Apellido</Field.Label>
+                <Input
+                  value={googleFormData.apellido}
+                  onChange={(e) => setGoogleFormData({ ...googleFormData, apellido: e.target.value })}
+                  placeholder="Pérez"
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>Teléfono <Text as="span" color="red.500">*</Text></Field.Label>
+                <Input
+                  value={googleFormData.telefono}
+                  onChange={(e) => setGoogleFormData({ ...googleFormData, telefono: e.target.value })}
+                  placeholder="3001234567"
+                  required
+                />
+              </Field.Root>
+              <Flex gap={3}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setGoogleFormData(null);
+                    delete (window as any).__googleIdToken;
+                  }}
+                  flex={1}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCompleteGoogleRegister}
+                  loading={isSubmitting}
+                  colorScheme="blue"
+                  flex={1}
+                >
+                  Completar Registro
+                </Button>
+              </Flex>
+            </Stack>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

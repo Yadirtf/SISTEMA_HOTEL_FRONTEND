@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost, JwtResponseDto } from "@/lib/api";
 import { saveSession } from "@/lib/session";
-import { Box, Button, Container, Field, Heading, Input, Link, Stack, Text, Flex } from "@chakra-ui/react";
+import { Box, Button, Container, Field, Heading, Input, Link, Stack, Text, Flex, Icon } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
+import { FiMail } from "react-icons/fi";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +17,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPass, setShowPass] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +46,45 @@ export default function LoginPage() {
       setErrorMsg("No se pudo iniciar sesión");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMsg(null);
+    
+    if (!auth || !googleProvider) {
+      setErrorMsg("Firebase no está configurado correctamente. Verifica las variables de entorno.");
+      return;
+    }
+    
+    setIsGoogleLoading(true);
+    try {
+      // Autenticar con Google usando Firebase
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      // Enviar token al backend
+      const resp = await apiPost<JwtResponseDto, { idToken: string }>(
+        "/auth/login/google",
+        { idToken }
+      );
+
+      if (!resp || resp.success === false || !resp.data) {
+        setErrorMsg(resp?.message || "Error al iniciar sesión con Google");
+        return;
+      }
+
+      saveSession(resp.data);
+      router.push("/panel");
+    } catch (err: any) {
+      console.error("Error en login con Google:", err);
+      if (err.code === "auth/popup-closed-by-user") {
+        setErrorMsg("Se cerró la ventana de autenticación");
+      } else {
+        setErrorMsg(err?.message || "No se pudo iniciar sesión con Google");
+      }
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -92,6 +135,28 @@ export default function LoginPage() {
                 </Box>
               </Field.Root>
               <Button type="submit" colorScheme="blue" loading={isSubmitting} w="full">Entrar</Button>
+              
+              <Flex align="center" gap={2} my={2}>
+                <Box flex="1" h="1px" bg="gray.300" />
+                <Text fontSize="sm" color="gray.500">o</Text>
+                <Box flex="1" h="1px" bg="gray.300" />
+              </Flex>
+
+              <Button
+                type="button"
+                onClick={handleGoogleLogin}
+                loading={isGoogleLoading}
+                w="full"
+                variant="outline"
+                colorScheme="red"
+                leftIcon={<Icon as={FiMail} />}
+              >
+                Continuar con Google
+              </Button>
+              <Text fontSize="xs" textAlign="center" color="gray.600" fontStyle="italic">
+                Solo disponible para administradores
+              </Text>
+
               <Text fontSize="sm" textAlign="center" color="black">
                 ¿No tienes cuenta? {" "}
                 <Link as={NextLink} href="/auth/register" color="black">Regístrate</Link>
