@@ -320,9 +320,11 @@ export default function RegisterPage() {
                 w="full"
                 variant="outline"
                 colorScheme="red"
-                leftIcon={<Icon as={FiMail} />}
               >
-                Registrarse con Google
+                <Flex align="center" gap={2}>
+                  <Icon as={FiMail} />
+                  <Text>Registrarse con Google</Text>
+                </Flex>
               </Button>
               <Text fontSize="xs" textAlign="center" color="gray.600" fontStyle="italic">
                 Solo para el primer administrador

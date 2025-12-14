@@ -2,13 +2,14 @@
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Box, Button, Flex, Icon, Text } from "@chakra-ui/react";
-import { FiDroplet, FiTag, FiPackage, FiShoppingCart } from "react-icons/fi";
+import { FiDroplet, FiTag, FiPackage, FiShoppingCart, FiGitBranch } from "react-icons/fi";
 import { useState, useCallback } from "react";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { InlineNotice } from "@/components/common/InlineNotice";
 import { CategoriesTab } from "./components/CategoriesTab";
 import { GarmentsTab } from "./components/GarmentsTab";
 import { ServicesTab } from "./components/ServicesTab";
+import { GraphViewTab } from "./components/GraphViewTab";
 
 export default function LavanderiaPage() {
   const { colors } = useThemeMode();
@@ -45,6 +46,7 @@ export default function LavanderiaPage() {
               { id: 0, label: "Servicios", icon: FiShoppingCart },
               { id: 1, label: "Prendas", icon: FiPackage },
               { id: 2, label: "Categorías", icon: FiTag },
+              { id: 3, label: "Vista Relacional", icon: FiGitBranch },
             ].map((tab) => (
               <Button
                 key={tab.id}
@@ -73,6 +75,7 @@ export default function LavanderiaPage() {
           {activeTab === 0 && <ServicesTab showNotification={showNotification} />}
           {activeTab === 1 && <GarmentsTab showNotification={showNotification} />}
           {activeTab === 2 && <CategoriesTab showNotification={showNotification} />}
+          {activeTab === 3 && <GraphViewTab showNotification={showNotification} />}
         </Box>
       </Box>
     </DashboardShell>

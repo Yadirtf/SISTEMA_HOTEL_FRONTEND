@@ -149,9 +149,11 @@ export default function LoginPage() {
                 w="full"
                 variant="outline"
                 colorScheme="red"
-                leftIcon={<Icon as={FiMail} />}
               >
-                Continuar con Google
+                <Flex align="center" gap={2}>
+                  <Icon as={FiMail} />
+                  <Text>Continuar con Google</Text>
+                </Flex>
               </Button>
               <Text fontSize="xs" textAlign="center" color="gray.600" fontStyle="italic">
                 Solo disponible para administradores
