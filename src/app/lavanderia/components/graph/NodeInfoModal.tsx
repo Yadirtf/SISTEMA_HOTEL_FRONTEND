@@ -39,6 +39,7 @@ export function NodeInfoModal({
 
   const getFilteredProperties = () => {
     const excludedKeys: string[] = [];
+    // Solo excluir las propiedades que ya se muestran en la sección principal
     if (nodeType === NodeType.CLIENT) {
       excludedKeys.push("firstName", "lastName", "documentNumber");
     } else if (nodeType === NodeType.ROOM) {
@@ -46,7 +47,13 @@ export function NodeInfoModal({
     } else if (nodeType === NodeType.LAUNDRY_SERVICE) {
       excludedKeys.push("serviceNumber", "status", "totalAmount");
     }
-    return Object.entries(node.properties).filter(([key]) => !excludedKeys.includes(key));
+    // Filtrar propiedades vacías o nulas, pero mantener todas las demás
+    return Object.entries(node.properties)
+      .filter(([key]) => !excludedKeys.includes(key))
+      .filter(([key, value]) => {
+        // Incluir todas las propiedades excepto las vacías (pero incluir 0, false, etc.)
+        return value !== null && value !== undefined && value !== "";
+      });
   };
 
   return (
@@ -184,18 +191,40 @@ export function NodeInfoModal({
                     {node.properties.documentNumber || "N/A"}
                   </Text>
                 </Box>
+                {node.properties.createdAt && (
+                  <Box>
+                    <Text fontSize="xs" color={colors.subtext} mb={1}>
+                      Fecha de Registro
+                    </Text>
+                    <Text fontSize="sm" color={colors.text}>
+                      {formatPropertyValue("createdAt", node.properties.createdAt)}
+                    </Text>
+                  </Box>
+                )}
               </>
             )}
 
             {nodeType === NodeType.ROOM && (
-              <Box>
-                <Text fontSize="xs" color={colors.subtext} mb={1}>
-                  Número de Habitación
-                </Text>
-                <Text fontSize="md" fontWeight="semibold" color={colors.text}>
-                  {node.properties.number || "N/A"}
-                </Text>
-              </Box>
+              <>
+                <Box>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Número de Habitación
+                  </Text>
+                  <Text fontSize="md" fontWeight="semibold" color={colors.text}>
+                    {node.properties.number || "N/A"}
+                  </Text>
+                </Box>
+                {node.properties.createdAt && (
+                  <Box>
+                    <Text fontSize="xs" color={colors.subtext} mb={1}>
+                      Fecha de Registro
+                    </Text>
+                    <Text fontSize="sm" color={colors.text}>
+                      {formatPropertyValue("createdAt", node.properties.createdAt)}
+                    </Text>
+                  </Box>
+                )}
+              </>
             )}
 
             {nodeType === NodeType.LAUNDRY_SERVICE && (
@@ -227,13 +256,57 @@ export function NodeInfoModal({
                   </Box>
                   <Box flex={1}>
                     <Text fontSize="xs" color={colors.subtext} mb={1}>
-                      Monto Total
+                      Estado de Pago
                     </Text>
-                    <Text fontSize="md" fontWeight="semibold" color={colors.text}>
-                      {formatPropertyValue("totalAmount", node.properties.totalAmount)}
-                    </Text>
+                    <Badge
+                      colorScheme={
+                        node.properties.paymentStatus === "paid"
+                          ? "green"
+                          : "orange"
+                      }
+                    >
+                      {formatPropertyValue("paymentStatus", node.properties.paymentStatus)}
+                    </Badge>
                   </Box>
                 </HStack>
+                <Box>
+                  <Text fontSize="xs" color={colors.subtext} mb={1}>
+                    Monto Total
+                  </Text>
+                  <Text fontSize="md" fontWeight="semibold" color={colors.text}>
+                    {formatPropertyValue("totalAmount", node.properties.totalAmount)}
+                  </Text>
+                </Box>
+                {node.properties.createdAt && (
+                  <Box>
+                    <Text fontSize="xs" color={colors.subtext} mb={1}>
+                      Fecha de Creación
+                    </Text>
+                    <Text fontSize="sm" color={colors.text}>
+                      {formatPropertyValue("createdAt", node.properties.createdAt)}
+                    </Text>
+                  </Box>
+                )}
+                {node.properties.completedAt && (
+                  <Box>
+                    <Text fontSize="xs" color={colors.subtext} mb={1}>
+                      Fecha de Completado
+                    </Text>
+                    <Text fontSize="sm" color={colors.text}>
+                      {formatPropertyValue("completedAt", node.properties.completedAt)}
+                    </Text>
+                  </Box>
+                )}
+                {node.properties.paidAt && (
+                  <Box>
+                    <Text fontSize="xs" color={colors.subtext} mb={1}>
+                      Fecha de Pago
+                    </Text>
+                    <Text fontSize="sm" color={colors.text}>
+                      {formatPropertyValue("paidAt", node.properties.paidAt)}
+                    </Text>
+                  </Box>
+                )}
               </>
             )}
 

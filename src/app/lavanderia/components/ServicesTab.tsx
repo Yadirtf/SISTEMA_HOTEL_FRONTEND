@@ -221,8 +221,10 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                             aria-label="Editar"
                             size="sm"
                             variant="ghost"
+                            colorScheme="blue"
                             color={colors.gold}
-                            _hover={{ bg: colors.bg }}
+                            _hover={{ bg: colors.bg, color: colors.gold, transform: "scale(1.1)" }}
+                            transition="all 0.2s"
                           >
                             <Icon as={FiEdit} />
                           </IconButton>
@@ -231,8 +233,10 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                             aria-label="Completar"
                             size="sm"
                             variant="ghost"
+                            colorScheme="green"
                             color="green.400"
-                            _hover={{ bg: colors.bg, color: "green.500" }}
+                            _hover={{ bg: "green.50", color: "green.600", transform: "scale(1.1)" }}
+                            transition="all 0.2s"
                           >
                             <Icon as={FiCheckCircle} />
                           </IconButton>
@@ -241,8 +245,10 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                             aria-label="Cancelar"
                             size="sm"
                             variant="ghost"
+                            colorScheme="red"
                             color="red.400"
-                            _hover={{ bg: colors.bg, color: "red.500" }}
+                            _hover={{ bg: "red.50", color: "red.600", transform: "scale(1.1)" }}
+                            transition="all 0.2s"
                           >
                             <Icon as={FiXCircle} />
                           </IconButton>
@@ -257,8 +263,10 @@ export function ServicesTab({ showNotification }: ServicesTabProps) {
                           aria-label="Ver detalles"
                           size="sm"
                           variant="ghost"
+                          colorScheme="gray"
                           color={colors.subtext}
-                          _hover={{ bg: colors.bg }}
+                          _hover={{ bg: colors.bg, color: colors.gold, transform: "scale(1.1)" }}
+                          transition="all 0.2s"
                         >
                           <Icon as={FiEye} />
                         </IconButton>

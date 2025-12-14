@@ -26,7 +26,15 @@ export const formatPropertyValue = (key: string, value: any): string => {
         } else if (value._seconds) {
           // Formato Firebase Timestamp
           date = new Date(value._seconds * 1000);
+        } else if (value.year && value.month && value.day) {
+          // Formato Neo4j DateTime
+          date = new Date(value.year, value.month - 1, value.day, value.hour || 0, value.minute || 0, value.second || 0);
+        } else if (value.toString && typeof value.toString === "function") {
+          // Intentar convertir usando toString
+          const dateStr = value.toString();
+          date = new Date(dateStr);
         } else {
+          // Intentar convertir directamente
           date = new Date(value);
         }
       } else if (typeof value === "string" || typeof value === "number") {
@@ -45,7 +53,18 @@ export const formatPropertyValue = (key: string, value: any): string => {
         });
       }
     } catch (e) {
-      // Si falla, devolver el valor como string
+      // Si falla, intentar mostrar el objeto de forma más legible
+      if (typeof value === "object" && value !== null) {
+        try {
+          // Intentar extraer información del objeto
+          if (value.year) {
+            return `${value.year}-${String(value.month || 0).padStart(2, '0')}-${String(value.day || 0).padStart(2, '0')} ${String(value.hour || 0).padStart(2, '0')}:${String(value.minute || 0).padStart(2, '0')}`;
+          }
+          return JSON.stringify(value);
+        } catch {
+          return String(value);
+        }
+      }
       return String(value);
     }
   }

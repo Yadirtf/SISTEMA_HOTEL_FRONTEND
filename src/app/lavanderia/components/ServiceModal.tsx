@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Button, Input, Text, Stack, Flex, Icon, Textarea } from "@chakra-ui/react";
+import { Box, Button, Input, Text, Stack, Flex, Icon, Textarea, IconButton } from "@chakra-ui/react";
 import { FiX, FiPlus, FiTrash2 } from "react-icons/fi";
 import { useThemeMode } from "@/components/theme/ThemeProvider";
 import { getToken } from "@/lib/session";
@@ -387,15 +387,19 @@ export function ServiceModal({
                             />
                           </Box>
                           {!isEditing && (
-                            <Button
+                            <IconButton
                               onClick={() => removeItem(index)}
+                              aria-label="Eliminar prenda"
                               variant="ghost"
+                              colorScheme="red"
                               color="red.400"
-                              _hover={{ bg: colors.bg, color: "red.500" }}
+                              _hover={{ bg: "red.50", color: "red.600", transform: "scale(1.1)" }}
+                              transition="all 0.2s"
                               mt={7}
+                              size="sm"
                             >
                               <Icon as={FiTrash2} />
-                            </Button>
+                            </IconButton>
                           )}
                         </Flex>
                         {item.garmentId && item.quantity > 0 && (() => {

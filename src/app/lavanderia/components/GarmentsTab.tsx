@@ -208,22 +208,27 @@ export function GarmentsTab({ showNotification }: GarmentsTabProps) {
                   onClick={() => openEditModal(garment)}
                   size="sm"
                   variant="ghost"
+                  colorScheme="blue"
                   color={colors.gold}
-                  _hover={{ bg: colors.bg }}
+                  _hover={{ bg: colors.bg, color: colors.gold, transform: "translateY(-1px)" }}
+                  transition="all 0.2s"
                   flex={1}
+                  leftIcon={<Icon as={FiEdit} />}
                 >
-                  <Icon as={FiEdit} mr={1} />
                   Editar
                 </Button>
-                <Button
+                <IconButton
                   onClick={() => handleDelete(garment)}
+                  aria-label="Eliminar"
                   size="sm"
                   variant="ghost"
+                  colorScheme="red"
                   color="red.400"
-                  _hover={{ bg: colors.bg, color: "red.500" }}
+                  _hover={{ bg: "red.50", color: "red.600", transform: "scale(1.1)" }}
+                  transition="all 0.2s"
                 >
                   <Icon as={FiTrash2} />
-                </Button>
+                </IconButton>
               </Flex>
             </Box>
           ))}
