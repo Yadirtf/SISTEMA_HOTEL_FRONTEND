@@ -55,6 +55,69 @@ export function GraphCanvas({
     }));
   }, [graphData.relationships]);
 
+  // Configurar fuerzas de D3 usando el ref
+  useEffect(() => {
+    if (!graphRef.current || graphLinks.length === 0) return;
+
+    // Acceder a la simulación a través del método del ref
+    const getSimulation = () => {
+      try {
+        // react-force-graph-2d expone la simulación a través del método d3Force()
+        return (graphRef.current as any)?.d3Force?.();
+      } catch (e) {
+        return null;
+      }
+    };
+
+    // Intentar configurar las fuerzas después de un pequeño delay para asegurar que la simulación esté lista
+    const timeout = setTimeout(async () => {
+      const simulation = getSimulation();
+      if (!simulation) return;
+
+      // Verificar si ya están configuradas las fuerzas
+      if (simulation.force('charge')) return;
+
+      // Importar d3-force
+      const d3 = await import('d3-force');
+      const links = graphLinks;
+
+      // Fuerza de repulsión
+      simulation.force('charge', d3.forceManyBody().strength(-3000));
+
+      // Fuerza de enlace con distancia dinámica
+      simulation.force('link', d3.forceLink(links)
+        .id((d: any) => d.id)
+        .distance((link: any) => {
+          const sourceConnections = links.filter((l: any) => 
+            (l.source === link.source || l.target === link.source) && l !== link
+          ).length;
+          const targetConnections = links.filter((l: any) => 
+            (l.source === link.target || l.target === link.target) && l !== link
+          ).length;
+
+          const baseDistance = 350;
+          const connectionMultiplier = Math.max(sourceConnections, targetConnections) * 40;
+          return baseDistance + connectionMultiplier;
+        })
+        .strength(0.2)
+      );
+
+      // Fuerza de colisión
+      simulation.force('collision', d3.forceCollide()
+        .radius(() => 72)
+        .strength(0.9)
+      );
+
+      // Fuerza centrífuga
+      simulation.force('center', d3.forceCenter());
+
+      // Reiniciar la simulación para aplicar las nuevas fuerzas
+      simulation.alpha(1).restart();
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [graphLinks]);
+
   // Agregar estilos CSS para el cursor pointer y encontrar el canvas
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -332,44 +395,6 @@ export function GraphCanvas({
         minZoom={0.1}
         maxZoom={4}
         nodeRelSize={4}
-        d3Force={(d3: any, simulation: any) => {
-          // Fuerza de repulsión fuerte pero estable (reducida para evitar movimiento constante)
-          d3.force('charge', d3.forceManyBody().strength(-3000));
-          
-          // Fuerza de enlace con distancia dinámica basada en el número de conexiones
-          const links = simulation.links();
-          d3.force('link', d3.forceLink(links)
-            .id((d: any) => d.id)
-            .distance((link: any) => {
-              // Calcular el número de conexiones del nodo fuente y destino
-              const sourceConnections = links.filter((l: any) => 
-                (l.source === link.source || l.target === link.source) && l !== link
-              ).length;
-              const targetConnections = links.filter((l: any) => 
-                (l.source === link.target || l.target === link.target) && l !== link
-              ).length;
-              
-              // Distancia base grande, aumentada si hay muchas conexiones
-              const baseDistance = 350;
-              const connectionMultiplier = Math.max(sourceConnections, targetConnections) * 40;
-              return baseDistance + connectionMultiplier;
-            })
-            .strength(0.2)
-          );
-          
-          // Fuerza de colisión para evitar que los nodos se superpongan (reducida para estabilidad)
-          d3.force('collision', d3.forceCollide()
-            .radius((node: any) => {
-              // Radio de colisión basado en el tamaño del nodo + padding para separación
-              // 12 (radio del nodo) + 35 (padding) + 25 (espacio para etiqueta) = 72
-              return 72;
-            })
-            .strength(0.9)
-          );
-          
-          // Fuerza centrífuga para distribuir mejor los nodos
-          d3.force('center', d3.forceCenter());
-        }}
       />
     </Box>
   );

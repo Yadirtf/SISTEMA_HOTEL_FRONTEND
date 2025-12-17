@@ -24,7 +24,7 @@ export function useGraphNodes(
 
   const handleCreateNode = useCallback(async () => {
     try {
-      const token = getToken();
+      const token = getToken() || undefined;
       const result = await apiPost<GraphNode, CreateGraphNodeFormData>("/laundry/graph/nodes", nodeFormData, token);
 
       if (!result.success) {
@@ -54,7 +54,7 @@ export function useGraphNodes(
         if (nodeFormData.totalAmount) updateData.totalAmount = nodeFormData.totalAmount;
       }
 
-      const token = getToken();
+      const token = getToken() || undefined;
       const result = await apiPut<GraphNode, any>(
         `/laundry/graph/nodes/${selectedNode.labels[0]}/${selectedNode.properties.id}`,
         updateData,
@@ -76,7 +76,7 @@ export function useGraphNodes(
     if (!confirm(`¿Estás seguro de eliminar este nodo?`)) return;
 
     try {
-      const token = getToken();
+      const token = getToken() || undefined;
       const result = await apiDelete<any>(
         `/laundry/graph/nodes/${node.labels[0]}/${node.properties.id}`,
         token

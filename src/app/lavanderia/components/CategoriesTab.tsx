@@ -142,9 +142,11 @@ export function CategoriesTab({ showNotification }: CategoriesTabProps) {
                   _hover={{ bg: colors.bg, color: colors.gold, transform: "translateY(-1px)" }}
                   transition="all 0.2s"
                   flex={1}
-                  leftIcon={<Icon as={FiEdit} />}
                 >
-                  Editar
+                  <Flex align="center" gap={2}>
+                    <Icon as={FiEdit} />
+                    <Text>Editar</Text>
+                  </Flex>
                 </Button>
                 <IconButton
                   onClick={() => handleDelete(category)}

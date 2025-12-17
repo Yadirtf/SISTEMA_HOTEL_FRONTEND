@@ -96,7 +96,7 @@ export function CreateRelationshipModal({
         </Box>
 
         <Box p={{ base: 4, md: 6 }}>
-          <VStack spacing={4} align="stretch">
+          <VStack gap={4} align="stretch">
             <Box>
               <Text color={colors.text} mb={2} fontWeight="semibold">
                 Tipo de Relación

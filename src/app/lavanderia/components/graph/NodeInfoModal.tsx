@@ -115,16 +115,16 @@ export function NodeInfoModal({
           </HStack>
           <HStack>
             <IconButton
-              icon={<FiEdit />}
               aria-label="Editar"
               size="sm"
               onClick={() => {
                 onClose();
                 onEdit(node);
               }}
-            />
+            >
+              <Icon as={FiEdit} />
+            </IconButton>
             <IconButton
-              icon={<FiTrash2 />}
               aria-label="Eliminar"
               size="sm"
               colorScheme="red"
@@ -132,7 +132,9 @@ export function NodeInfoModal({
                 onClose();
                 onDelete(node);
               }}
-            />
+            >
+              <Icon as={FiTrash2} />
+            </IconButton>
             <Button
               onClick={onClose}
               variant="ghost"
@@ -171,7 +173,7 @@ export function NodeInfoModal({
             },
           }}
         >
-          <VStack align="stretch" spacing={4}>
+          <VStack align="stretch" gap={4}>
             {/* Información principal según el tipo */}
             {nodeType === NodeType.CLIENT && (
               <>
@@ -237,7 +239,7 @@ export function NodeInfoModal({
                     {node.properties.serviceNumber || "N/A"}
                   </Text>
                 </Box>
-                <HStack spacing={4}>
+                <HStack gap={4}>
                   <Box flex={1}>
                     <Text fontSize="xs" color={colors.subtext} mb={1}>
                       Estado
@@ -318,7 +320,7 @@ export function NodeInfoModal({
                 <Text fontSize="sm" fontWeight="semibold" color={colors.text} mb={3}>
                   Información Detallada
                 </Text>
-                <VStack align="stretch" spacing={2}>
+                <VStack align="stretch" gap={2}>
                   {getFilteredProperties().map(([key, value]) => (
                     <Flex
                       key={key}
@@ -346,7 +348,7 @@ export function NodeInfoModal({
                 <Text fontSize="sm" fontWeight="semibold" color={colors.text} mb={3}>
                   Relaciones Conectadas
                 </Text>
-                <VStack align="stretch" spacing={2}>
+                <VStack align="stretch" gap={2}>
                   {connectedRelationships.map((rel) => {
                     const fromNode = nodeMap.get(rel.startNodeId);
                     const toNode = nodeMap.get(rel.endNodeId);
@@ -362,7 +364,7 @@ export function NodeInfoModal({
                         borderColor={colors.border}
                       >
                         <HStack justify="space-between" align="start">
-                          <VStack align="start" spacing={1} flex={1}>
+                          <VStack align="start" gap={1} flex={1}>
                             <Badge colorScheme="purple" fontSize="xs">
                               {rel.type === RelationshipType.HAS_SERVICE
                                 ? "Tiene Servicio"
@@ -375,16 +377,17 @@ export function NodeInfoModal({
                                 : getNodeLabel(fromNode || {}, fromNode?.labels[0] || "")}
                             </Text>
                           </VStack>
-                          <IconButton
-                            icon={<FiTrash2 />}
-                            aria-label="Eliminar relación"
-                            size="xs"
-                            colorScheme="red"
-                            onClick={() => {
-                              onClose();
-                              onDeleteRelationship(rel);
-                            }}
-                          />
+                                <IconButton
+                                  aria-label="Eliminar relación"
+                                  size="xs"
+                                  colorScheme="red"
+                                  onClick={() => {
+                                    onClose();
+                                    onDeleteRelationship(rel);
+                                  }}
+                                >
+                                  <Icon as={FiTrash2} />
+                                </IconButton>
                         </HStack>
                       </Box>
                     );

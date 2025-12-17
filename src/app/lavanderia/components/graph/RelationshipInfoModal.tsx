@@ -85,7 +85,6 @@ export function RelationshipInfoModal({
           </HStack>
           <HStack>
             <IconButton
-              icon={<FiTrash2 />}
               aria-label="Eliminar relación"
               size="sm"
               colorScheme="red"
@@ -93,7 +92,9 @@ export function RelationshipInfoModal({
                 onClose();
                 onDelete(relationship);
               }}
-            />
+            >
+              <Icon as={FiTrash2} />
+            </IconButton>
             <Button
               onClick={onClose}
               variant="ghost"
@@ -132,7 +133,7 @@ export function RelationshipInfoModal({
             },
           }}
         >
-          <VStack align="stretch" spacing={4}>
+          <VStack align="stretch" gap={4}>
             {/* Nodo Origen */}
             <Box>
               <Text fontSize="xs" color={colors.subtext} mb={2}>
@@ -140,7 +141,7 @@ export function RelationshipInfoModal({
               </Text>
               <Box p={3} bg={colors.bg} borderRadius="md" border="1px solid" borderColor={colors.border}>
                 {fromNode ? (
-                  <VStack align="start" spacing={1}>
+                  <VStack align="start" gap={1}>
                     <HStack>
                       <Badge
                         colorScheme={
@@ -181,7 +182,7 @@ export function RelationshipInfoModal({
               </Text>
               <Box p={3} bg={colors.bg} borderRadius="md" border="1px solid" borderColor={colors.border}>
                 {toNode ? (
-                  <VStack align="start" spacing={1}>
+                  <VStack align="start" gap={1}>
                     <HStack>
                       <Badge
                         colorScheme={
@@ -219,7 +220,7 @@ export function RelationshipInfoModal({
                   <Text fontSize="sm" fontWeight="semibold" color={colors.text} mb={2}>
                     Propiedades Adicionales
                   </Text>
-                  <VStack align="stretch" spacing={2}>
+                  <VStack align="stretch" gap={2}>
                     {filteredProperties.map(([key, value]) => (
                       <Flex key={key} justify="space-between" align="start">
                         <Text fontSize="sm" color={colors.subtext}>

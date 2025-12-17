@@ -20,7 +20,7 @@ export function useGraphData(
   const fetchGraphData = useCallback(async () => {
     try {
       setLoading(true);
-      const token = getToken();
+      const token = getToken() || undefined;
       const result = await apiGet<GraphData>("/laundry/graph", token);
 
       if (!result.success) {

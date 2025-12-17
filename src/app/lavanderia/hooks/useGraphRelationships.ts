@@ -25,7 +25,7 @@ export function useGraphRelationships(
 
   const handleCreateRelationship = useCallback(async () => {
     try {
-      const token = getToken();
+      const token = getToken() || undefined;
       const result = await apiPost<GraphRelationship, CreateRelationshipFormData>(
         "/laundry/graph/relationships",
         {
@@ -60,7 +60,7 @@ export function useGraphRelationships(
     if (!confirm(`¿Estás seguro de eliminar esta relación?`)) return;
 
     try {
-      const token = getToken();
+      const token = getToken() || undefined;
       const result = await apiDelete<any>(`/laundry/graph/relationships/${rel.id}`, token);
 
       if (!result.success) {
