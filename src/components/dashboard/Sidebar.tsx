@@ -272,8 +272,17 @@ export function Sidebar() {
             size="md"
           >
             <Flex align="center" gap={2}>
-              <Icon as={mode === "dark" ? FiSun : FiMoon} />
-              <Text>{mode === "dark" ? "Modo Claro" : "Modo Oscuro"}</Text>
+              {hydrated ? (
+                <>
+                  <Icon as={mode === "dark" ? FiSun : FiMoon} />
+                  <Text>{mode === "dark" ? "Modo Claro" : "Modo Oscuro"}</Text>
+                </>
+              ) : (
+                <>
+                  <Icon as={FiMoon} />
+                  <Text>Modo Oscuro</Text>
+                </>
+              )}
             </Flex>
           </Button>
           <Button
