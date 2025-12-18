@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Box, Spinner, Text, VStack, Button, Flex } from "@chakra-ui/react";
+import { Box, Spinner, Text, VStack, Button, Flex, Icon } from "@chakra-ui/react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { ReservationsSection } from "@/components/dashboard/ReservationsSection";
 import { GuestsSection } from "@/components/dashboard/GuestsSection";
@@ -41,12 +41,14 @@ export default function PanelPage() {
               </Text>
               <Text color={colors.subtext}>{error}</Text>
               <Button
-                leftIcon={<FiRefreshCw />}
                 onClick={refetch}
                 colorScheme="yellow"
                 variant="outline"
               >
-                Reintentar
+                <Flex align="center" gap={2}>
+                  <Icon as={FiRefreshCw} />
+                  <Text>Reintentar</Text>
+                </Flex>
               </Button>
             </VStack>
           </Flex>
@@ -73,13 +75,15 @@ export default function PanelPage() {
             Dashboard General
           </Text>
           <Button
-            leftIcon={<FiRefreshCw />}
             onClick={refetch}
             size="sm"
             variant="outline"
             colorScheme="yellow"
           >
-            Actualizar
+            <Flex align="center" gap={2}>
+              <Icon as={FiRefreshCw} />
+              <Text>Actualizar</Text>
+            </Flex>
           </Button>
         </Flex>
         <VStack gap={8} align="stretch">

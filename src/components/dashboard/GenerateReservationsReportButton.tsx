@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@chakra-ui/react";
+import { Button, Flex, Icon, Text } from "@chakra-ui/react";
 import { FiDownload } from "react-icons/fi";
 import { pdf } from "@react-pdf/renderer";
 import { ReservationsReportPDF } from "./ReservationsReportPDF";
@@ -97,8 +97,7 @@ export function GenerateReservationsReportButton() {
       )}
       <Button
         onClick={handleGenerate}
-        isLoading={loading}
-        leftIcon={<FiDownload />}
+        loading={loading}
         colorScheme="yellow"
         variant="solid"
         size="md"
@@ -106,7 +105,10 @@ export function GenerateReservationsReportButton() {
         color="#000000"
         _hover={{ bg: "#b8941f" }}
       >
-        Generar Reporte PDF
+        <Flex align="center" gap={2}>
+          <Icon as={FiDownload} />
+          <Text>Generar Reporte PDF</Text>
+        </Flex>
       </Button>
     </>
   );

@@ -235,10 +235,11 @@ export function ReservationsReportPDF({
                 </Text>
                 <View style={styles.colPayment}>
                   <View
-                    style={[
-                      styles.statusBadge,
-                      !reservation.isPaid && styles.statusBadgeUnpaid,
-                    ]}
+                    style={
+                      reservation.isPaid
+                        ? styles.statusBadge
+                        : [styles.statusBadge, styles.statusBadgeUnpaid]
+                    }
                   >
                     <Text
                       style={{

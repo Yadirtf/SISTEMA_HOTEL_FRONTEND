@@ -93,7 +93,7 @@ export function LaundrySection({ stats }: LaundrySectionProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -120,11 +120,12 @@ export function LaundrySection({ stats }: LaundrySectionProps) {
                   border: `1px solid ${colors.border}`,
                   color: colors.text,
                 }}
-                formatter={(value: number, name: string) => {
+                formatter={(value, name) => {
+                  const numericValue = Number(value ?? 0);
                   if (name === "Ingresos") {
-                    return formatCurrency(value);
+                    return formatCurrency(numericValue);
                   }
-                  return value;
+                  return numericValue;
                 }}
               />
               <Legend />

@@ -112,7 +112,7 @@ export function StoreSection({ stats }: StoreSectionProps) {
                   border: `1px solid ${colors.border}`,
                   color: colors.text,
                 }}
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value) => formatCurrency(Number(value ?? 0))}
               />
               <Legend />
               <Bar dataKey="Ventas" fill={colors.gold} />
@@ -132,7 +132,7 @@ export function StoreSection({ stats }: StoreSectionProps) {
                   border: `1px solid ${colors.border}`,
                   color: colors.text,
                 }}
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value) => formatCurrency(Number(value ?? 0))}
               />
               <Line type="monotone" dataKey="value" stroke={colors.gold} strokeWidth={2} />
             </LineChart>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, SimpleGrid, Heading } from "@chakra-ui/react";
-import { FiDollarSign, FiTrendingDown, FiTrendingUp, FiCreditCard, FiArrowRightLeft } from "react-icons/fi";
+import { FiDollarSign, FiTrendingDown, FiTrendingUp, FiCreditCard, FiRepeat } from "react-icons/fi";
 import { StatCard } from "./StatCard";
 import { ChartCard } from "./ChartCard";
 import { CashStats } from "@/services/dashboard";
@@ -71,7 +71,7 @@ export function CashSection({ stats }: CashSectionProps) {
         <StatCard
           title="Total Transacciones"
           value={stats.transactionCount}
-          icon={FiArrowRightLeft}
+          icon={FiRepeat}
         />
         <StatCard
           title="Ingresos en Efectivo"
@@ -95,7 +95,7 @@ export function CashSection({ stats }: CashSectionProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -105,7 +105,7 @@ export function CashSection({ stats }: CashSectionProps) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value) => formatCurrency(Number(value ?? 0))}
                 contentStyle={{
                   backgroundColor: colors.surface,
                   border: `1px solid ${colors.border}`,
@@ -132,7 +132,7 @@ export function CashSection({ stats }: CashSectionProps) {
                       border: `1px solid ${colors.border}`,
                       color: colors.text,
                     }}
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value) => formatCurrency(Number(value ?? 0))}
                   />
                   <Bar dataKey="value" fill="#10b981" />
                 </BarChart>
@@ -152,7 +152,7 @@ export function CashSection({ stats }: CashSectionProps) {
                       border: `1px solid ${colors.border}`,
                       color: colors.text,
                     }}
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value) => formatCurrency(Number(value ?? 0))}
                   />
                   <Bar dataKey="value" fill="#ef4444" />
                 </BarChart>
